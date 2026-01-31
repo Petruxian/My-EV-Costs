@@ -93,6 +93,13 @@ const EVCostTracker = () => {
 
     useEffect(() => {
         if (view !== "charts" || charges.length === 0) return;
+        // Evita crash se i canvas non sono ancora nel DOM (es. refresh)
+        if (!document.getElementById("chartCost")) return;
+        if (!document.getElementById("chartKwh")) return;
+        if (!document.getElementById("chartConsumption")) return;
+        if (!document.getElementById("chartEurKwh")) return;
+        if (!document.getElementById("chartEur100km")) return;
+
 
         const labels = charges
             .map(c => new Date(c.date).toLocaleDateString("it-IT"))
