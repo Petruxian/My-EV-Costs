@@ -298,6 +298,33 @@ const EVCostTracker = () => {
 
     const forecast = calculateForecast();
 
+    const allConsumptions = charges
+        .filter(c => c.consumption)
+        .map(c => parseFloat(c.consumption));
+
+
+    // ==========================================
+    // BADGE DI EFFICIENZA PER OGNI RICARICA
+    // ==========================================
+    const getEfficiencyBadge = (consumption, allConsumptions) => {
+        if (!consumption || allConsumptions.length < 4) {
+            return { label: "N/D", color: "text-slate-400", bg: "bg-slate-700/40" };
+        }
+
+        const sorted = [...allConsumptions].sort((a, b) => a - b);
+        const q1 = sorted[Math.floor(sorted.length * 0.25)];
+        const q3 = sorted[Math.floor(sorted.length * 0.75)];
+
+        if (consumption <= q1) {
+            return { label: "Top", color: "text-emerald-400", bg: "bg-emerald-900/30" };
+        }
+        if (consumption >= q3) {
+            return { label: "Alto", color: "text-red-400", bg: "bg-red-900/30" };
+        }
+        return { label: "Normale", color: "text-yellow-400", bg: "bg-yellow-900/30" };
+    };
+
+
 
     // ==========================================
     // CARICA TUTTI I DATI
