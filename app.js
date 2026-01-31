@@ -93,9 +93,11 @@ const EVCostTracker = () => {
 
     useEffect(() => {
         if (view !== "charts") return;
-        if (!charges || charges.length === 0) return;
 
-        // Evita crash se i canvas non sono ancora nel DOM (es. refresh)
+        // Aspetta che i dati siano caricati
+        if (isLoading) return;
+
+        // Aspetta che il DOM monti i canvas
         const timeout = setTimeout(() => {
             const elCost = document.getElementById("chartCost");
             const elKwh = document.getElementById("chartKwh");
@@ -103,7 +105,11 @@ const EVCostTracker = () => {
             const elEurKwh = document.getElementById("chartEurKwh");
             const elEur100 = document.getElementById("chartEur100km");
 
+            // Se i canvas non esistono ancora → aspetta il prossimo ciclo
             if (!elCost || !elKwh || !elCons || !elEurKwh || !elEur100) return;
+
+            // Se non ci sono ricariche → niente grafici
+            if (!charges || charges.length === 0) return;
 
             // Distruggi grafici precedenti
             if (window._chartCost) window._chartCost.destroy();
@@ -232,11 +238,13 @@ const EVCostTracker = () => {
                     }
                 }
             });
+
         }, 80);
 
         return () => clearTimeout(timeout);
 
     }, [view, charges, isLoading]);
+
 
 
 
