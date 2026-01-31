@@ -945,10 +945,10 @@ const EVCostTracker = () => {
                                     <div className="flex items-center gap-3 mb-2">
                                         <span className="text-slate-300 text-sm">Trend costi</span>
                                         <span className={`font-bold ${forecast.trend < 0
-                                                ? "text-emerald-400"
-                                                : forecast.trend > 0
-                                                    ? "text-red-400"
-                                                    : "text-yellow-400"
+                                            ? "text-emerald-400"
+                                            : forecast.trend > 0
+                                                ? "text-red-400"
+                                                : "text-yellow-400"
                                             }`}>
                                             {forecast.trend < 0 ? "↓" : forecast.trend > 0 ? "↑" : "→"}
                                             {Math.abs(forecast.trend).toFixed(2)}
@@ -1188,27 +1188,27 @@ const EVCostTracker = () => {
                                                                     </span>
                                                                 </div>
 
-                                                                {/* BADGE */}
-                                                                {stats && (
-                                                                    <span
-                                                                        className={`
-                                      px-2 py-0.5 rounded text-xs font-bold
-                                      ${parseFloat(charge.consumption) < parseFloat(stats.consumption)
-                                                                                ? "bg-green-600/30 text-green-300 border border-green-600/40"
-                                                                                : "bg-red-600/30 text-red-300 border border-red-600/40"
-                                                                            }
-                                    `}
-                                                                    >
-                                                                        {parseFloat(charge.consumption) < parseFloat(stats.consumption)
-                                                                            ? "↓ migliore"
-                                                                            : "↑ peggiore"}
-                                                                    </span>
-                                                                )}
+                                                                {/* BADGE EFFICIENZA */}
+                                                                {(() => {
+                                                                    const badge = getEfficiencyBadge(
+                                                                        parseFloat(charge.consumption),
+                                                                        allConsumptions
+                                                                    );
+
+                                                                    return (
+                                                                        <span
+                                                                            className={`px-2 py-0.5 rounded text-xs font-bold ${badge.bg} ${badge.color}`}
+                                                                        >
+                                                                            {badge.label}
+                                                                        </span>
+                                                                    );
+                                                                })()}
                                                             </>
                                                         ) : (
                                                             <span className="text-slate-600">—</span>
                                                         )}
                                                     </div>
+
                                                 </div>
                                             )}
 
