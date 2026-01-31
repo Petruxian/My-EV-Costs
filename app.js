@@ -236,7 +236,7 @@ const EVCostTracker = () => {
 
         return () => clearTimeout(timeout);
 
-    }, [view, charges]);
+    }, [view, charges, isLoading]);
 
 
 
