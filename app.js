@@ -97,6 +97,13 @@ const EVCostTracker = () => {
             setChartsReady(false);
             return;
         }
+console.log("charges:", charges);
+console.log("labels:", labels);
+console.log("costs:", costs);
+console.log("kwh:", kwh);
+console.log("consumption:", consumption);
+console.log("eurKwh:", eurKwh);
+console.log("eur100km:", eur100km);
 
         const interval = setInterval(() => {
             const ok =
