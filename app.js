@@ -91,148 +91,152 @@ const EVCostTracker = () => {
         if (supabase) loadData();
     }, [supabase]);
 
-useEffect(() => {
-    if (view !== "charts") return;
-    if (!charges || charges.length === 0) return;
+    useEffect(() => {
+        if (view !== "charts") return;
+        if (!charges || charges.length === 0) return;
 
-    // Evita crash se i canvas non sono ancora nel DOM (es. refresh)
-    const elCost = document.getElementById("chartCost");
-    const elKwh = document.getElementById("chartKwh");
-    const elCons = document.getElementById("chartConsumption");
-    const elEurKwh = document.getElementById("chartEurKwh");
-    const elEur100 = document.getElementById("chartEur100km");
+        // Evita crash se i canvas non sono ancora nel DOM (es. refresh)
+        const timeout = setTimeout(() => {
+            const elCost = document.getElementById("chartCost");
+            const elKwh = document.getElementById("chartKwh");
+            const elCons = document.getElementById("chartConsumption");
+            const elEurKwh = document.getElementById("chartEurKwh");
+            const elEur100 = document.getElementById("chartEur100km");
 
-    if (!elCost || !elKwh || !elCons || !elEurKwh || !elEur100) return;
+            if (!elCost || !elKwh || !elCons || !elEurKwh || !elEur100) return;
 
-    // Distruggi grafici precedenti
-    if (window._chartCost) window._chartCost.destroy();
-    if (window._chartKwh) window._chartKwh.destroy();
-    if (window._chartConsumption) window._chartConsumption.destroy();
-    if (window._chartEurKwh) window._chartEurKwh.destroy();
-    if (window._chartEur100km) window._chartEur100km.destroy();
+            // Distruggi grafici precedenti
+            if (window._chartCost) window._chartCost.destroy();
+            if (window._chartKwh) window._chartKwh.destroy();
+            if (window._chartConsumption) window._chartConsumption.destroy();
+            if (window._chartEurKwh) window._chartEurKwh.destroy();
+            if (window._chartEur100km) window._chartEur100km.destroy();
 
-    const labels = charges.map(c =>
-        new Date(c.date).toLocaleDateString("it-IT", {
-            day: "2-digit",
-            month: "2-digit"
-        })
-    ).reverse();
+            const labels = charges.map(c =>
+                new Date(c.date).toLocaleDateString("it-IT", {
+                    day: "2-digit",
+                    month: "2-digit"
+                })
+            ).reverse();
 
-    const costs = charges.map(c => parseFloat(c.cost)).reverse();
-    const kwh = charges.map(c => parseFloat(c.kwh_added)).reverse();
-    const consumption = charges.map(c => c.consumption ? parseFloat(c.consumption) : null).reverse();
-    const eurKwh = charges.map(c => (c.cost / c.kwh_added).toFixed(3)).reverse();
+            const costs = charges.map(c => parseFloat(c.cost)).reverse();
+            const kwh = charges.map(c => parseFloat(c.kwh_added)).reverse();
+            const consumption = charges.map(c => c.consumption ? parseFloat(c.consumption) : null).reverse();
+            const eurKwh = charges.map(c => (c.cost / c.kwh_added).toFixed(3)).reverse();
 
-    const eur100km = charges.map(c => {
-        if (!c.km_since_last || c.km_since_last <= 0) return null;
-        return ((c.cost / c.km_since_last) * 100).toFixed(2);
-    }).reverse();
+            const eur100km = charges.map(c => {
+                if (!c.km_since_last || c.km_since_last <= 0) return null;
+                return ((c.cost / c.km_since_last) * 100).toFixed(2);
+            }).reverse();
 
-    const darkText = "#cbd5e1";
-    const darkGrid = "rgba(148,163,184,0.2)";
+            const darkText = "#cbd5e1";
+            const darkGrid = "rgba(148,163,184,0.2)";
 
-    // GRAFICO 1 — COSTO
-    window._chartCost = new Chart(elCost, {
-        type: "bar",
-        data: {
-            labels,
-            datasets: [{
-                label: "Costo (€)",
-                data: costs,
-                backgroundColor: "rgba(16,185,129,0.5)"
-            }]
-        },
-        options: {
-            scales: {
-                x: { ticks: { color: darkText }, grid: { color: darkGrid } },
-                y: { ticks: { color: darkText }, grid: { color: darkGrid } }
-            }
-        }
-    });
+            // GRAFICO 1 — COSTO
+            window._chartCost = new Chart(elCost, {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Costo (€)",
+                        data: costs,
+                        backgroundColor: "rgba(16,185,129,0.5)"
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { ticks: { color: darkText }, grid: { color: darkGrid } },
+                        y: { ticks: { color: darkText }, grid: { color: darkGrid } }
+                    }
+                }
+            });
 
-    // GRAFICO 2 — kWh
-    window._chartKwh = new Chart(elKwh, {
-        type: "bar",
-        data: {
-            labels,
-            datasets: [{
-                label: "kWh",
-                data: kwh,
-                backgroundColor: "rgba(6,182,212,0.5)"
-            }]
-        },
-        options: {
-            scales: {
-                x: { ticks: { color: darkText }, grid: { color: darkGrid } },
-                y: { ticks: { color: darkText }, grid: { color: darkGrid } }
-            }
-        }
-    });
+            // GRAFICO 2 — kWh
+            window._chartKwh = new Chart(elKwh, {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "kWh",
+                        data: kwh,
+                        backgroundColor: "rgba(6,182,212,0.5)"
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { ticks: { color: darkText }, grid: { color: darkGrid } },
+                        y: { ticks: { color: darkText }, grid: { color: darkGrid } }
+                    }
+                }
+            });
 
-    // GRAFICO 3 — CONSUMO
-    window._chartConsumption = new Chart(elCons, {
-        type: "line",
-        data: {
-            labels,
-            datasets: [{
-                label: "kWh/100km",
-                data: consumption,
-                borderColor: "#3b82f6",
-                backgroundColor: "rgba(59,130,246,0.2)",
-                tension: 0.3
-            }]
-        },
-        options: {
-            scales: {
-                x: { ticks: { color: darkText }, grid: { color: darkGrid } },
-                y: { ticks: { color: darkText }, grid: { color: darkGrid } }
-            }
-        }
-    });
+            // GRAFICO 3 — CONSUMO
+            window._chartConsumption = new Chart(elCons, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "kWh/100km",
+                        data: consumption,
+                        borderColor: "#3b82f6",
+                        backgroundColor: "rgba(59,130,246,0.2)",
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { ticks: { color: darkText }, grid: { color: darkGrid } },
+                        y: { ticks: { color: darkText }, grid: { color: darkGrid } }
+                    }
+                }
+            });
 
-    // GRAFICO 4 — €/kWh
-    window._chartEurKwh = new Chart(elEurKwh, {
-        type: "line",
-        data: {
-            labels,
-            datasets: [{
-                label: "€/kWh",
-                data: eurKwh,
-                borderColor: "#a855f7",
-                backgroundColor: "rgba(168,85,247,0.2)",
-                tension: 0.3
-            }]
-        },
-        options: {
-            scales: {
-                x: { ticks: { color: darkText }, grid: { color: darkGrid } },
-                y: { ticks: { color: darkText }, grid: { color: darkGrid } }
-            }
-        }
-    });
+            // GRAFICO 4 — €/kWh
+            window._chartEurKwh = new Chart(elEurKwh, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "€/kWh",
+                        data: eurKwh,
+                        borderColor: "#a855f7",
+                        backgroundColor: "rgba(168,85,247,0.2)",
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { ticks: { color: darkText }, grid: { color: darkGrid } },
+                        y: { ticks: { color: darkText }, grid: { color: darkGrid } }
+                    }
+                }
+            });
 
-    // GRAFICO 5 — €/100 km
-    window._chartEur100km = new Chart(elEur100, {
-        type: "line",
-        data: {
-            labels,
-            datasets: [{
-                label: "€/100 km",
-                data: eur100km,
-                borderColor: "#fbbf24",
-                backgroundColor: "rgba(251,191,36,0.2)",
-                tension: 0.3
-            }]
-        },
-        options: {
-            scales: {
-                x: { ticks: { color: darkText }, grid: { color: darkGrid } },
-                y: { ticks: { color: darkText }, grid: { color: darkGrid } }
-            }
-        }
-    });
+            // GRAFICO 5 — €/100 km
+            window._chartEur100km = new Chart(elEur100, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "€/100 km",
+                        data: eur100km,
+                        borderColor: "#fbbf24",
+                        backgroundColor: "rgba(251,191,36,0.2)",
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { ticks: { color: darkText }, grid: { color: darkGrid } },
+                        y: { ticks: { color: darkText }, grid: { color: darkGrid } }
+                    }
+                }
+            });
+        }, 80);
 
-}, [view, charges]);
+        return () => clearTimeout(timeout);
+
+    }, [view, charges]);
 
 
 
