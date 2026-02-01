@@ -1585,63 +1585,28 @@ const EVCostTracker = () => {
                         {/* ================================
                             GRAFICO 1 — COSTO PER RICARICA
                             ================================= */}
-                        {chartOptions.showCost && (    
-                        <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
-                            <h3 className="text-lg font-semibold text-emerald-300 mb-3">
-                                💶 Costo per ricarica
-                            </h3>
-                            <canvas id="chartCost"></canvas>
-                        </div>
-                        )}
+                        {chartOptions.showCost && <CostChart charges={charges} />}
+
 
                         {/* ================================
                             GRAFICO 2 — kWh PER RICARICA
                             ================================= */}
-                        {chartOptions.showKwh && (
-                        <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
-                            <h3 className="text-lg font-semibold text-cyan-300 mb-3">
-                                ⚡ kWh per ricarica
-                            </h3>
-                            <canvas id="chartKwh"></canvas>
-                        </div>
-                        )}
+                        {chartOptions.showKwh && <KwhChart charges={charges} />}
 
                         {/* ================================
                             GRAFICO 3 — CONSUMO REALE
                             ================================= */}
-                        {chartOptions.showConsumption && (
-                        <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
-                            <h3 className="text-lg font-semibold text-blue-300 mb-3">
-                                🚗 Consumo reale (kWh/100km)
-                            </h3>
-                            <canvas id="chartConsumption"></canvas>
-                        </div>
-                        )}
+                        {chartOptions.showConsumption && <ConsumptionChart charges={charges} />}
 
                         {/* ================================
                             GRAFICO 4 — €/kWh
                             ================================= */}
-                        {chartOptions.showEurKwh && (
-                        <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
-                            <h3 className="text-lg font-semibold text-purple-300 mb-3">
-                                💰 €/kWh per ricarica
-                            </h3>
-                            <canvas id="chartEurKwh"></canvas>
-                        </div>
-                        )}
+                        {chartOptions.showEurKwh && <EurKwhChart charges={charges} />}
 
                         {/* ================================
                             GRAFICO 5 — €/100 km
                             ================================= */}
-                        {chartOptions.showEur100km && (
-                        <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
-                            <h3 className="text-lg font-semibold text-purple-300 mb-3">
-                                🪙 €/100 km
-                            </h3>
-                            <canvas id="chartEur100km" className="w-full h-48 bg-slate-800 rounded" />
-                        </div>
-                        )}
-
+                        {chartOptions.showEur100km && <Eur100Chart charges={charges} />}
 
                     </div>
                 )}
