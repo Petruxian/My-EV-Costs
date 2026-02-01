@@ -92,58 +92,33 @@ const EVCostTracker = () => {
         if (supabase) loadData();
     }, [supabase]);
 
-    useEffect(() => {
-        if (view !== "charts") {
-            setChartsReady(false);
-            return;
-        }
+useEffect(() => {
+    // L'effetto deve partire SOLO quando sei nella pagina grafici
+    if (view !== "charts") return;
 
+    // Aspetta che i dati siano caricati
+    if (isLoading) return;
 
-        const interval = setInterval(() => {
-            const ok =
-                document.getElementById("chartCost") &&
-                document.getElementById("chartKwh") &&
-                document.getElementById("chartConsumption") &&
-                document.getElementById("chartEurKwh") &&
-                document.getElementById("chartEur100km");
+    // Aspetta che charges sia popolato
+    if (!charges || charges.length === 0) {
+        console.log("charges è vuoto, niente grafici");
+        return;
+    }
 
-            if (ok) {
-                setChartsReady(true);
-                clearInterval(interval);
-            }
-        }, 50);
-
-        return () => clearInterval(interval);
-    }, [view]);
-
-    useEffect(() => {
-        if (view !== "charts") return;
-        if (!chartsReady) return;
-        if (isLoading) return;
-        if (!charges || charges.length === 0) return;
-
-        console.log("charges:", charges);
-console.log("labels:", labels);
-console.log("costs:", costs);
-console.log("kwh:", kwh);
-console.log("consumption:", consumption);
-console.log("eurKwh:", eurKwh);
-console.log("eur100km:", eur100km);
-
+    // Aspetta che il DOM monti i canvas
+    const timeout = setTimeout(() => {
         const elCost = document.getElementById("chartCost");
         const elKwh = document.getElementById("chartKwh");
         const elCons = document.getElementById("chartConsumption");
         const elEurKwh = document.getElementById("chartEurKwh");
         const elEur100 = document.getElementById("chartEur100km");
 
-        if (!elCost || !elKwh || !elCons || !elEurKwh || !elEur100) return;
+        if (!elCost || !elKwh || !elCons || !elEurKwh || !elEur100) {
+            console.log("Canvas non trovati nel DOM");
+            return;
+        }
 
-        // Distruggi grafici precedenti
-        if (window._chartCost) window._chartCost.destroy();
-        if (window._chartKwh) window._chartKwh.destroy();
-        if (window._chartConsumption) window._chartConsumption.destroy();
-        if (window._chartEurKwh) window._chartEurKwh.destroy();
-        if (window._chartEur100km) window._chartEur100km.destroy();
+        console.log("charges:", charges);
 
         const labels = charges.map(c =>
             new Date(c.date).toLocaleDateString("it-IT", {
@@ -162,10 +137,23 @@ console.log("eur100km:", eur100km);
             return ((c.cost / c.km_since_last) * 100).toFixed(2);
         }).reverse();
 
+        console.log("labels:", labels);
+        console.log("costs:", costs);
+        console.log("kwh:", kwh);
+        console.log("consumption:", consumption);
+       console.log("eurKwh:", eurKwh);
+        console.log("eur100km:", eur100km);
+
+        // Distruggi grafici precedenti
+        if (window._chartCost) window._chartCost.destroy();
+        if (window._chartKwh) window._chartKwh.destroy();
+        if (window._chartConsumption) window._chartConsumption.destroy();
+        if (window._chartEurKwh) window._chartEurKwh.destroy();
+        if (window._chartEur100km) window._chartEur100km.destroy();
+
         const darkText = "#cbd5e1";
         const darkGrid = "rgba(148,163,184,0.2)";
 
-        // GRAFICO 1 — COSTO
         window._chartCost = new Chart(elCost, {
             type: "bar",
             data: {
@@ -184,7 +172,6 @@ console.log("eur100km:", eur100km);
             }
         });
 
-        // GRAFICO 2 — kWh
         window._chartKwh = new Chart(elKwh, {
             type: "bar",
             data: {
@@ -203,7 +190,6 @@ console.log("eur100km:", eur100km);
             }
         });
 
-        // GRAFICO 3 — CONSUMO
         window._chartConsumption = new Chart(elCons, {
             type: "line",
             data: {
@@ -224,7 +210,6 @@ console.log("eur100km:", eur100km);
             }
         });
 
-        // GRAFICO 4 — €/kWh
         window._chartEurKwh = new Chart(elEurKwh, {
             type: "line",
             data: {
@@ -245,7 +230,6 @@ console.log("eur100km:", eur100km);
             }
         });
 
-        // GRAFICO 5 — €/100 km
         window._chartEur100km = new Chart(elEur100, {
             type: "line",
             data: {
@@ -266,8 +250,11 @@ console.log("eur100km:", eur100km);
             }
         });
 
-    }, [view, charges, isLoading, chartsReady]);
+    }, 100);
 
+    return () => clearTimeout(timeout);
+
+}, [view, charges, isLoading]);
 
 
 
