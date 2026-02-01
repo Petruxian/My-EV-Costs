@@ -27,7 +27,7 @@ async function loadCharges(supabase) {
 // ==========================================
 // SALVA NUOVA RICARICA
 // ==========================================
-async function saveChargeToDB(supabase, newCharge, suppliers, settings) {
+async function saveChargeToDB(supabase, newCharge, suppliers, settings, previousCharges = []) {
     const supplier = suppliers.find(s => s.id === parseInt(newCharge.supplier));
 
     if (!supplier) {
@@ -41,6 +41,26 @@ async function saveChargeToDB(supabase, newCharge, suppliers, settings) {
         cost = parseFloat(newCharge.kWhAdded) * settings.homeElectricityPrice;
     }
 
+    // Calcolo km percorsi
+    let kmSinceLast = null;
+    if (previousCharges.length > 0) {
+        const last = previousCharges[0]; // la più recente
+        kmSinceLast = parseFloat(newCharge.totalKm) - parseFloat(last.total_km);
+        if (kmSinceLast < 0) kmSinceLast = null; // sicurezza
+    }
+
+    // Calcolo consumo (kWh/100km)
+    let consumption = null;
+    if (kmSinceLast && kmSinceLast > 0) {
+        consumption = (parseFloat(newCharge.kWhAdded) / kmSinceLast) * 100;
+    }
+
+    // Differenza rispetto al costo standard
+    const standardCost = parseFloat(supplier.standard_cost || 0);
+    const costDifference = standardCost
+        ? cost - parseFloat(newCharge.kWhAdded) * standardCost
+        : null;
+
     const payload = {
         date: newCharge.date,
         total_km: parseFloat(newCharge.totalKm),
@@ -51,13 +71,18 @@ async function saveChargeToDB(supabase, newCharge, suppliers, settings) {
         cost: parseFloat(cost),
 
         // Snapshot del costo standard del fornitore
-        standard_cost: parseFloat(supplier.standard_cost || 0),
+        standard_cost: standardCost,
 
         // Snapshot benzina/diesel
         saved_gasoline_price: settings.gasolinePrice,
         saved_gasoline_consumption: settings.gasolineConsumption,
         saved_diesel_price: settings.dieselPrice,
-        saved_diesel_consumption: settings.dieselConsumption
+        saved_diesel_consumption: settings.dieselConsumption,
+
+        // Nuovi campi
+        km_since_last: kmSinceLast,
+        consumption: consumption,
+        cost_difference: costDifference
     };
 
     const { error } = await supabase.from("charges").insert([payload]);
@@ -69,6 +94,7 @@ async function saveChargeToDB(supabase, newCharge, suppliers, settings) {
 
     return true;
 }
+
 
 
 

@@ -112,8 +112,10 @@ function EVCostTracker() {
             supabaseClient,
             newCharge,
             suppliers,
-            settings
+            settings,
+            charges // ← serve per calcolare km_since_last
         );
+
 
         if (ok) {
             setShowAddCharge(false);
@@ -225,11 +227,10 @@ function EVCostTracker() {
                     <div className="flex gap-2">
                         <button
                             onClick={() => setView("dashboard")}
-                            className={`px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all text-lg md:text-xl ${
-                                view === "dashboard"
+                            className={`px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all text-lg md:text-xl ${view === "dashboard"
                                     ? "bg-emerald-500 text-slate-900"
                                     : "bg-slate-800/50 hover:bg-slate-700/50"
-                            }`}
+                                }`}
                             title="Dashboard"
                         >
                             📊
@@ -237,11 +238,10 @@ function EVCostTracker() {
 
                         <button
                             onClick={() => setView("settings")}
-                            className={`px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all text-lg md:text-xl ${
-                                view === "settings"
+                            className={`px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all text-lg md:text-xl ${view === "settings"
                                     ? "bg-emerald-500 text-slate-900"
                                     : "bg-slate-800/50 hover:bg-slate-700/50"
-                            }`}
+                                }`}
                             title="Impostazioni"
                         >
                             ⚙️
@@ -249,24 +249,23 @@ function EVCostTracker() {
 
                         <button
                             onClick={() => setView("charts")}
-                            className={`px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all text-lg md:text-xl ${
-                                view === "charts"
+                            className={`px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all text-lg md:text-xl ${view === "charts"
                                     ? "bg-emerald-500 text-slate-900"
                                     : "bg-slate-800/50 hover:bg-slate-700/50"
-                            }`}
+                                }`}
                             title="Grafici"
                         >
                             ⚡📈
                         </button>
 
-                            <button
-                                onClick={loadData}
-                                disabled={isSyncing}
-                                className="px-3 py-2 md:px-4 md:py-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all text-lg md:text-xl"
-                                title="Ricarica dati"
-                            >
-                                🔄
-                            </button>
+                        <button
+                            onClick={loadData}
+                            disabled={isSyncing}
+                            className="px-3 py-2 md:px-4 md:py-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all text-lg md:text-xl"
+                            title="Ricarica dati"
+                        >
+                            🔄
+                        </button>
                     </div>
                 </div>
             </header>
@@ -368,13 +367,12 @@ function EVCostTracker() {
                                         <p className="text-slate-400 text-xs mb-1">Trend</p>
 
                                         <p
-                                            className={`text-xl font-bold ${
-                                                analysis.trend < 0
+                                            className={`text-xl font-bold ${analysis.trend < 0
                                                     ? "text-emerald-400"
                                                     : analysis.trend > 0
-                                                    ? "text-red-400"
-                                                    : "text-yellow-400"
-                                            }`}
+                                                        ? "text-red-400"
+                                                        : "text-yellow-400"
+                                                }`}
                                         >
                                             {analysis.trend < 0 ? "↓" : analysis.trend > 0 ? "↑" : "→"}
                                             {Math.abs(analysis.trend).toFixed(2)}
@@ -440,13 +438,12 @@ function EVCostTracker() {
                                     <div className="flex items-center gap-3 mb-2">
                                         <span className="text-slate-300 text-sm">Trend costi</span>
                                         <span
-                                            className={`font-bold ${
-                                                forecast.trend < 0
+                                            className={`font-bold ${forecast.trend < 0
                                                     ? "text-emerald-400"
                                                     : forecast.trend > 0
-                                                    ? "text-red-400"
-                                                    : "text-yellow-400"
-                                            }`}
+                                                        ? "text-red-400"
+                                                        : "text-yellow-400"
+                                                }`}
                                         >
                                             {forecast.trend < 0 ? "↓" : forecast.trend > 0 ? "↑" : "→"}
                                             {Math.abs(forecast.trend).toFixed(2)}
@@ -640,15 +637,14 @@ function EVCostTracker() {
                                                         </span>
 
                                                         <span
-                                                            className={`font-semibold ${
-                                                                parseFloat(charge.cost_difference) > 0
+                                                            className={`font-semibold ${parseFloat(charge.cost_difference) > 0
                                                                     ? "text-red-400"
                                                                     : parseFloat(
-                                                                          charge.cost_difference
-                                                                      ) < 0
-                                                                    ? "text-green-400"
-                                                                    : "text-slate-400"
-                                                            }`}
+                                                                        charge.cost_difference
+                                                                    ) < 0
+                                                                        ? "text-green-400"
+                                                                        : "text-slate-400"
+                                                                }`}
                                                         >
                                                             {parseFloat(charge.cost_difference) > 0 ? "+" : ""}
                                                             €
@@ -875,11 +871,10 @@ function EVCostTracker() {
 
                         <div className="flex flex-wrap gap-2 mb-4 text-xs">
                             <button
-                                className={`px-3 py-1 rounded-full border ${
-                                    chartOptions.showCost
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showCost
                                         ? "bg-emerald-600/30 border-emerald-400"
                                         : "bg-slate-800 border-slate-600"
-                                }`}
+                                    }`}
                                 onClick={() =>
                                     setChartOptions(o => ({ ...o, showCost: !o.showCost }))
                                 }
@@ -888,11 +883,10 @@ function EVCostTracker() {
                             </button>
 
                             <button
-                                className={`px-3 py-1 rounded-full border ${
-                                    chartOptions.showKwh
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showKwh
                                         ? "bg-cyan-600/30 border-cyan-400"
                                         : "bg-slate-800 border-slate-600"
-                                }`}
+                                    }`}
                                 onClick={() =>
                                     setChartOptions(o => ({ ...o, showKwh: !o.showKwh }))
                                 }
@@ -901,11 +895,10 @@ function EVCostTracker() {
                             </button>
 
                             <button
-                                className={`px-3 py-1 rounded-full border ${
-                                    chartOptions.showConsumption
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showConsumption
                                         ? "bg-blue-600/30 border-blue-400"
                                         : "bg-slate-800 border-slate-600"
-                                }`}
+                                    }`}
                                 onClick={() =>
                                     setChartOptions(o => ({
                                         ...o,
@@ -917,11 +910,10 @@ function EVCostTracker() {
                             </button>
 
                             <button
-                                className={`px-3 py-1 rounded-full border ${
-                                    chartOptions.showEurKwh
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showEurKwh
                                         ? "bg-violet-600/30 border-violet-400"
                                         : "bg-slate-800 border-slate-600"
-                                }`}
+                                    }`}
                                 onClick={() =>
                                     setChartOptions(o => ({
                                         ...o,
@@ -933,11 +925,10 @@ function EVCostTracker() {
                             </button>
 
                             <button
-                                className={`px-3 py-1 rounded-full border ${
-                                    chartOptions.showEur100km
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showEur100km
                                         ? "bg-amber-600/30 border-amber-400"
                                         : "bg-slate-800 border-slate-600"
-                                }`}
+                                    }`}
                                 onClick={() =>
                                     setChartOptions(o => ({
                                         ...o,
