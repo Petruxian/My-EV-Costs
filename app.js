@@ -12,6 +12,16 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // COMPONENTE PRINCIPALE
 // ==========================================
 function EVCostTracker() {
+    function toggleTheme() {
+        const next =
+            settings.theme === "theme-light"
+                ? "theme-dark"
+                : "theme-light";
+
+        setSettings(prev => ({ ...prev, theme: next }));
+        document.body.className = next;
+    }
+
     const [view, setView] = React.useState("dashboard");
     const [isSyncing, setIsSyncing] = React.useState(false);
 
@@ -233,6 +243,15 @@ function EVCostTracker() {
                     </div>
 
                     <div className="flex gap-2">
+                        {/* Toggle Tema Rapido */}
+                        <button
+                            onClick={toggleTheme}
+                            className="btn text-lg md:text-xl"
+                            title="Cambia tema"
+                        >
+                            {settings.theme === "theme-light" ? "🌙" : "☀️"}
+                        </button>
+
                         <button
                             onClick={() => setView("dashboard")}
                             className={`btn text-lg md:text-xl ${view === "dashboard" ? "btn-primary" : "btn-secondary"}`}
@@ -698,209 +717,209 @@ function EVCostTracker() {
                 {/* ====================================== */}
                 {/* IMPOSTAZIONI */}
                 {/* ====================================== */}
-{view === "settings" && (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+                {view === "settings" && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
 
-        {/* Impostazioni costi e consumi */}
-        <div className="card">
-            <h2 className="text-xl font-bold text-saving mb-4">
-                ⚙️ Impostazioni Costi & Consumi
-            </h2>
+                        {/* Impostazioni costi e consumi */}
+                        <div className="card">
+                            <h2 className="text-xl font-bold text-saving mb-4">
+                                ⚙️ Impostazioni Costi & Consumi
+                            </h2>
 
-            {/* Selettore Tema */}
-            <div className="mb-6">
-                <label className="block text-muted mb-1">Tema</label>
-                <select
-                    className="input-field"
-                    value={settings.theme || "theme-default"}
-                    onChange={(e) => {
-                        const theme = e.target.value;
-                        document.body.className = theme;
-                        setSettings({ ...settings, theme });
-                    }}
-                >
-                    <option value="theme-default">Default</option>
-                    <option value="theme-dark">Dark</option>
-                    <option value="theme-light">Light</option>
-                    <option value="theme-emerald">Emerald</option>
-                    <option value="theme-neon">Neon</option>
-                    <option value="theme-nord">Nord</option>
-                    <option value="theme-solarized">Solarized</option>
-                    <option value="theme-material">Material</option>
-                    <option value="theme-cyber">Cyber</option>
-                    <option value="theme-sunset">Sunset</option>
-                </select>
-            </div>
+                            {/* Selettore Tema */}
+                            <div className="mb-6">
+                                <label className="block text-muted mb-1">Tema</label>
+                                <select
+                                    className="input-field"
+                                    value={settings.theme || "theme-default"}
+                                    onChange={(e) => {
+                                        const theme = e.target.value;
+                                        document.body.className = theme;
+                                        setSettings({ ...settings, theme });
+                                    }}
+                                >
+                                    <option value="theme-default">Default</option>
+                                    <option value="theme-dark">Dark</option>
+                                    <option value="theme-light">Light</option>
+                                    <option value="theme-emerald">Emerald</option>
+                                    <option value="theme-neon">Neon</option>
+                                    <option value="theme-nord">Nord</option>
+                                    <option value="theme-solarized">Solarized</option>
+                                    <option value="theme-material">Material</option>
+                                    <option value="theme-cyber">Cyber</option>
+                                    <option value="theme-sunset">Sunset</option>
+                                </select>
+                            </div>
 
-            {/* Campi benzina/diesel/energia */}
-            <div className="space-y-4 text-sm">
+                            {/* Campi benzina/diesel/energia */}
+                            <div className="space-y-4 text-sm">
 
-                {/* Benzina */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-muted mb-1">
-                            Prezzo Benzina (€/L)
-                        </label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            value={settings.gasolinePrice}
-                            onChange={e =>
-                                setSettings({
-                                    ...settings,
-                                    gasolinePrice: parseFloat(e.target.value) || 0
-                                })
-                            }
-                            className="input-field"
-                        />
-                    </div>
+                                {/* Benzina */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-muted mb-1">
+                                            Prezzo Benzina (€/L)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={settings.gasolinePrice}
+                                            onChange={e =>
+                                                setSettings({
+                                                    ...settings,
+                                                    gasolinePrice: parseFloat(e.target.value) || 0
+                                                })
+                                            }
+                                            className="input-field"
+                                        />
+                                    </div>
 
-                    <div>
-                        <label className="block text-muted mb-1">
-                            Consumo Benzina (km/L)
-                        </label>
-                        <input
-                            type="number"
-                            step="0.1"
-                            value={settings.gasolineConsumption}
-                            onChange={e =>
-                                setSettings({
-                                    ...settings,
-                                    gasolineConsumption: parseFloat(e.target.value) || 0
-                                })
-                            }
-                            className="input-field"
-                        />
-                    </div>
-                </div>
-
-                {/* Diesel */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-muted mb-1">
-                            Prezzo Diesel (€/L)
-                        </label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            value={settings.dieselPrice}
-                            onChange={e =>
-                                setSettings({
-                                    ...settings,
-                                    dieselPrice: parseFloat(e.target.value) || 0
-                                })
-                            }
-                            className="input-field"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-muted mb-1">
-                            Consumo Diesel (km/L)
-                        </label>
-                        <input
-                            type="number"
-                            step="0.1"
-                            value={settings.dieselConsumption}
-                            onChange={e =>
-                                setSettings({
-                                    ...settings,
-                                    dieselConsumption: parseFloat(e.target.value) || 0
-                                })
-                            }
-                            className="input-field"
-                        />
-                    </div>
-                </div>
-
-                {/* Casa */}
-                <div>
-                    <label className="block text-muted mb-1">
-                        Prezzo Energia Casa (€/kWh)
-                    </label>
-                    <input
-                        type="number"
-                        step="0.001"
-                        value={settings.homeElectricityPrice}
-                        onChange={e =>
-                            setSettings({
-                                ...settings,
-                                homeElectricityPrice: parseFloat(e.target.value) || 0
-                            })
-                        }
-                        className="input-field"
-                    />
-                </div>
-            </div>
-
-            <button
-                onClick={saveSettings}
-                disabled={isSyncing}
-                className="btn btn-primary mt-6 w-full"
-            >
-                {isSyncing ? "💾 Salvataggio..." : "💾 Salva Impostazioni"}
-            </button>
-        </div>
-
-        {/* Fornitori */}
-        <div className="card">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-saving">
-                    🏪 Fornitori
-                </h2>
-
-                <button
-                    onClick={() => setShowAddSupplier(true)}
-                    className="btn btn-secondary px-3 py-1.5 text-sm"
-                >
-                    ➕ Aggiungi
-                </button>
-            </div>
-
-            {suppliers.length === 0 ? (
-                <p className="text-muted text-sm">
-                    Nessun fornitore configurato.
-                </p>
-            ) : (
-                <div className="space-y-3">
-                    {suppliers.map(s => (
-                        <div
-                            key={s.id}
-                            className="card-soft border border-card flex items-center justify-between px-3 py-2 text-sm"
-                        >
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-saving">
-                                        {s.name}
-                                    </span>
-                                    <span className="text-xs text-muted">
-                                        ({s.type})
-                                    </span>
+                                    <div>
+                                        <label className="block text-muted mb-1">
+                                            Consumo Benzina (km/L)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={settings.gasolineConsumption}
+                                            onChange={e =>
+                                                setSettings({
+                                                    ...settings,
+                                                    gasolineConsumption: parseFloat(e.target.value) || 0
+                                                })
+                                            }
+                                            className="input-field"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="text-xs text-muted mt-1">
-                                    Standard: €
-                                    {parseFloat(s.standard_cost || 0).toFixed(3)}
-                                    /kWh
+                                {/* Diesel */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-muted mb-1">
+                                            Prezzo Diesel (€/L)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={settings.dieselPrice}
+                                            onChange={e =>
+                                                setSettings({
+                                                    ...settings,
+                                                    dieselPrice: parseFloat(e.target.value) || 0
+                                                })
+                                            }
+                                            className="input-field"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-muted mb-1">
+                                            Consumo Diesel (km/L)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={settings.dieselConsumption}
+                                            onChange={e =>
+                                                setSettings({
+                                                    ...settings,
+                                                    dieselConsumption: parseFloat(e.target.value) || 0
+                                                })
+                                            }
+                                            className="input-field"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Casa */}
+                                <div>
+                                    <label className="block text-muted mb-1">
+                                        Prezzo Energia Casa (€/kWh)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.001"
+                                        value={settings.homeElectricityPrice}
+                                        onChange={e =>
+                                            setSettings({
+                                                ...settings,
+                                                homeElectricityPrice: parseFloat(e.target.value) || 0
+                                            })
+                                        }
+                                        className="input-field"
+                                    />
                                 </div>
                             </div>
 
-                            {s.name !== "Casa" && (
+                            <button
+                                onClick={saveSettings}
+                                disabled={isSyncing}
+                                className="btn btn-primary mt-6 w-full"
+                            >
+                                {isSyncing ? "💾 Salvataggio..." : "💾 Salva Impostazioni"}
+                            </button>
+                        </div>
+
+                        {/* Fornitori */}
+                        <div className="card">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold text-saving">
+                                    🏪 Fornitori
+                                </h2>
+
                                 <button
-                                    onClick={() => handleDeleteSupplier(s.id)}
-                                    disabled={isSyncing}
-                                    className="text-negative hover:text-negative/80 text-lg"
+                                    onClick={() => setShowAddSupplier(true)}
+                                    className="btn btn-secondary px-3 py-1.5 text-sm"
                                 >
-                                    🗑️
+                                    ➕ Aggiungi
                                 </button>
+                            </div>
+
+                            {suppliers.length === 0 ? (
+                                <p className="text-muted text-sm">
+                                    Nessun fornitore configurato.
+                                </p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {suppliers.map(s => (
+                                        <div
+                                            key={s.id}
+                                            className="card-soft border border-card flex items-center justify-between px-3 py-2 text-sm"
+                                        >
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-semibold text-saving">
+                                                        {s.name}
+                                                    </span>
+                                                    <span className="text-xs text-muted">
+                                                        ({s.type})
+                                                    </span>
+                                                </div>
+
+                                                <div className="text-xs text-muted mt-1">
+                                                    Standard: €
+                                                    {parseFloat(s.standard_cost || 0).toFixed(3)}
+                                                    /kWh
+                                                </div>
+                                            </div>
+
+                                            {s.name !== "Casa" && (
+                                                <button
+                                                    onClick={() => handleDeleteSupplier(s.id)}
+                                                    disabled={isSyncing}
+                                                    className="text-negative hover:text-negative/80 text-lg"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    </div>
-)}
+                    </div>
+                )}
 
 
                 {/* MODALE NUOVO FORNITORE */}
