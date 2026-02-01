@@ -80,6 +80,8 @@ const EVCostTracker = () => {
 
     const [chartsReady, setChartsReady] = useState(false);
 
+    console.log("view:", view);
+
     // ==========================================
     // CARICA DATI QUANDO SUPABASE È PRONTO
     // ==========================================
@@ -104,7 +106,7 @@ useEffect(() => {
         console.log("charges è vuoto, niente grafici");
         return;
     }
-
+console.log("view:", view);
     // Aspetta che il DOM monti i canvas
     const timeout = setTimeout(() => {
         const elCost = document.getElementById("chartCost");
