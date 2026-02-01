@@ -108,6 +108,16 @@ useEffect(() => {
     }
 console.log("view:", view);
     // Aspetta che il DOM monti i canvas
+
+    console.log("Canvas:", {
+  cost: document.getElementById("chartCost"),
+  kwh: document.getElementById("chartKwh"),
+  cons: document.getElementById("chartConsumption"),
+  eurKwh: document.getElementById("chartEurKwh"),
+  eur100: document.getElementById("chartEur100km")
+});
+
+    
     const timeout = setTimeout(() => {
         const elCost = document.getElementById("chartCost");
         const elKwh = document.getElementById("chartKwh");
