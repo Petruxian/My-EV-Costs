@@ -13,6 +13,9 @@ function CostChart({ charges }) {
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
 
+        const theme = document.body.getAttribute("data-theme");
+        const styles = getComputedStyle(document.body);
+
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
 
@@ -32,21 +35,21 @@ function CostChart({ charges }) {
                 datasets: [{
                     label: "Costo (€)",
                     data: costs,
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--accent-soft"),
-                    borderColor: getComputedStyle(document.body).getPropertyValue("--accent"),
+                    backgroundColor: styles.getPropertyValue("--accent-soft"),
+                    borderColor: styles.getPropertyValue("--accent"),
                     borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
-                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
+                    x: { ticks: { color: styles.getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: styles.getPropertyValue("--text-muted") } }
                 }
             }
         });
 
         return () => chartRef.current?.destroy();
-    }, [charges]);
+    }, [charges, document.body.getAttribute("data-theme")]);
 
     return (
         <div className="chart-card">
@@ -68,6 +71,9 @@ function KwhChart({ charges }) {
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
 
+        const theme = document.body.getAttribute("data-theme");
+        const styles = getComputedStyle(document.body);
+
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
 
@@ -87,21 +93,21 @@ function KwhChart({ charges }) {
                 datasets: [{
                     label: "kWh",
                     data: kwh,
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--info-soft"),
-                    borderColor: getComputedStyle(document.body).getPropertyValue("--info"),
+                    backgroundColor: styles.getPropertyValue("--info-soft"),
+                    borderColor: styles.getPropertyValue("--info"),
                     borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
-                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
+                    x: { ticks: { color: styles.getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: styles.getPropertyValue("--text-muted") } }
                 }
             }
         });
 
         return () => chartRef.current?.destroy();
-    }, [charges]);
+    }, [charges, document.body.getAttribute("data-theme")]);
 
     return (
         <div className="chart-card">
@@ -122,6 +128,9 @@ function ConsumptionChart({ charges }) {
 
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
+
+        const theme = document.body.getAttribute("data-theme");
+        const styles = getComputedStyle(document.body);
 
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
@@ -144,22 +153,22 @@ function ConsumptionChart({ charges }) {
                 datasets: [{
                     label: "kWh/100km",
                     data: consumption,
-                    borderColor: getComputedStyle(document.body).getPropertyValue("--info"),
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--info-soft"),
+                    borderColor: styles.getPropertyValue("--info"),
+                    backgroundColor: styles.getPropertyValue("--info-soft"),
                     tension: 0.3,
                     borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
-                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
+                    x: { ticks: { color: styles.getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: styles.getPropertyValue("--text-muted") } }
                 }
             }
         });
 
         return () => chartRef.current?.destroy();
-    }, [charges]);
+    }, [charges, document.body.getAttribute("data-theme")]);
 
     return (
         <div className="chart-card">
@@ -180,6 +189,9 @@ function EurKwhChart({ charges }) {
 
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
+
+        const theme = document.body.getAttribute("data-theme");
+        const styles = getComputedStyle(document.body);
 
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
@@ -202,22 +214,22 @@ function EurKwhChart({ charges }) {
                 datasets: [{
                     label: "€/kWh",
                     data: eurKwh,
-                    borderColor: getComputedStyle(document.body).getPropertyValue("--accent"),
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--accent-soft"),
+                    borderColor: styles.getPropertyValue("--accent"),
+                    backgroundColor: styles.getPropertyValue("--accent-soft"),
                     tension: 0.3,
                     borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
-                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
+                    x: { ticks: { color: styles.getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: styles.getPropertyValue("--text-muted") } }
                 }
             }
         });
 
         return () => chartRef.current?.destroy();
-    }, [charges]);
+    }, [charges, document.body.getAttribute("data-theme")]);
 
     return (
         <div className="chart-card">
@@ -238,6 +250,9 @@ function Eur100Chart({ charges }) {
 
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
+
+        const theme = document.body.getAttribute("data-theme");
+        const styles = getComputedStyle(document.body);
 
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
@@ -261,22 +276,22 @@ function Eur100Chart({ charges }) {
                 datasets: [{
                     label: "€/100 km",
                     data: eur100,
-                    borderColor: getComputedStyle(document.body).getPropertyValue("--warning"),
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--warning-soft"),
+                    borderColor: styles.getPropertyValue("--warning"),
+                    backgroundColor: styles.getPropertyValue("--warning-soft"),
                     tension: 0.3,
                     borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
-                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
+                    x: { ticks: { color: styles.getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: styles.getPropertyValue("--text-muted") } }
                 }
             }
         });
 
         return () => chartRef.current?.destroy();
-    }, [charges]);
+    }, [charges, document.body.getAttribute("data-theme")]);
 
     return (
         <div className="chart-card">

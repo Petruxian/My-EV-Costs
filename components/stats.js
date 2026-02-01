@@ -27,14 +27,15 @@ function calculateStats(charges, settings) {
         0
     );
 
-    const avgCostPerKwh =
-        totalKwh > 0 ? totalCost / totalKwh : 0;
+    const avgCostPerKwh = totalKwh > 0 ? totalCost / totalKwh : 0;
 
     // ============================
     // KM TOTALI PERCORSI
     // ============================
     const sortedByKm = [...charges].sort(
-        (a, b) => (parseFloat(a.total_km) || 0) - (parseFloat(b.total_km) || 0)
+        (a, b) =>
+            (parseFloat(a.total_km) || 0) -
+            (parseFloat(b.total_km) || 0)
     );
 
     const firstKm = parseFloat(sortedByKm[0].total_km) || 0;
@@ -56,17 +57,24 @@ function calculateStats(charges, settings) {
 
     charges.forEach(charge => {
         const gasPrice =
-            charge.saved_gasoline_price || settings.gasolinePrice;
+            parseFloat(charge.saved_gasoline_price) ||
+            parseFloat(settings.gasolinePrice);
+
         const diesPrice =
-            charge.saved_diesel_price || settings.dieselPrice;
+            parseFloat(charge.saved_diesel_price) ||
+            parseFloat(settings.dieselPrice);
 
         const gasCons =
-            charge.saved_gasoline_consumption || settings.gasolineConsumption;
+            parseFloat(charge.saved_gasoline_consumption) ||
+            parseFloat(settings.gasolineConsumption);
+
         const diesCons =
-            charge.saved_diesel_consumption || settings.dieselConsumption;
+            parseFloat(charge.saved_diesel_consumption) ||
+            parseFloat(settings.dieselConsumption);
+
+        const kwh = parseFloat(charge.kwh_added) || 0;
 
         // km stimati da questa ricarica
-        const kwh = parseFloat(charge.kwh_added) || 0;
         const estimatedKm =
             consumption > 0 ? (kwh / (consumption / 100)) : 0;
 
@@ -79,6 +87,9 @@ function calculateStats(charges, settings) {
         }
     });
 
+    // ============================
+    // RISULTATO
+    // ============================
     return {
         totalKwh: totalKwh.toFixed(2),
         totalCost: totalCost.toFixed(2),

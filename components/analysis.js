@@ -12,11 +12,14 @@ function calculateAdvancedAnalysis(charges) {
     if (!charges || charges.length === 0) return null;
 
     // Filtra solo ricariche con consumo valido
-    const valid = charges.filter(c =>
-        c.consumption &&
-        !isNaN(parseFloat(c.consumption)) &&
-        c.km_since_last > 0
-    );
+    const valid = charges.filter(c => {
+        const cons = parseFloat(c.consumption);
+        return (
+            !isNaN(cons) &&
+            cons > 0 &&
+            c.km_since_last > 0
+        );
+    });
 
     if (valid.length === 0) return null;
 
@@ -25,10 +28,12 @@ function calculateAdvancedAnalysis(charges) {
     const best = Math.min(...consumptions);
     const worst = Math.max(...consumptions);
 
-    const avg = consumptions.reduce((a, b) => a + b, 0) / consumptions.length;
+    const avg =
+        consumptions.reduce((a, b) => a + b, 0) / consumptions.length;
 
     const last5 = consumptions.slice(-5);
-    const avgLast5 = last5.reduce((a, b) => a + b, 0) / last5.length;
+    const avgLast5 =
+        last5.reduce((a, b) => a + b, 0) / last5.length;
 
     const trend = avgLast5 - avg; // negativo = miglioramento
 
@@ -80,18 +85,30 @@ function calculateForecast(charges) {
 
     if (last30.length === 0) return null;
 
-    const totalCost30 = last30.reduce((sum, c) => sum + parseFloat(c.cost || 0), 0);
-    const totalKwh30 = last30.reduce((sum, c) => sum + parseFloat(c.kwh_added || 0), 0);
-    const totalKm30 = last30.reduce((sum, c) => sum + (c.km_since_last || 0), 0);
+    const totalCost30 = last30.reduce(
+        (sum, c) => sum + (parseFloat(c.cost) || 0),
+        0
+    );
+
+    const totalKwh30 = last30.reduce(
+        (sum, c) => sum + (parseFloat(c.kwh_added) || 0),
+        0
+    );
+
+    const totalKm30 = last30.reduce(
+        (sum, c) => sum + (parseFloat(c.km_since_last) || 0),
+        0
+    );
 
     const avgCost = totalCost30 / last30.length;
     const avgKwh = totalKwh30 / last30.length;
     const avgKm = totalKm30 / last30.length;
 
-    // Trend basato sulle ultime 5 ricariche REALI (non invertite)
+    // Trend basato sulle ultime 5 ricariche REALI
     const last5 = charges.slice(-5);
     const avgCostLast5 =
-        last5.reduce((s, c) => s + parseFloat(c.cost || 0), 0) / last5.length;
+        last5.reduce((s, c) => s + (parseFloat(c.cost) || 0), 0) /
+        last5.length;
 
     const trend = avgCostLast5 - avgCost; // positivo = aumento
 
@@ -101,9 +118,13 @@ function calculateForecast(charges) {
     const forecastKm = avgKm * 8;
 
     let comment = "";
-    if (trend < -0.5) comment = "I costi stanno diminuendo rispetto al mese scorso.";
-    else if (trend < 0.2) comment = "Costi stabili rispetto al mese scorso.";
-    else comment = "I costi sono in leggero aumento, controlla le tariffe dei fornitori.";
+    if (trend < -0.5) {
+        comment = "I costi stanno diminuendo rispetto al mese scorso.";
+    } else if (trend < 0.2) {
+        comment = "Costi stabili rispetto al mese scorso.";
+    } else {
+        comment = "I costi sono in leggero aumento, controlla le tariffe dei fornitori.";
+    }
 
     return {
         forecastCost,
@@ -120,7 +141,9 @@ function calculateForecast(charges) {
 // BADGE DI EFFICIENZA PER OGNI RICARICA
 // ==========================================
 function getEfficiencyBadge(consumption, allConsumptions) {
-    if (!consumption || allConsumptions.length < 4) {
+    const cons = parseFloat(consumption);
+
+    if (!cons || allConsumptions.length < 4) {
         return {
             label: "N/D",
             color: "text-slate-400",
@@ -128,11 +151,23 @@ function getEfficiencyBadge(consumption, allConsumptions) {
         };
     }
 
-    const sorted = [...allConsumptions].sort((a, b) => a - b);
+    const sorted = [...allConsumptions]
+        .map(n => parseFloat(n))
+        .filter(n => !isNaN(n))
+        .sort((a, b) => a - b);
+
+    if (sorted.length < 4) {
+        return {
+            label: "N/D",
+            color: "text-slate-400",
+            bg: "bg-slate-700/40"
+        };
+    }
+
     const q1 = sorted[Math.floor(sorted.length * 0.25)];
     const q3 = sorted[Math.floor(sorted.length * 0.75)];
 
-    if (consumption <= q1) {
+    if (cons <= q1) {
         return {
             label: "Top",
             color: "text-emerald-400",
@@ -140,7 +175,7 @@ function getEfficiencyBadge(consumption, allConsumptions) {
         };
     }
 
-    if (consumption >= q3) {
+    if (cons >= q3) {
         return {
             label: "Alto",
             color: "text-red-400",
