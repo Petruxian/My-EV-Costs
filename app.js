@@ -23,7 +23,8 @@ function EVCostTracker() {
         gasolineConsumption: 15,
         dieselPrice: 1.8,
         dieselConsumption: 18,
-        homeElectricityPrice: 0.25
+        homeElectricityPrice: 0.25,
+        theme: "theme-default"
     });
 
     const [newCharge, setNewCharge] = React.useState({
@@ -52,17 +53,29 @@ function EVCostTracker() {
     });
 
     // ==========================================
-    // LOAD SETTINGS (localStorage)
+    // LOAD SETTINGS UNA SOLA VOLTA
     // ==========================================
     React.useEffect(() => {
         try {
             const saved = localStorage.getItem("ev_settings");
-            if (saved) setSettings(JSON.parse(saved));
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                setSettings(parsed);
+
+                // Applica tema salvato
+                document.body.className = parsed.theme || "theme-default";
+            } else {
+                document.body.className = "theme-default";
+            }
         } catch (e) {
             console.warn("Impossibile leggere le impostazioni", e);
+            document.body.className = "theme-default";
         }
     }, []);
 
+    // ==========================================
+    // SALVA SETTINGS
+    // ==========================================
     React.useEffect(() => {
         try {
             localStorage.setItem("ev_settings", JSON.stringify(settings));
@@ -71,25 +84,14 @@ function EVCostTracker() {
         }
     }, [settings]);
 
+    // ==========================================
+    // APPLICA TEMA QUANDO CAMBIA
+    // ==========================================
     React.useEffect(() => {
-        const saved = localStorage.getItem("ev_settings");
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            setSettings(parsed);
-
-            // Applica il tema salvato al body
-            if (parsed.theme) {
-                document.body.className = parsed.theme;
-            } else {
-                document.body.className = "theme-default";
-            }
-        } else {
-            document.body.className = "theme-default";
+        if (settings.theme) {
+            document.body.className = settings.theme;
         }
-    }, []);
-
-
-
+    }, [settings.theme]);
 
     // ==========================================
     // LOAD DATA (Supabase)
