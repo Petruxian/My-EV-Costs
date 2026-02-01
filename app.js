@@ -74,8 +74,11 @@ function EVCostTracker() {
     React.useEffect(() => {
         if (settings.theme) {
             document.body.className = settings.theme;
+        } else {
+            document.body.className = "theme-default";
         }
     }, []);
+
 
 
     // ==========================================
