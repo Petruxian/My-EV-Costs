@@ -1,6 +1,6 @@
 /* ============================================================
-   EV COST TRACKER — STYLESHEET COMPLETO
-   10 Temi coerenti + Ottimizzazione iPhone + UI moderna
+   EV COST TRACKER — STYLESHEET COMPLETO (VERSIONE DEFINITIVA)
+   10 Temi coerenti + UI moderna + classi semantiche
    ============================================================ */
 
 /* ------------------------------------------------------------
@@ -14,10 +14,12 @@ body {
         Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     transition: background 0.3s ease, color 0.3s ease;
+    background: var(--bg);
+    color: var(--text);
 }
 
 /* ------------------------------------------------------------
-   1) CLASSI UI GLOBALI
+   1) CARD & SUPERFICI
    ------------------------------------------------------------ */
 
 .card {
@@ -36,6 +38,18 @@ body {
     border-radius: 1rem;
     padding: 1rem;
 }
+
+.bg-card { background: var(--card); }
+.bg-card-soft { background: var(--card-soft); }
+.border-card { border-color: var(--card-border); }
+
+.hover-card:hover {
+    background: var(--card-soft);
+}
+
+/* ------------------------------------------------------------
+   2) BOTTONI
+   ------------------------------------------------------------ */
 
 .btn {
     padding: 0.6rem 1.2rem;
@@ -64,6 +78,10 @@ body {
     color: var(--danger-text);
 }
 
+/* ------------------------------------------------------------
+   3) TOGGLE BUTTONS
+   ------------------------------------------------------------ */
+
 .toggle-btn {
     padding: 4px 12px;
     border-radius: 9999px;
@@ -78,6 +96,10 @@ body {
     color: var(--btn-text);
 }
 
+/* ------------------------------------------------------------
+   4) BADGE EFFICIENZA
+   ------------------------------------------------------------ */
+
 .badge {
     padding: 2px 8px;
     border-radius: 6px;
@@ -87,20 +109,12 @@ body {
     line-height: 1.2;
 }
 
-.badge-top {
-    background: var(--badge-top-bg);
-    color: var(--badge-top-text);
-}
+/* I colori vengono applicati dinamicamente via JS:
+   badge.bg + badge.color */
 
-.badge-high {
-    background: var(--badge-high-bg);
-    color: var(--badge-high-text);
-}
-
-.badge-normal {
-    background: var(--badge-normal-bg);
-    color: var(--badge-normal-text);
-}
+/* ------------------------------------------------------------
+   5) MODALI
+   ------------------------------------------------------------ */
 
 .modal-backdrop {
     background: rgba(0, 0, 0, 0.7);
@@ -116,7 +130,41 @@ body {
 }
 
 /* ------------------------------------------------------------
-   2) GRAFICI
+   6) INPUT FIELD (SEMANTICO)
+   ------------------------------------------------------------ */
+
+.input-field {
+    width: 100%;
+    background: var(--card-soft);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 2px var(--accent-2);
+}
+
+/* ------------------------------------------------------------
+   7) TESTI SEMANTICI
+   ------------------------------------------------------------ */
+
+.text-primary { color: var(--text); }
+.text-muted { color: var(--text-muted, rgba(148, 163, 184, 0.7)); }
+.text-subtle { color: var(--text-subtle, rgba(148, 163, 184, 0.5)); }
+
+.text-saving { color: var(--saving-color, #4ade80); }
+.text-negative { color: var(--negative-color, #f87171); }
+.text-kwh { color: var(--kwh-color, #22d3ee); }
+.text-km { color: var(--km-color, #60a5fa); }
+.text-forecast { color: var(--forecast-color, #c084fc); }
+
+/* ------------------------------------------------------------
+   8) GRAFICI
    ------------------------------------------------------------ */
 
 canvas {
@@ -139,34 +187,48 @@ canvas {
 }
 
 /* ------------------------------------------------------------
-   3) OTTIMIZZAZIONE iPHONE
+   9) ANIMAZIONI
+   ------------------------------------------------------------ */
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------------------------------------------------
+   10) OTTIMIZZAZIONE iPHONE
    ------------------------------------------------------------ */
 
 @media (max-width: 480px) {
-    body {
-        font-size: 15px;
-    }
-    .card {
-        padding: 1rem;
-        border-radius: 0.9rem;
-    }
+    body { font-size: 15px; }
+
+    .card { padding: 1rem; border-radius: 0.9rem; }
+
     .modal-panel {
         padding: 1.25rem;
         max-width: 90%;
     }
+
     .btn {
         padding: 0.8rem 1.2rem;
         font-size: 1rem;
     }
+
     canvas {
         height: 260px !important;
     }
 }
 
 /* ------------------------------------------------------------
-   4) TEMI (10 temi coerenti)
-   Ogni tema definisce solo variabili CSS
+   11) TEMI (10 TEMI COMPLETI)
    ------------------------------------------------------------ */
+
+/* Ogni tema definisce SOLO variabili CSS.
+   Tutto il resto della UI usa classi semantiche. */
 
 /* 1) DEFAULT */
 .theme-default {
@@ -176,68 +238,77 @@ canvas {
     --card-soft: rgba(15, 23, 42, 0.5);
     --card-border: rgba(148, 163, 184, 0.25);
     --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
     --accent: linear-gradient(to right, #10b981, #06b6d4);
     --accent-2: #06b6d4;
+
     --btn-text: #0f172a;
     --btn-secondary: rgba(51, 65, 85, 0.6);
     --btn-danger: rgba(239, 68, 68, 0.2);
     --danger-text: #f87171;
+
     --toggle-bg: rgba(30, 41, 59, 0.6);
     --toggle-border: rgba(71, 85, 105, 0.6);
-    --badge-top-bg: rgba(16, 185, 129, 0.2);
-    --badge-top-text: #34d399;
-    --badge-high-bg: rgba(239, 68, 68, 0.2);
-    --badge-high-text: #f87171;
-    --badge-normal-bg: rgba(234, 179, 8, 0.2);
-    --badge-normal-text: #facc15;
+
+    --saving-color: #4ade80;
+    --negative-color: #f87171;
+    --kwh-color: #22d3ee;
+    --km-color: #60a5fa;
+    --forecast-color: #c084fc;
 }
 
 /* 2) DARK */
 .theme-dark {
-    --bg: #000000;
+    --bg: #000;
     --text: #e5e5e5;
-    --card: #111111;
+    --card: #111;
     --card-soft: #1a1a1a;
     --card-border: #222;
     --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+
     --accent: #84cc16;
     --accent-2: #bef264;
+
     --btn-text: #000;
     --btn-secondary: #222;
     --btn-danger: #450a0a;
     --danger-text: #f87171;
+
     --toggle-bg: #1a1a1a;
     --toggle-border: #333;
-    --badge-top-bg: #14532d;
-    --badge-top-text: #86efac;
-    --badge-high-bg: #450a0a;
-    --badge-high-text: #fca5a5;
-    --badge-normal-bg: #422006;
-    --badge-normal-text: #fcd34d;
+
+    --saving-color: #4ade80;
+    --negative-color: #f87171;
+    --kwh-color: #22d3ee;
+    --km-color: #60a5fa;
+    --forecast-color: #c084fc;
 }
 
 /* 3) LIGHT */
 .theme-light {
     --bg: #f8fafc;
     --text: #1e293b;
-    --card: #ffffff;
+    --card: #fff;
     --card-soft: #f1f5f9;
     --card-border: #cbd5e1;
     --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
     --accent: #0ea5e9;
     --accent-2: #38bdf8;
-    --btn-text: #ffffff;
+
+    --btn-text: #fff;
     --btn-secondary: #e2e8f0;
     --btn-danger: #fee2e2;
     --danger-text: #b91c1c;
+
     --toggle-bg: #e2e8f0;
     --toggle-border: #cbd5e1;
-    --badge-top-bg: #d1fae5;
-    --badge-top-text: #047857;
-    --badge-high-bg: #fee2e2;
-    --badge-high-text: #b91c1c;
-    --badge-normal-bg: #fef9c3;
-    --badge-normal-text: #b45309;
+
+    --saving-color: #059669;
+    --negative-color: #dc2626;
+    --kwh-color: #0284c7;
+    --km-color: #2563eb;
+    --forecast-color: #7c3aed;
 }
 
 /* 4) EMERALD */
@@ -248,20 +319,23 @@ canvas {
     --card-soft: rgba(6, 95, 70, 0.5);
     --card-border: rgba(52, 211, 153, 0.3);
     --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+
     --accent: #34d399;
     --accent-2: #6ee7b7;
+
     --btn-text: #064e3b;
     --btn-secondary: rgba(16, 185, 129, 0.2);
     --btn-danger: rgba(239, 68, 68, 0.2);
     --danger-text: #fee2e2;
+
     --toggle-bg: rgba(6, 95, 70, 0.5);
     --toggle-border: rgba(52, 211, 153, 0.4);
-    --badge-top-bg: rgba(16, 185, 129, 0.3);
-    --badge-top-text: #ecfdf5;
-    --badge-high-bg: rgba(239, 68, 68, 0.3);
-    --badge-high-text: #fee2e2;
-    --badge-normal-bg: rgba(234, 179, 8, 0.3);
-    --badge-normal-text: #fef9c3;
+
+    --saving-color: #34d399;
+    --negative-color: #f87171;
+    --kwh-color: #22d3ee;
+    --km-color: #60a5fa;
+    --forecast-color: #c084fc;
 }
 
 /* 5) NEON */
@@ -272,20 +346,23 @@ canvas {
     --card-soft: rgba(112, 26, 117, 0.4);
     --card-border: rgba(216, 180, 254, 0.4);
     --card-shadow: 0 8px 24px rgba(112, 26, 117, 0.5);
+
     --accent: #d946ef;
     --accent-2: #a855f7;
+
     --btn-text: #1a002b;
     --btn-secondary: rgba(112, 26, 117, 0.3);
     --btn-danger: rgba(244, 63, 94, 0.3);
     --danger-text: #fecdd3;
+
     --toggle-bg: rgba(88, 28, 135, 0.4);
     --toggle-border: rgba(216, 180, 254, 0.4);
-    --badge-top-bg: rgba(168, 85, 247, 0.3);
-    --badge-top-text: #f5f3ff;
-    --badge-high-bg: rgba(244, 63, 94, 0.3);
-    --badge-high-text: #fecdd3;
-    --badge-normal-bg: rgba(234, 179, 8, 0.3);
-    --badge-normal-text: #fef9c3;
+
+    --saving-color: #d946ef;
+    --negative-color: #f87171;
+    --kwh-color: #22d3ee;
+    --km-color: #60a5fa;
+    --forecast-color: #c084fc;
 }
 
 /* 6) NORD */
@@ -296,20 +373,23 @@ canvas {
     --card-soft: #434c5e;
     --card-border: #4c566a;
     --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+
     --accent: #88c0d0;
     --accent-2: #81a1c1;
+
     --btn-text: #2e3440;
     --btn-secondary: #4c566a;
     --btn-danger: #bf616a;
     --danger-text: #ffe4e6;
+
     --toggle-bg: #434c5e;
     --toggle-border: #4c566a;
-    --badge-top-bg: #a3be8c;
-    --badge-top-text: #2e3440;
-    --badge-high-bg: #bf616a;
-    --badge-high-text: #ffe4e6;
-    --badge-normal-bg: #ebcb8b;
-    --badge-normal-text: #2e3440;
+
+    --saving-color: #a3be8c;
+    --negative-color: #bf616a;
+    --kwh-color: #88c0d0;
+    --km-color: #81a1c1;
+    --forecast-color: #ebcb8b;
 }
 
 /* 7) SOLARIZED */
@@ -320,20 +400,23 @@ canvas {
     --card-soft: #e1d9c6;
     --card-border: #d6cbb8;
     --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
     --accent: #268bd2;
     --accent-2: #2aa198;
+
     --btn-text: #ffffff;
     --btn-secondary: #e1d9c6;
     --btn-danger: #fce8e6;
     --danger-text: #dc322f;
+
     --toggle-bg: #e1d9c6;
     --toggle-border: #d6cbb8;
-    --badge-top-bg: #d1fae5;
-    --badge-top-text: #047857;
-    --badge-high-bg: #fee2e2;
-    --badge-high-text: #b91c1c;
-    --badge-normal-bg: #fef9c3;
-    --badge-normal-text: #b45309;
+
+    --saving-color: #047857;
+    --negative-color: #dc322f;
+    --kwh-color: #268bd2;
+    --km-color: #2aa198;
+    --forecast-color: #b58900;
 }
 
 /* 8) MATERIAL */
@@ -344,20 +427,23 @@ canvas {
     --card-soft: #3730a3;
     --card-border: #4338ca;
     --card-shadow: 0 8px 24px rgba(49, 46, 129, 0.5);
+
     --accent: #6366f1;
     --accent-2: #818cf8;
+
     --btn-text: #ffffff;
     --btn-secondary: #4338ca;
     --btn-danger: #fca5a5;
     --danger-text: #7f1d1d;
+
     --toggle-bg: #3730a3;
     --toggle-border: #4338ca;
-    --badge-top-bg: #818cf8;
-    --badge-top-text: #1e1b4b;
-    --badge-high-bg: #fca5a5;
-    --badge-high-text: #7f1d1d;
-    --badge-normal-bg: #fde68a;
-    --badge-normal-text: #78350f;
+
+    --saving-color: #818cf8;
+    --negative-color: #fca5a5;
+    --kwh-color: #6366f1;
+    --km-color: #818cf8;
+    --forecast-color: #fde68a;
 }
 
 /* 9) CYBER */
@@ -368,20 +454,23 @@ canvas {
     --card-soft: #002200;
     --card-border: #00ff41;
     --card-shadow: 0 8px 24px rgba(0, 255, 65, 0.3);
+
     --accent: #00ff41;
     --accent-2: #00cc33;
+
     --btn-text: #000000;
     --btn-secondary: #003300;
     --btn-danger: #330000;
     --danger-text: #ff6666;
+
     --toggle-bg: #002200;
     --toggle-border: #00ff41;
-    --badge-top-bg: #003300;
-    --badge-top-text: #00ff41;
-    --badge-high-bg: #330000;
-    --badge-high-text: #ff6666;
-    --badge-normal-bg: #332200;
-    --badge-normal-text: #ffcc66;
+
+    --saving-color: #00ff41;
+    --negative-color: #ff6666;
+    --kwh-color: #00cc33;
+    --km-color: #00ff41;
+    --forecast-color: #ffcc66;
 }
 
 /* 10) SUNSET */
@@ -392,27 +481,14 @@ canvas {
     --card-soft: rgba(112, 26, 117, 0.4);
     --card-border: rgba(244, 114, 182, 0.4);
     --card-shadow: 0 8px 24px rgba(244, 114, 182, 0.4);
+
     --accent: #f472b6;
     --accent-2: #fb7185;
+
     --btn-text: #2e0f3a;
     --btn-secondary: rgba(244, 114, 182, 0.2);
     --btn-danger: rgba(244, 63, 94, 0.3);
     --danger-text: #fecdd3;
+
     --toggle-bg: rgba(88, 28, 135, 0.4);
-    --toggle-border: rgba(244, 114, 182, 0.4);
-    --badge-top-bg: rgba(244, 114, 182, 0.3);
-    --badge-top-text: #ffe4e6;
-    --badge-high-bg: rgba(244, 63, 94, 0.3);
-    --badge-high-text: #fecdd3;
-    --badge-normal-bg: rgba(234, 179, 8, 0.3);
-    --badge-normal-text: #fef9c3;
-}
-
-/* ------------------------------------------------------------
-   5) APPLICAZIONE TEMA
-   ------------------------------------------------------------ */
-
-body {
-    background: var(--bg);
-    color: var(--text);
-}
+    --toggle-border: rgba(244, 114,
