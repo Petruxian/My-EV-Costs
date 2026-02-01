@@ -72,21 +72,21 @@ function EVCostTracker() {
     }, [settings]);
 
     React.useEffect(() => {
-    const saved = localStorage.getItem("ev_settings");
-    if (saved) {
-        const parsed = JSON.parse(saved);
-        setSettings(parsed);
+        const saved = localStorage.getItem("ev_settings");
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            setSettings(parsed);
 
-        // Applica il tema salvato al body
-        if (parsed.theme) {
-            document.body.className = parsed.theme;
+            // Applica il tema salvato al body
+            if (parsed.theme) {
+                document.body.className = parsed.theme;
+            } else {
+                document.body.className = "theme-default";
+            }
         } else {
             document.body.className = "theme-default";
         }
-    } else {
-        document.body.className = "theme-default";
-    }
-}, []);
+    }, []);
 
 
 
@@ -706,12 +706,12 @@ function EVCostTracker() {
                             </h2>
 
                             {/* Selettore Tema */}
-                            <div className="mb-4">
+                            <div className="mb-6">
                                 <label className="block text-muted mb-1">Tema</label>
                                 <select
                                     className="input-field"
                                     value={settings.theme || "theme-default"}
-                                    onChange={e => {
+                                    onChange={(e) => {
                                         const theme = e.target.value;
                                         document.body.className = theme;
                                         setSettings({ ...settings, theme });
@@ -729,6 +729,7 @@ function EVCostTracker() {
                                     <option value="theme-sunset">Sunset</option>
                                 </select>
                             </div>
+
 
                             <div className="space-y-4 text-sm">
 
