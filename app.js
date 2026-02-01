@@ -72,12 +72,22 @@ function EVCostTracker() {
     }, [settings]);
 
     React.useEffect(() => {
-        if (settings.theme) {
-            document.body.className = settings.theme;
+    const saved = localStorage.getItem("ev_settings");
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        setSettings(parsed);
+
+        // Applica il tema salvato al body
+        if (parsed.theme) {
+            document.body.className = parsed.theme;
         } else {
             document.body.className = "theme-default";
         }
-    }, []);
+    } else {
+        document.body.className = "theme-default";
+    }
+}, []);
+
 
 
 
