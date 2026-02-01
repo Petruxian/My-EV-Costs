@@ -14,6 +14,14 @@ const EVCostTracker = () => {
         gasolineConsumption: 15,
         dieselConsumption: 18
     });
+    const [chartOptions, setChartOptions] = useState({
+        showCost: true,
+        showKwh: true,
+        showConsumption: true,
+        showEurKwh: true,
+        showEur100km: true,
+    });
+
 
     const [view, setView] = useState("dashboard");
     const [isLoading, setIsLoading] = useState(true);
@@ -1518,6 +1526,59 @@ const EVCostTracker = () => {
 
                 {view === "charts" && (
                     <div className="animate-fade-in space-y-10">
+
+                        <div className="flex flex-wrap gap-2 mb-4 text-xs">
+                            <button
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showCost ? "bg-emerald-600/30 border-emerald-400" : "bg-slate-800 border-slate-600"
+                                    }`}
+                                onClick={() =>
+                                    setChartOptions(o => ({ ...o, showCost: !o.showCost }))
+                                }
+                            >
+                                💵 Costo
+                            </button>
+
+                            <button
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showKwh ? "bg-cyan-600/30 border-cyan-400" : "bg-slate-800 border-slate-600"
+                                    }`}
+                                onClick={() =>
+                                    setChartOptions(o => ({ ...o, showKwh: !o.showKwh }))
+                                }
+                            >
+                                ⚡ kWh
+                            </button>
+
+                            <button
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showConsumption ? "bg-blue-600/30 border-blue-400" : "bg-slate-800 border-slate-600"
+                                    }`}
+                                onClick={() =>
+                                    setChartOptions(o => ({ ...o, showConsumption: !o.showConsumption }))
+                                }
+                            >
+                                🚗 Consumo
+                            </button>
+
+                            <button
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showEurKwh ? "bg-violet-600/30 border-violet-400" : "bg-slate-800 border-slate-600"
+                                    }`}
+                                onClick={() =>
+                                    setChartOptions(o => ({ ...o, showEurKwh: !o.showEurKwh }))
+                                }
+                            >
+                                💰 €/kWh
+                            </button>
+
+                            <button
+                                className={`px-3 py-1 rounded-full border ${chartOptions.showEur100km ? "bg-amber-600/30 border-amber-400" : "bg-slate-800 border-slate-600"
+                                    }`}
+                                onClick={() =>
+                                    setChartOptions(o => ({ ...o, showEur100km: !o.showEur100km }))
+                                }
+                            >
+                                🪙 €/100 km
+                            </button>
+                        </div>
+
 
                         <h2 className="text-2xl font-bold text-emerald-400 mb-6 flex items-center gap-2">
                             ⚡📈 Grafici delle Ricariche
