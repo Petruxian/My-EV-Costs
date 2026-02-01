@@ -9,6 +9,22 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ==========================================
+// TEMA UI – DEFINIZIONE LISTA TEMI
+// ==========================================
+const UI_THEMES = [
+    { id: "theme-default", label: "Default" },
+    { id: "theme-dark", label: "Dark" },
+    { id: "theme-light", label: "Light" },
+    { id: "theme-emerald", label: "Emerald" },
+    { id: "theme-neon", label: "Neon" },
+    { id: "theme-nord", label: "Nord" },
+    { id: "theme-solarized", label: "Solarized" },
+    { id: "theme-material", label: "Material" },
+    { id: "theme-cyber", label: "Cyber" },
+    { id: "theme-sunset", label: "Sunset" }
+];
+
+// ==========================================
 // COMPONENTE PRINCIPALE
 // ==========================================
 function EVCostTracker() {
@@ -23,7 +39,8 @@ function EVCostTracker() {
         gasolineConsumption: 15,
         dieselPrice: 1.8,
         dieselConsumption: 18,
-        homeElectricityPrice: 0.25
+        homeElectricityPrice: 0.25,
+        uiTheme: "theme-default"
     });
 
     const [newCharge, setNewCharge] = React.useState({
@@ -58,7 +75,12 @@ function EVCostTracker() {
         try {
             const saved = localStorage.getItem("ev_settings");
             if (saved) {
-                setSettings(JSON.parse(saved));
+                const parsed = JSON.parse(saved);
+                setSettings(prev => ({
+                    ...prev,
+                    ...parsed,
+                    uiTheme: parsed.uiTheme || "theme-default"
+                }));
             }
         } catch (e) {
             console.warn("Impossibile leggere le impostazioni da localStorage", e);
@@ -72,6 +94,13 @@ function EVCostTracker() {
             console.warn("Impossibile salvare le impostazioni su localStorage", e);
         }
     }, [settings]);
+
+    // ==========================================
+    // APPLICAZIONE TEMA AL BODY
+    // ==========================================
+    React.useEffect(() => {
+        document.body.className = settings.uiTheme || "theme-default";
+    }, [settings.uiTheme]);
 
     // ==========================================
     // LOAD DATA (Supabase)
@@ -115,7 +144,6 @@ function EVCostTracker() {
             settings,
             charges // ← serve per calcolare km_since_last
         );
-
 
         if (ok) {
             setShowAddCharge(false);
@@ -202,7 +230,7 @@ function EVCostTracker() {
     // RENDER PRINCIPALE
     // ==========================================
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 text-white font-sans">
+        <div className="min-h-screen text-white font-sans">
 
             {/* HEADER */}
             <header className="bg-black/30 backdrop-blur-md border-b border-emerald-500/20 sticky top-0 z-50">
@@ -635,7 +663,6 @@ function EVCostTracker() {
                                                             ).toFixed(3)}
                                                             /kWh):
                                                         </span>
-
                                                         <span
                                                             className={`font-semibold ${parseFloat(charge.cost_difference) > 0
                                                                     ? "text-red-400"
@@ -743,7 +770,6 @@ function EVCostTracker() {
                                             className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-white"
                                         />
                                     </div>
-
                                     <div>
                                         <label className="block text-slate-300 mb-1">
                                             Consumo Diesel (km/L)
@@ -795,59 +821,93 @@ function EVCostTracker() {
                         </div>
 
                         {/* Fornitori */}
-                        <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4 md:p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold text-emerald-400">
-                                    🏪 Fornitori
-                                </h2>
-                                <button
-                                    onClick={() => setShowAddSupplier(true)}
-                                    className="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-sm"
-                                >
-                                    ➕ Aggiungi
-                                </button>
+                        <div className="space-y-6">
+                            <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4 md:p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-bold text-emerald-400">
+                                        🏪 Fornitori
+                                    </h2>
+                                    <button
+                                        onClick={() => setShowAddSupplier(true)}
+                                        className="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-sm"
+                                    >
+                                        ➕ Aggiungi
+                                    </button>
+                                </div>
+
+                                {suppliers.length === 0 ? (
+                                    <p className="text-slate-400 text-sm">
+                                        Nessun fornitore configurato.
+                                    </p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {suppliers.map(s => (
+                                            <div
+                                                key={s.id}
+                                                className="flex items-center justify-between bg-slate-900/60 border border-slate-700/80 rounded-xl px-3 py-2 text-sm"
+                                            >
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-emerald-300">
+                                                            {s.name}
+                                                        </span>
+                                                        <span className="text-xs text-slate-400">
+                                                            ({s.type})
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs text-slate-400 mt-1">
+                                                        Standard: €
+                                                        {parseFloat(s.standard_cost || 0).toFixed(3)}
+                                                        /kWh
+                                                    </div>
+                                                </div>
+
+                                                {s.name !== "Casa" && (
+                                                    <button
+                                                        onClick={() => handleDeleteSupplier(s.id)}
+                                                        disabled={isSyncing}
+                                                        className="text-red-400 hover:text-red-300 text-lg"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
-                            {suppliers.length === 0 ? (
-                                <p className="text-slate-400 text-sm">
-                                    Nessun fornitore configurato.
-                                </p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {suppliers.map(s => (
-                                        <div
-                                            key={s.id}
-                                            className="flex items-center justify-between bg-slate-900/60 border border-slate-700/80 rounded-xl px-3 py-2 text-sm"
-                                        >
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-emerald-300">
-                                                        {s.name}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400">
-                                                        ({s.type})
-                                                    </span>
-                                                </div>
-                                                <div className="text-xs text-slate-400 mt-1">
-                                                    Standard: €
-                                                    {parseFloat(s.standard_cost || 0).toFixed(3)}
-                                                    /kWh
-                                                </div>
-                                            </div>
+                            {/* TEMA UI */}
+                            <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4 md:p-6">
+                                <h2 className="text-xl font-bold text-emerald-400 mb-4">
+                                    🎨 Tema UI
+                                </h2>
 
-                                            {s.name !== "Casa" && (
-                                                <button
-                                                    onClick={() => handleDeleteSupplier(s.id)}
-                                                    disabled={isSyncing}
-                                                    className="text-red-400 hover:text-red-300 text-lg"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            )}
-                                        </div>
+                                <p className="text-sm text-slate-300 mb-3">
+                                    Scegli il tema grafico dell’app. Il tema viene salvato e riapplicato automaticamente.
+                                </p>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                                    {UI_THEMES.map(theme => (
+                                        <button
+                                            key={theme.id}
+                                            onClick={() =>
+                                                setSettings(prev => ({
+                                                    ...prev,
+                                                    uiTheme: theme.id
+                                                }))
+                                            }
+                                            className={`px-3 py-2 rounded-lg border text-left transition-all ${
+                                                settings.uiTheme === theme.id
+                                                    ? "bg-emerald-500 text-slate-900 border-emerald-400 font-semibold"
+                                                    : "bg-slate-900/60 border-slate-700 hover:bg-slate-800"
+                                            }`}
+                                        >
+                                            {theme.label}
+                                        </button>
                                     ))}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 )}

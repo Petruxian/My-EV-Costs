@@ -22,8 +22,8 @@ function AddChargeModal({
     );
 
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 sm:p-6 max-w-md w-full border border-emerald-500/20 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+            <div className="modal-panel max-w-md w-full">
 
                 <h2 className="text-2xl font-bold mb-6 text-emerald-400">
                     ➕ Nuova Ricarica
@@ -144,8 +144,8 @@ function AddSupplierModal({
     onSave
 }) {
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 sm:p-6 max-w-md w-full border border-emerald-500/20 shadow-2xl">
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+            <div className="modal-panel max-w-md w-full">
 
                 <h2 className="text-2xl font-bold mb-6 text-emerald-400">
                     ➕ Nuovo Fornitore

@@ -32,13 +32,15 @@ function CostChart({ charges }) {
                 datasets: [{
                     label: "Costo (€)",
                     data: costs,
-                    backgroundColor: "rgba(16,185,129,0.5)"
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--accent-soft"),
+                    borderColor: getComputedStyle(document.body).getPropertyValue("--accent"),
+                    borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: "#cbd5e1" } },
-                    y: { ticks: { color: "#cbd5e1" } }
+                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
                 }
             }
         });
@@ -85,13 +87,15 @@ function KwhChart({ charges }) {
                 datasets: [{
                     label: "kWh",
                     data: kwh,
-                    backgroundColor: "rgba(6,182,212,0.5)"
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--info-soft"),
+                    borderColor: getComputedStyle(document.body).getPropertyValue("--info"),
+                    borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: "#cbd5e1" } },
-                    y: { ticks: { color: "#cbd5e1" } }
+                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
                 }
             }
         });
@@ -140,15 +144,16 @@ function ConsumptionChart({ charges }) {
                 datasets: [{
                     label: "kWh/100km",
                     data: consumption,
-                    borderColor: "#3b82f6",
-                    backgroundColor: "rgba(59,130,246,0.2)",
-                    tension: 0.3
+                    borderColor: getComputedStyle(document.body).getPropertyValue("--info"),
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--info-soft"),
+                    tension: 0.3,
+                    borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: "#cbd5e1" } },
-                    y: { ticks: { color: "#cbd5e1" } }
+                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
                 }
             }
         });
@@ -197,15 +202,16 @@ function EurKwhChart({ charges }) {
                 datasets: [{
                     label: "€/kWh",
                     data: eurKwh,
-                    borderColor: "#a855f7",
-                    backgroundColor: "rgba(168,85,247,0.2)",
-                    tension: 0.3
+                    borderColor: getComputedStyle(document.body).getPropertyValue("--accent"),
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--accent-soft"),
+                    tension: 0.3,
+                    borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: "#cbd5e1" } },
-                    y: { ticks: { color: "#cbd5e1" } }
+                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
                 }
             }
         });
@@ -255,15 +261,16 @@ function Eur100Chart({ charges }) {
                 datasets: [{
                     label: "€/100 km",
                     data: eur100,
-                    borderColor: "#fbbf24",
-                    backgroundColor: "rgba(251,191,36,0.2)",
-                    tension: 0.3
+                    borderColor: getComputedStyle(document.body).getPropertyValue("--warning"),
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue("--warning-soft"),
+                    tension: 0.3,
+                    borderWidth: 2
                 }]
             },
             options: {
                 scales: {
-                    x: { ticks: { color: "#cbd5e1" } },
-                    y: { ticks: { color: "#cbd5e1" } }
+                    x: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } },
+                    y: { ticks: { color: getComputedStyle(document.body).getPropertyValue("--text-muted") } }
                 }
             }
         });
@@ -278,28 +285,3 @@ function Eur100Chart({ charges }) {
         </div>
     );
 }
-
-
-
-// ===============================
-// STILI MINIMI PER I CHART CARD
-// (opzionali, ma utili)
-// ===============================
-const style = document.createElement("style");
-style.innerHTML = `
-.chart-card {
-    background: rgba(30,41,59,0.6);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(148,163,184,0.3);
-    border-radius: 1rem;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-}
-.chart-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #a7f3d0;
-    margin-bottom: 0.75rem;
-}
-`;
-document.head.appendChild(style);
