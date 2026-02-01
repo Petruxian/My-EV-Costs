@@ -71,6 +71,13 @@ function EVCostTracker() {
         }
     }, [settings]);
 
+    React.useEffect(() => {
+        if (settings.theme) {
+            document.body.className = settings.theme;
+        }
+    }, []);
+
+
     // ==========================================
     // LOAD DATA (Supabase)
     // ==========================================
@@ -379,10 +386,10 @@ function EVCostTracker() {
 
                                         <p
                                             className={`text-xl font-bold ${analysis.trend < 0
-                                                    ? "text-saving"
-                                                    : analysis.trend > 0
-                                                        ? "text-negative"
-                                                        : "text-forecast"
+                                                ? "text-saving"
+                                                : analysis.trend > 0
+                                                    ? "text-negative"
+                                                    : "text-forecast"
                                                 }`}
                                         >
                                             {analysis.trend < 0 ? "↓" : analysis.trend > 0 ? "↑" : "→"}
@@ -450,10 +457,10 @@ function EVCostTracker() {
 
                                         <span
                                             className={`font-bold ${forecast.trend < 0
-                                                    ? "text-saving"
-                                                    : forecast.trend > 0
-                                                        ? "text-negative"
-                                                        : "text-forecast"
+                                                ? "text-saving"
+                                                : forecast.trend > 0
+                                                    ? "text-negative"
+                                                    : "text-forecast"
                                                 }`}
                                         >
                                             {forecast.trend < 0 ? "↓" : forecast.trend > 0 ? "↑" : "→"}
@@ -645,10 +652,10 @@ function EVCostTracker() {
 
                                                         <span
                                                             className={`font-semibold ${parseFloat(charge.cost_difference) > 0
-                                                                    ? "text-negative"
-                                                                    : parseFloat(charge.cost_difference) < 0
-                                                                        ? "text-saving"
-                                                                        : "text-muted"
+                                                                ? "text-negative"
+                                                                : parseFloat(charge.cost_difference) < 0
+                                                                    ? "text-saving"
+                                                                    : "text-muted"
                                                                 }`}
                                                         >
                                                             {parseFloat(charge.cost_difference) > 0 ? "+" : ""}
@@ -684,6 +691,31 @@ function EVCostTracker() {
                             <h2 className="text-xl font-bold text-saving mb-4">
                                 ⚙️ Impostazioni Costi & Consumi
                             </h2>
+
+                            {/* Selettore Tema */}
+                            <div className="mb-4">
+                                <label className="block text-muted mb-1">Tema</label>
+                                <select
+                                    className="input-field"
+                                    value={settings.theme || "theme-default"}
+                                    onChange={e => {
+                                        const theme = e.target.value;
+                                        document.body.className = theme;
+                                        setSettings({ ...settings, theme });
+                                    }}
+                                >
+                                    <option value="theme-default">Default</option>
+                                    <option value="theme-dark">Dark</option>
+                                    <option value="theme-light">Light</option>
+                                    <option value="theme-emerald">Emerald</option>
+                                    <option value="theme-neon">Neon</option>
+                                    <option value="theme-nord">Nord</option>
+                                    <option value="theme-solarized">Solarized</option>
+                                    <option value="theme-material">Material</option>
+                                    <option value="theme-cyber">Cyber</option>
+                                    <option value="theme-sunset">Sunset</option>
+                                </select>
+                            </div>
 
                             <div className="space-y-4 text-sm">
 
