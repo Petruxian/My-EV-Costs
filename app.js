@@ -1566,8 +1566,8 @@ const EVCostTracker = () => {
                         {/* ================================
                             GRAFICO 5 — €/100 km
                             ================================= */}
-                        <div className="w-full max-w-3xl mx-auto mb-8">
-                            <h3 className="text-slate-300 text-sm mb-2">
+                        <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
+                            <h3 className="text-lg font-semibold text-purple-300 mb-3">
                                 🪙 €/100 km
                             </h3>
                             <canvas id="chartEur100km" className="w-full h-48 bg-slate-800 rounded" />
