@@ -1598,7 +1598,7 @@ const EVCostTracker = () => {
                         {/* ================================
                             GRAFICO 2 — kWh PER RICARICA
                             ================================= */}
-                        {chartOptions.showCost && (
+                        {chartOptions.showKwh && (
                         <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
                             <h3 className="text-lg font-semibold text-cyan-300 mb-3">
                                 ⚡ kWh per ricarica
@@ -1610,7 +1610,7 @@ const EVCostTracker = () => {
                         {/* ================================
                             GRAFICO 3 — CONSUMO REALE
                             ================================= */}
-                        {chartOptions.showCost && (
+                        {chartOptions.showConsumption && (
                         <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
                             <h3 className="text-lg font-semibold text-blue-300 mb-3">
                                 🚗 Consumo reale (kWh/100km)
@@ -1622,7 +1622,7 @@ const EVCostTracker = () => {
                         {/* ================================
                             GRAFICO 4 — €/kWh
                             ================================= */}
-                        {chartOptions.showCost && (
+                        {chartOptions.showEurKwh && (
                         <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
                             <h3 className="text-lg font-semibold text-purple-300 mb-3">
                                 💰 €/kWh per ricarica
@@ -1634,7 +1634,7 @@ const EVCostTracker = () => {
                         {/* ================================
                             GRAFICO 5 — €/100 km
                             ================================= */}
-                        {chartOptions.showCost && (
+                        {chartOptions.showEur100km && (
                         <div className="bg-slate-800/60 backdrop-blur rounded-2xl border border-slate-700/60 p-4">
                             <h3 className="text-lg font-semibold text-purple-300 mb-3">
                                 🪙 €/100 km
