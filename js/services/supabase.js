@@ -1,206 +1,159 @@
-//
-// SUPABASE FUNCTIONS
-// Compatibile con React UMD + GitHub Pages
-// Nessun import/export, tutto in globale
-//
+// services/supabase.js
 
-
-// ==========================================
-// CARICA FORNITORI
-// ==========================================
-async function loadSuppliers(supabase) {
-    const { data, error } = await supabase
-        .from("suppliers")
-        .select("*")
-        .order("name", { ascending: true });
-
-    if (error) {
-        console.error("Errore caricamento fornitori:", error);
-        return [];
-    }
-
-    return data || [];
+// --- FETCH ---
+async function loadVehicles(sb) {
+    const { data, error } = await sb.from("vehicles").select("*");
+    return error ? [] : data;
 }
 
-
-
-// ==========================================
-// CARICA RICARICHE
-// ==========================================
-async function loadCharges(supabase) {
-    const { data, error } = await supabase
-        .from("charges")
-        .select("*")
-        .order("date", { ascending: false });
-
-    if (error) {
-        console.error("Errore caricamento ricariche:", error);
-        return [];
-    }
-
-    return data || [];
+async function loadSuppliers(sb) {
+    const { data, error } = await sb.from("suppliers").select("*");
+    return error ? [] : data;
 }
 
+async function loadCharges(sb) {
+    const { data, error } = await sb.from("charges").select("*").order("date", { ascending: false });
+    return error ? [] : data;
+}
 
+// --- SAVE VEHICLE ---
+async function saveVehicleToDB(sb, vehicle) {
+    const { error } = await sb.from("vehicles").insert({
+        name: vehicle.name,
+        brand: vehicle.brand,
+        capacity_kwh: parseFloat(vehicle.capacity),
+        image_url: vehicle.image
+    });
+    if(error) console.error(error);
+    return !error;
+}
 
-// ==========================================
-// SALVA NUOVO FORNITORE
-// ==========================================
-async function saveSupplier(supabase, supplier) {
+// --- SAVE SUPPLIER ---
+async function saveSupplier(sb, s) {
+    const { error } = await sb.from("suppliers").insert({
+        name: s.name, type: s.type, standard_cost: parseFloat(s.standardCost)||0
+    });
+    return !error;
+}
+
+// --- LOGICA RICARICA ---
+
+// 1. INIZIA SESSIONE
+async function startChargeDB(sb, data, vehicleId, suppliers) {
+    const supplier = suppliers.find(s => s.id == data.supplierId);
+    
+    // Cerco la ricarica precedente SOLO di questo veicolo per coerenza km? 
+    // Per ora salviamo solo il dato grezzo, i calcoli li facciamo alla fine o in visualizzazione.
+    
     const payload = {
-        name: supplier.name,
-        type: supplier.type,
-        standard_cost: parseFloat(supplier.standardCost) || 0
+        vehicle_id: vehicleId,
+        supplier_id: supplier.id,
+        supplier_name: supplier.name,
+        supplier_type: supplier.type,
+        date: data.date,
+        total_km: parseFloat(data.totalKm),
+        battery_start: parseFloat(data.startPct),
+        status: 'in_progress'
+    };
+    
+    const { error } = await sb.from("charges").insert(payload);
+    if(error) { console.error(error); return false; }
+    return true;
+}
+
+// 2. TERMINA SESSIONE
+async function stopChargeDB(sb, chargeId, endData, finalCost, vehicle, settings, allCharges) {
+    const kwhAdded = parseFloat(endData.kwhAdded);
+    const endPct = parseFloat(endData.endPct);
+    
+    // Recupera la ricarica iniziale dal DB o dalla lista locale per calcolare i delta
+    // Per semplicità usiamo l'update diretto assumendo che i dati 'start' siano già nel DB.
+    // Ma ci serve sapere i km precedenti per calcolare consumo.
+    
+    // Trova l'ultima ricarica COMPLETATA di questo veicolo prima di questa sessione
+    const previousCharge = allCharges
+        .filter(c => c.vehicle_id === vehicle.id && c.status === 'completed' && c.id !== chargeId)
+        .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+        
+    // Recupera la ricarica attuale (per sapere i km iniziali)
+    const currentCharge = allCharges.find(c => c.id === chargeId);
+    const currentTotalKm = parseFloat(currentCharge.total_km);
+    
+    let kmSinceLast = null;
+    let consumption = null;
+    
+    if(previousCharge) {
+        const prevKm = parseFloat(previousCharge.total_km);
+        if(currentTotalKm > prevKm) {
+            kmSinceLast = currentTotalKm - prevKm;
+            // Consumo reale: kwh erogati / km percorsi * 100
+            if(kmSinceLast > 0) consumption = (kwhAdded / kmSinceLast) * 100;
+        }
+    }
+
+    const payload = {
+        end_date: endData.endDate,
+        battery_end: endPct,
+        kwh_added: kwhAdded,
+        cost: finalCost,
+        status: 'completed',
+        km_since_last: kmSinceLast,
+        consumption: consumption,
+        
+        // Snapshot prezzi
+        saved_gasoline_price: settings.gasolinePrice,
+        saved_diesel_price: settings.dieselPrice
+    };
+    
+    const { error } = await sb.from("charges").update(payload).eq("id", chargeId);
+    return !error;
+}
+
+// 3. SALVA RICARICA MANUALE
+async function saveManualChargeDB(sb, data, vehicleId, suppliers, vehicle, settings, allCharges) {
+    const supplier = suppliers.find(s => s.id == data.supplierId);
+    const kwh = parseFloat(data.kwhAdded);
+    const cost = parseFloat(data.cost);
+    const totalKm = parseFloat(data.totalKm);
+    
+    // Calcolo consumo vs precedente
+    const previousCharge = allCharges
+        .filter(c => c.vehicle_id === vehicle.id && c.status === 'completed')
+        .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+        
+    let kmSinceLast = null;
+    let consumption = null;
+
+    if(previousCharge) {
+        const prevKm = parseFloat(previousCharge.total_km);
+        if(totalKm > prevKm) {
+            kmSinceLast = totalKm - prevKm;
+            consumption = (kwh / kmSinceLast) * 100;
+        }
+    }
+
+    const payload = {
+        vehicle_id: vehicleId,
+        supplier_id: supplier.id,
+        supplier_name: supplier.name,
+        supplier_type: supplier.type,
+        date: data.date,
+        total_km: totalKm,
+        battery_start: parseFloat(data.startPct),
+        battery_end: parseFloat(data.endPct),
+        kwh_added: kwh,
+        cost: cost,
+        status: 'completed',
+        km_since_last: kmSinceLast,
+        consumption: consumption,
+        saved_gasoline_price: settings.gasolinePrice
     };
 
-    const { error } = await supabase.from("suppliers").insert(payload);
-
-    if (error) {
-        console.error("Errore salvataggio fornitore:", error);
-        return false;
-    }
-
-    return true;
+    const { error } = await sb.from("charges").insert(payload);
+    return !error;
 }
 
-
-
-// ==========================================
-// ELIMINA FORNITORE
-// ==========================================
-async function deleteSupplier(supabase, id) {
-    const { error } = await supabase
-        .from("suppliers")
-        .delete()
-        .eq("id", id);
-
-    if (error) {
-        console.error("Errore eliminazione fornitore:", error);
-        return false;
-    }
-
-    return true;
-}
-
-
-
-// ==========================================
-// SALVA NUOVA RICARICA
-// ==========================================
-async function saveChargeToDB(supabase, newCharge, suppliers, settings, charges) {
-    try {
-        const supplier = suppliers.find(s => s.id === parseInt(newCharge.supplier));
-        if (!supplier) {
-            console.error("Fornitore non trovato");
-            return false;
-        }
-
-        const kwh = parseFloat(newCharge.kWhAdded) || 0;
-        const totalKm = parseFloat(newCharge.totalKm) || 0;
-
-        // ============================
-        // CALCOLO km_since_last
-        // ============================
-        let kmSinceLast = null;
-        let consumption = null;
-
-        if (charges.length > 0) {
-            const sorted = [...charges].sort(
-                (a, b) => parseFloat(b.total_km) - parseFloat(a.total_km)
-            );
-
-            const lastKm = parseFloat(sorted[0].total_km) || 0;
-
-            if (totalKm > lastKm) {
-                kmSinceLast = totalKm - lastKm;
-
-                if (kmSinceLast > 0 && kwh > 0) {
-                    consumption = (kwh / kmSinceLast) * 100;
-                }
-            }
-        }
-
-        // ============================
-        // COSTO
-        // ============================
-        let cost = parseFloat(newCharge.cost) || 0;
-
-        if (supplier.name === "Casa") {
-            cost = kwh * settings.homeElectricityPrice;
-        }
-
-        // ============================
-        // COSTO STANDARD FORNITORE
-        // ============================
-        const standardCost = parseFloat(supplier.standard_cost) || 0;
-
-        let costDifference = null;
-        if (standardCost > 0) {
-            const expected = kwh * standardCost;
-            costDifference = cost - expected;
-        }
-
-        // ============================
-        // SNAPSHOT PREZZI BENZINA/DIESEL
-        // ============================
-        const gasolinePrice = settings.gasolinePrice;
-        const dieselPrice = settings.dieselPrice;
-        const gasolineConsumption = settings.gasolineConsumption;
-        const dieselConsumption = settings.dieselConsumption;
-
-        // ============================
-        // PAYLOAD
-        // ============================
-        const payload = {
-            date: newCharge.date,
-            total_km: totalKm,
-            kwh_added: kwh,
-            supplier_id: supplier.id,  // CORRETTO: era "supplier"
-            supplier_name: supplier.name,
-            supplier_type: supplier.type,
-            cost: cost,
-            standard_cost: standardCost,
-            cost_difference: costDifference,
-            km_since_last: kmSinceLast,
-            consumption: consumption,
-
-            // snapshot
-            saved_gasoline_price: gasolinePrice,
-            saved_diesel_price: dieselPrice,
-            saved_gasoline_consumption: gasolineConsumption,
-            saved_diesel_consumption: dieselConsumption
-        };
-
-        const { error } = await supabase.from("charges").insert(payload);
-
-        if (error) {
-            console.error("Errore salvataggio ricarica:", error);
-            return false;
-        }
-
-        return true;
-
-    } catch (err) {
-        console.error("Errore inatteso salvataggio ricarica:", err);
-        return false;
-    }
-}
-
-
-
-// ==========================================
-// ELIMINA RICARICA
-// ==========================================
-async function deleteChargeFromDB(supabase, id) {
-    const { error } = await supabase
-        .from("charges")
-        .delete()
-        .eq("id", id);
-
-    if (error) {
-        console.error("Errore eliminazione ricarica:", error);
-        return false;
-    }
-
-    return true;
+async function deleteChargeFromDB(sb, id) {
+    const { error } = await sb.from("charges").delete().eq("id", id);
+    return !error;
 }
