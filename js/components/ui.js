@@ -20,105 +20,126 @@ function StatsCards({ stats }) {
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fade-in">
-            {/* Energia Totale */}
+            {/* Energia & Costo */}
             <div className="card">
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">⚡</span>
-                    <h3 className="text-sm text-saving font-semibold">Energia Totale</h3>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <div className="text-sm text-muted mb-1">Totale Speso</div>
+                        <div className="text-2xl font-bold text-saving">€{stats.totalCost}</div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-sm text-muted mb-1">Energia</div>
+                        <div className="text-xl font-bold text-kwh">{parseFloat(stats.totalKwh).toFixed(0)} <span className="text-sm">kWh</span></div>
+                    </div>
                 </div>
-                <p className="text-3xl font-bold text-kwh">{stats.totalKwh} kWh</p>
-                <p className="text-xs text-muted mt-1">{stats.chargesCount} ricariche</p>
             </div>
 
-            {/* Costo Totale */}
+            {/* Km & Consumo */}
             <div className="card">
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">€</span>
-                    <h3 className="text-sm text-kwh font-semibold">Costo Totale</h3>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <div className="text-sm text-muted mb-1">Strada fatta</div>
+                        <div className="text-2xl font-bold text-km">{stats.kmDriven} <span className="text-sm">km</span></div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-sm text-muted mb-1">Consumo</div>
+                        <div className="text-xl font-bold text-kwh">{stats.consumption}</div>
+                    </div>
                 </div>
-                <p className="text-3xl font-bold text-kwh">€{stats.totalCost}</p>
-                <p className="text-xs text-muted mt-1">€{stats.avgCostPerKwh}/kWh medio</p>
             </div>
 
-            {/* Km Percorsi */}
-            <div className="card">
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">🚗</span>
-                    <h3 className="text-sm text-km font-semibold">Km Percorsi</h3>
-                </div>
-                <p className="text-3xl font-bold text-km">{stats.kmDriven} km</p>
-                <p className="text-xs text-muted mt-1">{stats.consumption} kWh/100km</p>
+            {/* Risparmio vs Benzina */}
+            <div className="card bg-gradient-to-br from-slate-800 to-slate-900 border-emerald-500/30">
+                <div className="text-sm text-emerald-400 mb-1 font-bold">💰 Risparmio Reale</div>
+                <div className="text-3xl font-bold text-white">€{stats.gasolineSavings}</div>
+                <div className="text-xs text-muted mt-1">rispetto alla benzina</div>
             </div>
 
-            {/* Risparmio */}
-            <div className="card-soft border border-saving/40">
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">💰</span>
-                    <h3 className="text-sm text-saving font-semibold">Risparmio</h3>
+            {/* ECO IMPACT (Alberi) */}
+            <div className="card bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-500/30 relative overflow-hidden">
+                <div className="absolute -right-4 -bottom-4 text-8xl opacity-10">🌳</div>
+                
+                <div className="text-sm text-green-300 mb-1 font-bold">🌍 Impatto Green</div>
+                <div className="flex items-end gap-2">
+                    <div className="text-3xl font-bold text-white">{stats.treesSaved}</div>
+                    <div className="text-sm text-green-200 mb-1">Alberi 🌲</div>
                 </div>
-                <p className="text-2xl font-bold text-saving">€{stats.gasolineSavings}</p>
-                <p className="text-xs text-muted mt-1">vs benzina</p>
+                <div className="text-xs text-green-400/70 mt-1">
+                    -{stats.co2SavedKg} kg di CO₂
+                </div>
             </div>
         </div>
     );
 }
+
 
 // ==========================================
 // LISTA RICARICHE
 // ==========================================
 function ChargeList({ charges, onDelete }) {
     if (!charges || charges.length === 0) {
-        return <div className="p-8 text-center text-muted card">Nessuna ricarica registrata per questa auto.</div>;
+        return <div className="p-8 text-center text-muted card">Nessuna ricarica registrata.</div>;
     }
 
     return (
         <div className="card overflow-hidden">
             <div className="divide-y divide-card-border">
-                {charges.map(charge => (
-                    <div key={charge.id} className="p-4 hover:bg-card-soft transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span>📅</span>
-                                    <span className="text-sm text-muted">
-                                        {new Date(charge.date).toLocaleDateString("it-IT", {
-                                            day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
-                                        })}
-                                    </span>
+                {charges.map(charge => {
+                    // Calcolo potenza se abbiamo data fine
+                    const power = calculateAveragePower(charge.kwh_added, charge.date, charge.end_date);
+                    
+                    return (
+                        <div key={charge.id} className="p-4 hover:bg-card-soft transition-colors group">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="flex items-center gap-3">
+                                    {/* Icona Tipo */}
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold 
+                                        ${charge.supplier_type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                        {charge.supplier_type}
+                                    </div>
+                                    
+                                    <div>
+                                        <div className="font-bold text-sm text-white">{charge.supplier_name}</div>
+                                        <div className="text-xs text-muted">
+                                            {new Date(charge.date).toLocaleDateString("it-IT", {
+                                                day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4 text-sm">
-                                    <span className="text-saving font-semibold">{charge.supplier_name}</span>
-                                    <span className="text-muted">({charge.supplier_type})</span>
-                                </div>
+                                
+                                <button onClick={() => onDelete(charge.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-negative p-2">
+                                    🗑️
+                                </button>
                             </div>
-                            <button onClick={() => onDelete(charge.id)} className="text-negative hover:text-negative/80 text-xl">
-                                🗑️
-                            </button>
-                        </div>
 
-                        {/* Dettagli */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-                            <div>
-                                <span className="text-muted">Km:</span>
-                                <span className="ml-2 font-semibold text-km">{parseFloat(charge.total_km).toLocaleString()}</span>
-                            </div>
-                            <div>
-                                <span className="text-muted">kWh:</span>
-                                <span className="ml-2 font-semibold text-kwh">{charge.kwh_added || "---"}</span>
-                            </div>
-                            <div>
-                                <span className="text-muted">Costo:</span>
-                                <span className="ml-2 font-semibold text-saving">€{parseFloat(charge.cost || 0).toFixed(2)}</span>
-                            </div>
-                            <div>
-                                <span className="text-muted">Consumo:</span>
-                                <span className="ml-2 font-semibold text-kwh">
-                                    {charge.consumption ? parseFloat(charge.consumption).toFixed(2) + " kWh%" : "---"}
-                                </span>
+                            {/* Griglia Dati */}
+                            <div className="grid grid-cols-4 gap-2 mt-3 text-sm">
+                                <div className="bg-card-soft p-2 rounded text-center">
+                                    <div className="text-xs text-muted">kWh</div>
+                                    <div className="font-bold text-kwh">{parseFloat(charge.kwh_added).toFixed(1)}</div>
+                                </div>
+                                <div className="bg-card-soft p-2 rounded text-center">
+                                    <div className="text-xs text-muted">Costo</div>
+                                    <div className="font-bold text-saving">€{parseFloat(charge.cost).toFixed(2)}</div>
+                                </div>
+                                <div className="bg-card-soft p-2 rounded text-center">
+                                    <div className="text-xs text-muted">Km agg.</div>
+                                    <div className="font-bold text-km">
+                                        {charge.km_since_last ? parseFloat(charge.km_since_last).toFixed(0) : "-"}
+                                    </div>
+                                </div>
+                                {/* BOX POTENZA kW */}
+                                <div className="bg-card-soft p-2 rounded text-center border border-card-border">
+                                    <div className="text-xs text-muted">Velocità</div>
+                                    <div className="font-bold text-orange-300">
+                                        {power ? power + " kW" : "-"}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
