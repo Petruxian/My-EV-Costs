@@ -139,3 +139,20 @@ function debugLog(...args) {
         console.log("[DEBUG]", ...args);
     }
 }
+
+// ==========================================
+// Calcola potenza media (kW)
+// ==========================================
+
+function calculateAveragePower(kwh, startDate, endDate) {
+    if (!kwh || !startDate || !endDate) return null;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffMs = end - start;
+    const diffHours = diffMs / (1000 * 60 * 60); // Ore decimali
+    
+    if (diffHours <= 0) return null;
+    
+    return (kwh / diffHours).toFixed(1); // kW
+}
