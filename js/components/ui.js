@@ -13,14 +13,14 @@ function UICard({ children, className = "" }) {
 }
 
 // ==========================================
-// STATS CARDS (Le 4 card in alto)
+// STATS CARDS (Le card in alto)
 // ==========================================
 function StatsCards({ stats }) {
     if (!stats) return null;
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fade-in">
-            {/* Energia & Costo */}
+            {/* 1. Energia & Costo */}
             <div className="card">
                 <div className="flex justify-between items-start">
                     <div>
@@ -34,7 +34,7 @@ function StatsCards({ stats }) {
                 </div>
             </div>
 
-            {/* Km & Consumo */}
+            {/* 2. Km & Consumo */}
             <div className="card">
                 <div className="flex justify-between items-start">
                     <div>
@@ -48,14 +48,31 @@ function StatsCards({ stats }) {
                 </div>
             </div>
 
-            {/* Risparmio vs Benzina */}
+            {/* 3. Risparmio vs Benzina & Diesel (MODIFICATO) */}
             <div className="card bg-gradient-to-br from-slate-800 to-slate-900 border-emerald-500/30">
-                <div className="text-sm text-emerald-400 mb-1 font-bold">💰 Risparmio Reale</div>
-                <div className="text-3xl font-bold text-white">€{stats.gasolineSavings}</div>
-                <div className="text-xs text-muted mt-1">rispetto alla benzina</div>
+                <div className="text-sm text-emerald-400 mb-2 font-bold flex items-center gap-2">
+                    💰 Risparmio Reale
+                </div>
+                
+                <div className="grid grid-cols-2 gap-0 relative">
+                    {/* Linea divisoria verticale sottile */}
+                    <div className="absolute left-1/2 top-1 bottom-1 w-px bg-slate-700/50 -translate-x-1/2"></div>
+
+                    {/* Colonna Benzina */}
+                    <div className="text-center pr-1">
+                        <div className="text-xl font-bold text-white truncate">€{stats.gasolineSavings}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-200/70 mt-1">Benzina</div>
+                    </div>
+
+                    {/* Colonna Diesel */}
+                    <div className="text-center pl-1">
+                        <div className="text-xl font-bold text-white truncate">€{stats.dieselSavings}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-cyan-200/70 mt-1">Diesel</div>
+                    </div>
+                </div>
             </div>
 
-            {/* ECO IMPACT (Alberi) */}
+            {/* 4. ECO IMPACT (Alberi) */}
             <div className="card bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-500/30 relative overflow-hidden">
                 <div className="absolute -right-4 -bottom-4 text-8xl opacity-10">🌳</div>
                 
@@ -71,7 +88,6 @@ function StatsCards({ stats }) {
         </div>
     );
 }
-
 
 // ==========================================
 // LISTA RICARICHE
