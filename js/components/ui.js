@@ -310,15 +310,21 @@ function ChartSection({ charges, options, setOptions, theme }) {
     return (
         <div className="space-y-10">
             {/* Toggle bottoni */}
-            <div className="flex flex-wrap gap-2 mb-4 text-xs justify-center">
+            <div className="flex flex-wrap gap-2 mb-6 text-xs justify-center">
                 <button className={`toggle-btn ${options.showCost ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showCost: !o.showCost }))}>💵 Costo</button>
                 <button className={`toggle-btn ${options.showKwh ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showKwh: !o.showKwh }))}>⚡ kWh</button>
                 <button className={`toggle-btn ${options.showConsumption ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showConsumption: !o.showConsumption }))}>🚗 Consumo</button>
+                <button className={`toggle-btn ${options.showTrend ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showTrend: !o.showTrend }))}>📈 Trend</button>
+                <button className={`toggle-btn ${options.showACDC ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showACDC: !o.showACDC }))}>⚡ AC/DC</button>
+                <button className={`toggle-btn ${options.showSuppliers ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showSuppliers: !o.showSuppliers }))}>🏪 Fornitori</button>
             </div>
 
             {options.showCost && <CostChart charges={charges} theme={theme} />}
             {options.showKwh && <KwhChart charges={charges} theme={theme} />}
             {options.showConsumption && <ConsumptionChart charges={charges} theme={theme} />}
+            {options.showTrend && <CostTrendChart charges={charges} theme={theme} />}
+            {options.showACDC && <ACvsDCChart charges={charges} theme={theme} />}
+            {options.showSuppliers && <SuppliersPieChart charges={charges} theme={theme} />}
         </div>
     );
 }
@@ -331,29 +337,14 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
 
     React.useEffect(() => {
         const updateTimer = () => {
-            // Debug: stampa la data grezza
-            console.log('🔍 DEBUG Timer:', {
-                rawDate: activeSession.date,
-                parsedDate: new Date(activeSession.date).toString(),
-                now: new Date().toString(),
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            });
-            
-            // Parsing più robusto della data
             let start = new Date(activeSession.date);
             
-            // Verifica se la data è valida
             if (isNaN(start.getTime())) {
-                // Tentativo di parsing alternativo
                 start = new Date(activeSession.date.replace(' ', 'T'));
             }
             
             const now = new Date();
             const diff = Math.floor((now - start) / 1000);
-            
-            console.log('⏱️ Diff secondi:', diff, 'Start:', start.toISOString(), 'Now:', now.toISOString());
-            
-            // Assicurati che diff sia positivo
             const safeDiff = Math.max(0, diff);
             
             const hours = Math.floor(safeDiff / 3600);
