@@ -13,7 +13,7 @@ function SkeletonLoader() {
                     <div key={i} className="skeleton skeleton-card"></div>
                 ))}
             </div>
-            
+
             {/* Skeleton List */}
             <div className="card">
                 <div className="skeleton skeleton-title"></div>
@@ -79,7 +79,7 @@ function StatsCards({ stats }) {
                 <div className="text-xs sm:text-sm text-emerald-400 mb-3 font-bold flex items-center gap-2">
                     <span className="text-lg">💰</span> Risparmio Reale
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-0 relative">
                     <div className="absolute left-1/2 top-1 bottom-1 w-px bg-slate-700/50 -translate-x-1/2"></div>
 
@@ -100,7 +100,7 @@ function StatsCards({ stats }) {
             {/* 4. ECO IMPACT (Alberi) */}
             <div className="card hover-card bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-500/30 relative overflow-hidden">
                 <div className="absolute -right-4 -bottom-4 text-8xl opacity-10">🌳</div>
-                
+
                 <div className="text-xs sm:text-sm text-green-300 mb-2 font-bold flex items-center gap-1">
                     <span className="text-lg">🌍</span> Impatto Green
                 </div>
@@ -134,23 +134,23 @@ function ChargeList({ charges, onDelete }) {
             <div className="divide-y divide-card-border">
                 {charges.map(charge => {
                     const power = calculateAveragePower(charge.kwh_added, charge.date, charge.end_date);
-                    
+
                     return (
                         <div key={charge.id} className="p-4 hover:bg-card-soft transition-all duration-200 group relative">
                             {/* Hover indicator */}
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            
+
                             <div className="flex justify-between items-start mb-3">
                                 <div className="flex items-center gap-3">
                                     {/* Badge Tipo con animazione */}
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 group-hover:scale-110
-                                        ${charge.supplier_type === 'DC' 
-                                            ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white' 
+                                        ${charge.supplier_type === 'DC'
+                                            ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white'
                                             : 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white'
                                         }`}>
                                         {charge.supplier_type}
                                     </div>
-                                    
+
                                     <div>
                                         <div className="font-bold text-base text-white mb-0.5">{charge.supplier_name}</div>
                                         <div className="text-xs text-muted flex items-center gap-1">
@@ -160,9 +160,9 @@ function ChargeList({ charges, onDelete }) {
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <button 
-                                    onClick={() => onDelete(charge.id)} 
+
+                                <button
+                                    onClick={() => onDelete(charge.id)}
                                     className="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125 text-negative p-2 rounded-lg hover:bg-red-500/10"
                                     aria-label="Elimina ricarica"
                                 >
@@ -212,7 +212,7 @@ function ChargeList({ charges, onDelete }) {
 // ==========================================
 // VIEW IMPOSTAZIONI COMPLETA
 // ==========================================
-function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, suppliers, onAddSupplier }) {
+function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, suppliers, onAddSupplier, onEditSupplier }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
             {/* COLONNA SX: Parametri */}
@@ -255,6 +255,22 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                         <label className="label">Costo Energia Casa (€/kWh)</label>
                         <input type="number" step="0.001" className="input" value={settings.homeElectricityPrice} onChange={e => setSettings({ ...settings, homeElectricityPrice: e.target.value })} />
                     </div>
+                    <div>
+                        <label className="label">☀️ Fotovoltaico (€/kWh)</label>
+                        <input
+                            type="number"
+                            step="0.001"
+                            className="input"
+                            value={settings.solarElectricityPrice || 0}
+                            onChange={e => setSettings({
+                                ...settings,
+                                solarElectricityPrice: parseFloat(e.target.value) || 0
+                            })}
+                        />
+                        <p className="text-xs text-muted mt-1">
+                            Costo simbolico pannelli solari (€0.00 se totalmente gratuito)
+                        </p>
+                    </div>
                 </div>
 
                 <button onClick={saveSettings} className="btn btn-primary mt-6 w-full">💾 Salva Impostazioni</button>
@@ -289,9 +305,24 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     </div>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                         {suppliers.map(s => (
-                            <div key={s.id} className="card-soft p-2 flex justify-between items-center text-sm">
-                                <span>{s.name} ({s.type})</span>
-                                <span className="text-muted">€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
+                            <div key={s.id} className="card-soft p-3 hover:bg-card transition-colors">
+                                <div className="flex justify-between items-center mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-semibold">{s.name}</span>
+                                        <span className={`text-xs px-2 py-0.5 rounded ${s.type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                            {s.type}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => onEditSupplier(s)}
+                                        className="text-xs text-accent hover:text-accent-2 font-medium"
+                                    >
+                                        ✏️ Modifica
+                                    </button>
+                                </div>
+                                <div className="text-xs text-muted">
+                                    Costo standard: <span className="text-saving font-bold">€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -305,7 +336,7 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
 // SEZIONE GRAFICI
 // ==========================================
 function ChartSection({ charges, options, setOptions, theme }) {
-    if(!charges || charges.length < 2) return <div className="text-center p-10 text-muted">Servono almeno 2 ricariche per i grafici.</div>;
+    if (!charges || charges.length < 2) return <div className="text-center p-10 text-muted">Servono almeno 2 ricariche per i grafici.</div>;
 
     return (
         <div className="space-y-10">
@@ -338,19 +369,19 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
     React.useEffect(() => {
         const updateTimer = () => {
             let start = new Date(activeSession.date);
-            
+
             if (isNaN(start.getTime())) {
                 start = new Date(activeSession.date.replace(' ', 'T'));
             }
-            
+
             const now = new Date();
             const diff = Math.floor((now - start) / 1000);
             const safeDiff = Math.max(0, diff);
-            
+
             const hours = Math.floor(safeDiff / 3600);
             const minutes = Math.floor((safeDiff % 3600) / 60);
             const seconds = safeDiff % 60;
-            
+
             setElapsedTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
         };
 
@@ -363,7 +394,7 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
         <div className="relative bg-gradient-to-br from-emerald-900/50 via-green-900/40 to-cyan-900/50 border-2 border-emerald-400/60 rounded-3xl p-8 mb-8 text-center overflow-hidden animate-pulse-glow animate-scale-in">
             {/* Sfondo animato */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)] animate-pulse"></div>
-            
+
             <div className="relative z-10">
                 {/* Icona pulsante */}
                 <div className="inline-block mb-4">
@@ -375,7 +406,7 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
                 <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
                     Ricarica in Corso
                 </h2>
-                
+
                 {/* Timer live */}
                 <div className="inline-block bg-black/30 backdrop-blur-sm rounded-2xl px-6 py-3 mb-4">
                     <div className="text-emerald-300 text-sm font-medium mb-1">Tempo trascorso</div>
@@ -389,7 +420,7 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
                     <div className="bg-black/20 backdrop-blur-sm rounded-xl px-4 py-2">
                         <div className="text-xs text-emerald-300/80 mb-1">Inizio</div>
                         <div className="text-sm font-bold text-white">
-                            {new Date(activeSession.date).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}
+                            {new Date(activeSession.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                     </div>
                     <div className="bg-black/20 backdrop-blur-sm rounded-xl px-4 py-2">
@@ -403,15 +434,15 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
                 {/* Progress bar simulata */}
                 <div className="mb-6 max-w-md mx-auto">
                     <div className="h-3 bg-black/30 rounded-full overflow-hidden backdrop-blur-sm">
-                        <div className="h-full bg-gradient-to-r from-emerald-400 via-green-400 to-cyan-400 rounded-full animate-pulse" 
-                             style={{width: `${Math.min(activeSession.battery_start + 10, 100)}%`}}>
+                        <div className="h-full bg-gradient-to-r from-emerald-400 via-green-400 to-cyan-400 rounded-full animate-pulse"
+                            style={{ width: `${Math.min(activeSession.battery_start + 10, 100)}%` }}>
                         </div>
                     </div>
                 </div>
 
                 {/* Pulsanti */}
                 <div className="flex gap-3 justify-center flex-wrap">
-                    <button 
+                    <button
                         onClick={onStopClick}
                         className="btn bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold text-lg px-8 py-3 shadow-2xl border-2 border-red-400/30"
                     >
@@ -420,8 +451,8 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
                             <span>Termina Ricarica</span>
                         </span>
                     </button>
-                    
-                    <button 
+
+                    <button
                         onClick={onCancelClick}
                         className="btn bg-gray-700 hover:bg-gray-600 text-white font-semibold text-sm px-6 py-3 shadow-lg border border-gray-500/50"
                     >

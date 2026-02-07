@@ -23,6 +23,7 @@ function EVCostTracker() {
         dieselPrice: 1.8,
         dieselConsumption: 18,
         homeElectricityPrice: 0.25,
+        solarElectricityPrice: 0.00,
         theme: "theme-default"
     });
 
@@ -32,6 +33,8 @@ function EVCostTracker() {
     const [showManualModal, setShowManualModal] = React.useState(false);
     const [showVehicleModal, setShowVehicleModal] = React.useState(false);
     const [showSupplierModal, setShowSupplierModal] = React.useState(false);
+    const [showEditSupplierModal, setShowEditSupplierModal] = React.useState(false);
+    const [editingSupplier, setEditingSupplier] = React.useState(null);
 
     // Dati per i form
     const [tempChargeData, setTempChargeData] = React.useState({}); // Dati temporanei form
@@ -40,10 +43,10 @@ function EVCostTracker() {
 
     // Chart Options
     const [chartOptions, setChartOptions] = React.useState({
-        showCost: true, 
-        showKwh: true, 
-        showConsumption: true, 
-        showEurKwh: true, 
+        showCost: true,
+        showKwh: true,
+        showConsumption: true,
+        showEurKwh: true,
         showEur100km: true,
         showTrend: false,
         showACDC: false,
@@ -60,24 +63,24 @@ function EVCostTracker() {
             setSettings(parsed);
             document.body.className = parsed.theme || "theme-default";
         }
-        
+
         // Carica ID auto selezionata
         const lastVehicle = localStorage.getItem("ev_last_vehicle");
         if (lastVehicle) setSelectedVehicleId(parseInt(lastVehicle));
-        
+
         loadData();
     }, []);
 
     React.useEffect(() => {
         localStorage.setItem("ev_settings_v2", JSON.stringify(settings));
     }, [settings]);
-    
+
     React.useEffect(() => {
         // Gestione tema auto (segue sistema)
-        if(settings.theme === 'theme-auto') {
+        if (settings.theme === 'theme-auto') {
             const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             document.body.className = isDark ? 'theme-dark' : 'theme-light';
-            
+
             // Listener per cambio tema sistema
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             const handleChange = (e) => {
@@ -85,13 +88,13 @@ function EVCostTracker() {
             };
             mediaQuery.addEventListener('change', handleChange);
             return () => mediaQuery.removeEventListener('change', handleChange);
-        } else if(settings.theme) {
+        } else if (settings.theme) {
             document.body.className = settings.theme;
         }
     }, [settings.theme]);
 
     React.useEffect(() => {
-        if(selectedVehicleId) localStorage.setItem("ev_last_vehicle", selectedVehicleId);
+        if (selectedVehicleId) localStorage.setItem("ev_last_vehicle", selectedVehicleId);
     }, [selectedVehicleId]);
 
     // --------------------------------------------------------
@@ -119,7 +122,7 @@ function EVCostTracker() {
 
     // Filtra le ricariche per l'auto selezionata (per dashboard e grafici)
     const currentVehicleCharges = React.useMemo(() => {
-        if(!selectedVehicleId) return [];
+        if (!selectedVehicleId) return [];
         return charges.filter(c => c.vehicle_id === selectedVehicleId && c.status === 'completed');
     }, [charges, selectedVehicleId]);
 
@@ -127,7 +130,7 @@ function EVCostTracker() {
 
     // Trova sessione attiva SOLO per l'auto selezionata
     const currentActiveSession = React.useMemo(() => {
-        if(!selectedVehicleId) return null;
+        if (!selectedVehicleId) return null;
         return charges.find(c => c.vehicle_id === selectedVehicleId && c.status === 'in_progress') || null;
     }, [charges, selectedVehicleId]);
 
@@ -140,13 +143,13 @@ function EVCostTracker() {
     // ACTIONS: VEHICLES
     // --------------------------------------------------------
     async function handleSaveVehicle() {
-        if(!newVehicle.name || !newVehicle.capacity) {
+        if (!newVehicle.name || !newVehicle.capacity) {
             alert("Nome e Capacità Batteria sono obbligatori!");
             return;
         }
         setIsSyncing(true);
         const ok = await saveVehicleToDB(supabaseClient, newVehicle);
-        if(ok) {
+        if (ok) {
             setShowVehicleModal(false);
             setNewVehicle({ name: "", capacity: "", brand: "", image: "" });
             await loadData();
@@ -155,17 +158,51 @@ function EVCostTracker() {
     }
 
     // --------------------------------------------------------
+    // HANDLER: Modifica Fornitore
+    // --------------------------------------------------------
+    async function handleEditSupplier(supplier) {
+        setEditingSupplier({
+            id: supplier.id,
+            name: supplier.name,
+            type: supplier.type,
+            standardCost: supplier.standard_cost
+        });
+        setShowEditSupplierModal(true);
+    }
+
+    async function handleSaveEditSupplier() {
+        if (!editingSupplier.name || !editingSupplier.standardCost) {
+            alert("⚠️ Compila tutti i campi!");
+            return;
+        }
+
+        setIsSyncing(true);
+        const ok = await updateSupplier(supabaseClient, editingSupplier.id, editingSupplier);
+
+        if (ok) {
+            setShowEditSupplierModal(false);
+            setEditingSupplier(null);
+            await loadData();
+            alert("✅ Fornitore aggiornato!");
+        } else {
+            alert("❌ Errore nell'aggiornamento");
+        }
+
+        setIsSyncing(false);
+    }
+
+    // --------------------------------------------------------
     // ACTIONS: CHARGING FLOW
     // --------------------------------------------------------
-    
+
     // 1. START CHARGE
     async function handleStartCharge(data) {
-        if(!selectedVehicleId) return alert("Seleziona prima un'auto!");
-        
+        if (!selectedVehicleId) return alert("Seleziona prima un'auto!");
+
         setIsSyncing(true);
         // Salva nel DB con status 'in_progress'
         const ok = await startChargeDB(supabaseClient, data, selectedVehicleId, suppliers);
-        if(ok) {
+        if (ok) {
             setShowStartModal(false);
             await loadData();
         }
@@ -174,20 +211,20 @@ function EVCostTracker() {
 
     // 2. STOP CHARGE
     async function handleStopCharge(endData) {
-        if(!currentActiveSession) return;
-        
+        if (!currentActiveSession) return;
+
         setIsSyncing(true);
         // Calcola costo se "Casa"
         let finalCost = parseFloat(endData.cost);
         const supplier = suppliers.find(s => s.id === currentActiveSession.supplier_id);
-        
+
         if (supplier && supplier.name === "Casa" && !finalCost) {
             finalCost = parseFloat(endData.kwhAdded) * settings.homeElectricityPrice;
         }
 
-        const ok = await stopChargeDB(supabaseClient, currentActiveSession.id, endData, finalCost, activeVehicle, settings, charges);
-        
-        if(ok) {
+        const ok = await stopChargeDB(supabaseClient, currentActiveSession.id, endData, finalCost, activeVehicle, settings, charges, supplier);
+
+        if (ok) {
             setShowStopModal(false);
             await loadData();
         }
@@ -196,12 +233,12 @@ function EVCostTracker() {
 
     // 3. MANUAL FULL CHARGE (Retroactive)
     async function handleManualCharge(data) {
-        if(!selectedVehicleId) return alert("Seleziona prima un'auto!");
-        
+        if (!selectedVehicleId) return alert("Seleziona prima un'auto!");
+
         setIsSyncing(true);
         const ok = await saveManualChargeDB(supabaseClient, data, selectedVehicleId, suppliers, activeVehicle, settings, charges);
-        
-        if(ok) {
+
+        if (ok) {
             setShowManualModal(false);
             await loadData();
         }
@@ -210,7 +247,7 @@ function EVCostTracker() {
 
     // 4. DELETE
     async function handleDeleteCharge(id) {
-        if(!confirm("Eliminare questa ricarica?")) return;
+        if (!confirm("Eliminare questa ricarica?")) return;
         setIsSyncing(true);
         await deleteChargeFromDB(supabaseClient, id);
         await loadData();
@@ -219,21 +256,21 @@ function EVCostTracker() {
 
     // 5. CANCEL ACTIVE CHARGE
     async function handleCancelCharge() {
-        if(!currentActiveSession) return;
-        if(!confirm("Annullare questa ricarica in corso? L'operazione non può essere annullata.")) return;
-        
+        if (!currentActiveSession) return;
+        if (!confirm("Annullare questa ricarica in corso? L'operazione non può essere annullata.")) return;
+
         setIsSyncing(true);
         await deleteChargeFromDB(supabaseClient, currentActiveSession.id);
         await loadData();
         setIsSyncing(false);
     }
-    
+
     // --------------------------------------------------------
     // STATS CALCULATIONS
     // --------------------------------------------------------
-    const stats = React.useMemo(() => 
-        calculateStats(currentVehicleCharges, settings), 
-    [currentVehicleCharges, settings]);
+    const stats = React.useMemo(() =>
+        calculateStats(currentVehicleCharges, settings),
+        [currentVehicleCharges, settings]);
 
     // --------------------------------------------------------
     // RENDER
@@ -245,11 +282,11 @@ function EVCostTracker() {
                 <div className="flex items-center gap-2">
                     <span className="text-2xl">⚡</span>
                     <h1 className="font-bold text-lg hidden md:block">EV Tracker</h1>
-                    
+
                     {/* Selettore Auto Rapido */}
                     {vehicles.length > 0 && (
                         <div className="relative ml-2">
-                            <select 
+                            <select
                                 className="bg-card border border-card-border rounded-lg px-2 py-1 text-sm text-saving font-bold outline-none"
                                 value={selectedVehicleId || ""}
                                 onChange={(e) => setSelectedVehicleId(parseInt(e.target.value))}
@@ -265,8 +302,8 @@ function EVCostTracker() {
                             </select>
                             {/* Badge altre auto in ricarica */}
                             {otherActiveCharges.length > 0 && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse border-2 border-card-soft" 
-                                     title={`${otherActiveCharges.length} altra/e auto in ricarica`}>
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse border-2 border-card-soft"
+                                    title={`${otherActiveCharges.length} altra/e auto in ricarica`}>
                                 </div>
                             )}
                         </div>
@@ -274,9 +311,9 @@ function EVCostTracker() {
                 </div>
 
                 <div className="flex gap-2">
-                     <button onClick={() => setView("dashboard")} className={`btn ${view==="dashboard"?"btn-primary":"btn-secondary"} p-2`}>📊</button>
-                     <button onClick={() => setView("charts")} className={`btn ${view==="charts"?"btn-primary":"btn-secondary"} p-2`}>📈</button>
-                     <button onClick={() => setView("settings")} className={`btn ${view==="settings"?"btn-primary":"btn-secondary"} p-2`}>⚙️</button>
+                    <button onClick={() => setView("dashboard")} className={`btn ${view === "dashboard" ? "btn-primary" : "btn-secondary"} p-2`}>📊</button>
+                    <button onClick={() => setView("charts")} className={`btn ${view === "charts" ? "btn-primary" : "btn-secondary"} p-2`}>📈</button>
+                    <button onClick={() => setView("settings")} className={`btn ${view === "settings" ? "btn-primary" : "btn-secondary"} p-2`}>⚙️</button>
                 </div>
             </header>
 
@@ -302,10 +339,10 @@ function EVCostTracker() {
                 {/* 2. DASHBOARD VIEW */}
                 {view === "dashboard" && vehicles.length > 0 && !isSyncing && (
                     <div className="animate-fade-in">
-                        
+
                         {/* BOX RICARICA ATTIVA */}
                         {currentActiveSession ? (
-                            <ActiveChargingBox 
+                            <ActiveChargingBox
                                 activeSession={currentActiveSession}
                                 onStopClick={() => setShowStopModal(true)}
                                 onCancelClick={handleCancelCharge}
@@ -313,7 +350,7 @@ function EVCostTracker() {
                         ) : (
                             /* PULSANTI AZIONE PRINCIPALE */
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                                <button 
+                                <button
                                     onClick={() => setShowStartModal(true)}
                                     className="btn btn-primary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] animate-scale-in"
                                 >
@@ -322,10 +359,10 @@ function EVCostTracker() {
                                     <span className="text-xs opacity-70 font-normal">Start ricarica live</span>
                                 </button>
 
-                                <button 
+                                <button
                                     onClick={() => setShowManualModal(true)}
                                     className="btn btn-secondary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] border-dashed border-2 border-card-border animate-scale-in"
-                                    style={{animationDelay: '0.1s'}}
+                                    style={{ animationDelay: '0.1s' }}
                                 >
                                     <span className="text-5xl">📝</span>
                                     <span className="font-bold text-lg">MANUALE</span>
@@ -344,20 +381,21 @@ function EVCostTracker() {
                         </div>
                     </div>
                 )}
-                
+
                 {/* 3. SETTINGS VIEW */}
                 {view === "settings" && (
-                     <SettingsView 
-                        settings={settings} setSettings={setSettings} 
+                    <SettingsView
+                        settings={settings} setSettings={setSettings}
                         saveSettings={() => alert("Salvato!")}
                         vehicles={vehicles}
                         onAddVehicle={() => setShowVehicleModal(true)}
                         suppliers={suppliers}
                         onAddSupplier={() => setShowSupplierModal(true)}
-                        onDeleteSupplier={(id) => {/* to implement */}}
-                     />
+                        onEditSupplier={handleEditSupplier}
+                        onDeleteSupplier={(id) => {/* to implement */ }}
+                    />
                 )}
-                
+
                 {/* 4. CHARTS VIEW */}
                 {view === "charts" && (
                     <div className="animate-fade-in">
@@ -365,14 +403,14 @@ function EVCostTracker() {
                         <ChartSection charges={currentVehicleCharges} options={chartOptions} setOptions={setChartOptions} theme={settings.theme} />
                     </div>
                 )}
-                
+
             </main>
 
             {/* MODALI */}
             {showVehicleModal && (
-                <AddVehicleModal 
-                    newVehicle={newVehicle} setNewVehicle={setNewVehicle} 
-                    onClose={() => setShowVehicleModal(false)} onSave={handleSaveVehicle} isSyncing={isSyncing} 
+                <AddVehicleModal
+                    newVehicle={newVehicle} setNewVehicle={setNewVehicle}
+                    onClose={() => setShowVehicleModal(false)} onSave={handleSaveVehicle} isSyncing={isSyncing}
                 />
             )}
 
@@ -393,7 +431,7 @@ function EVCostTracker() {
                     onStop={handleStopCharge}
                 />
             )}
-            
+
             {showManualModal && (
                 <ManualChargeModal
                     activeVehicle={activeVehicle}
@@ -402,16 +440,29 @@ function EVCostTracker() {
                     onSave={handleManualCharge}
                 />
             )}
-            
+
             {showSupplierModal && (
-                <AddSupplierModal 
-                     newSupplier={newSupplier} setNewSupplier={setNewSupplier}
-                     onClose={() => setShowSupplierModal(false)} onSave={async () => {
-                         await saveSupplier(supabaseClient, newSupplier);
-                         setNewSupplier({name:"", type:"AC", standardCost:""});
-                         setShowSupplierModal(false);
-                         loadData();
-                     }}
+                <AddSupplierModal
+                    newSupplier={newSupplier} setNewSupplier={setNewSupplier}
+                    onClose={() => setShowSupplierModal(false)} onSave={async () => {
+                        await saveSupplier(supabaseClient, newSupplier);
+                        setNewSupplier({ name: "", type: "AC", standardCost: "" });
+                        setShowSupplierModal(false);
+                        loadData();
+                    }}
+                />
+            )}
+
+            {showEditSupplierModal && editingSupplier && (
+                <EditSupplierModal
+                    supplier={editingSupplier}
+                    setSupplier={setEditingSupplier}
+                    onClose={() => {
+                        setShowEditSupplierModal(false);
+                        setEditingSupplier(null);
+                    }}
+                    onSave={handleSaveEditSupplier}
+                    isSyncing={isSyncing}
                 />
             )}
 
