@@ -42,13 +42,12 @@ function StartChargeModal({ activeVehicle, suppliers, onClose, onStart }) {
     const handleSubmit = () => {
         if(!data.totalKm || !data.startPct || !data.supplierId) return alert("Compila tutti i campi!");
         
-        // Converti la data in ISO completo per evitare problemi di timezone
-        const dateObj = new Date(data.date);
-        const fullISODate = dateObj.toISOString();
+        // Usa la data locale attuale per evitare problemi di timezone
+        const now = new Date();
         
         onStart({
             ...data,
-            date: fullISODate
+            date: now.toISOString()
         });
     };
 
