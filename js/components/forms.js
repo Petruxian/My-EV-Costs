@@ -41,7 +41,15 @@ function StartChargeModal({ activeVehicle, suppliers, onClose, onStart }) {
 
     const handleSubmit = () => {
         if(!data.totalKm || !data.startPct || !data.supplierId) return alert("Compila tutti i campi!");
-        onStart(data);
+        
+        // Converti la data in ISO completo per evitare problemi di timezone
+        const dateObj = new Date(data.date);
+        const fullISODate = dateObj.toISOString();
+        
+        onStart({
+            ...data,
+            date: fullISODate
+        });
     };
 
     return (
@@ -159,7 +167,15 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
 
     const handleSubmit = () => {
         if(!data.totalKm || !data.kwhAdded || !data.supplierId) return alert("Dati mancanti!");
-        onSave(data);
+        
+        // Converti la data in ISO completo per evitare problemi di timezone
+        const dateObj = new Date(data.date);
+        const fullISODate = dateObj.toISOString();
+        
+        onSave({
+            ...data,
+            date: fullISODate
+        });
     };
 
     return (
