@@ -331,13 +331,24 @@ function ActiveChargingBox({ activeSession, onStopClick }) {
 
     React.useEffect(() => {
         const updateTimer = () => {
-            const start = new Date(activeSession.date);
+            // Parsing più robusto della data
+            let start = new Date(activeSession.date);
+            
+            // Verifica se la data è valida
+            if (isNaN(start.getTime())) {
+                // Tentativo di parsing alternativo
+                start = new Date(activeSession.date.replace(' ', 'T'));
+            }
+            
             const now = new Date();
             const diff = Math.floor((now - start) / 1000);
             
-            const hours = Math.floor(diff / 3600);
-            const minutes = Math.floor((diff % 3600) / 60);
-            const seconds = diff % 60;
+            // Assicurati che diff sia positivo
+            const safeDiff = Math.max(0, diff);
+            
+            const hours = Math.floor(safeDiff / 3600);
+            const minutes = Math.floor((safeDiff % 3600) / 60);
+            const seconds = safeDiff % 60;
             
             setElapsedTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
         };
