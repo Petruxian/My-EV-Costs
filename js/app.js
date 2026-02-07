@@ -15,9 +15,6 @@ function EVCostTracker() {
     const [selectedVehicleId, setSelectedVehicleId] = React.useState(null); // ID auto attiva
     const [charges, setCharges] = React.useState([]);
     const [suppliers, setSuppliers] = React.useState([]);
-    
-    // Stato Sessione Attiva (se c'è una ricarica in corso)
-    const [activeSession, setActiveSession] = React.useState(null);
 
     // Impostazioni globali
     const [settings, setSettings] = React.useState({
@@ -110,10 +107,6 @@ function EVCostTracker() {
             setSelectedVehicleId(vList[0].id);
         }
 
-        // Cerca se c'è una sessione attiva per l'auto selezionata (o in generale)
-        const running = cList.find(c => c.status === 'in_progress');
-        setActiveSession(running || null);
-
         setIsSyncing(false);
     }
 
@@ -124,6 +117,17 @@ function EVCostTracker() {
     }, [charges, selectedVehicleId]);
 
     const activeVehicle = vehicles.find(v => v.id === selectedVehicleId);
+
+    // Trova sessione attiva SOLO per l'auto selezionata
+    const currentActiveSession = React.useMemo(() => {
+        if(!selectedVehicleId) return null;
+        return charges.find(c => c.vehicle_id === selectedVehicleId && c.status === 'in_progress') || null;
+    }, [charges, selectedVehicleId]);
+
+    // Controlla se ci sono altre auto in ricarica
+    const otherActiveCharges = React.useMemo(() => {
+        return charges.filter(c => c.status === 'in_progress' && c.vehicle_id !== selectedVehicleId);
+    }, [charges, selectedVehicleId]);
 
     // --------------------------------------------------------
     // ACTIONS: VEHICLES
@@ -163,18 +167,18 @@ function EVCostTracker() {
 
     // 2. STOP CHARGE
     async function handleStopCharge(endData) {
-        if(!activeSession) return;
+        if(!currentActiveSession) return;
         
         setIsSyncing(true);
         // Calcola costo se "Casa"
         let finalCost = parseFloat(endData.cost);
-        const supplier = suppliers.find(s => s.id === activeSession.supplier_id);
+        const supplier = suppliers.find(s => s.id === currentActiveSession.supplier_id);
         
         if (supplier && supplier.name === "Casa" && !finalCost) {
             finalCost = parseFloat(endData.kwhAdded) * settings.homeElectricityPrice;
         }
 
-        const ok = await stopChargeDB(supabaseClient, activeSession.id, endData, finalCost, activeVehicle, settings, charges);
+        const ok = await stopChargeDB(supabaseClient, currentActiveSession.id, endData, finalCost, activeVehicle, settings, charges);
         
         if(ok) {
             setShowStopModal(false);
@@ -226,15 +230,28 @@ function EVCostTracker() {
                     
                     {/* Selettore Auto Rapido */}
                     {vehicles.length > 0 && (
-                        <select 
-                            className="bg-card border border-card-border rounded-lg px-2 py-1 text-sm text-saving font-bold ml-2 outline-none"
-                            value={selectedVehicleId || ""}
-                            onChange={(e) => setSelectedVehicleId(parseInt(e.target.value))}
-                        >
-                            {vehicles.map(v => (
-                                <option key={v.id} value={v.id}>{v.name}</option>
-                            ))}
-                        </select>
+                        <div className="relative ml-2">
+                            <select 
+                                className="bg-card border border-card-border rounded-lg px-2 py-1 text-sm text-saving font-bold outline-none"
+                                value={selectedVehicleId || ""}
+                                onChange={(e) => setSelectedVehicleId(parseInt(e.target.value))}
+                            >
+                                {vehicles.map(v => {
+                                    const hasActiveCharge = charges.some(c => c.vehicle_id === v.id && c.status === 'in_progress');
+                                    return (
+                                        <option key={v.id} value={v.id}>
+                                            {hasActiveCharge ? '⚡ ' : ''}{v.name}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                            {/* Badge altre auto in ricarica */}
+                            {otherActiveCharges.length > 0 && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full animate-pulse border-2 border-card-soft" 
+                                     title={`${otherActiveCharges.length} altra/e auto in ricarica`}>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 
@@ -269,9 +286,9 @@ function EVCostTracker() {
                     <div className="animate-fade-in">
                         
                         {/* BOX RICARICA ATTIVA */}
-                        {activeSession ? (
+                        {currentActiveSession ? (
                             <ActiveChargingBox 
-                                activeSession={activeSession}
+                                activeSession={currentActiveSession}
                                 onStopClick={() => setShowStopModal(true)}
                             />
                         ) : (
@@ -349,9 +366,9 @@ function EVCostTracker() {
                 />
             )}
 
-            {showStopModal && activeSession && (
+            {showStopModal && currentActiveSession && (
                 <StopChargeModal
-                    activeSession={activeSession}
+                    activeSession={currentActiveSession}
                     activeVehicle={activeVehicle}
                     onClose={() => setShowStopModal(false)}
                     onStop={handleStopCharge}
