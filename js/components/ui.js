@@ -331,6 +331,14 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
 
     React.useEffect(() => {
         const updateTimer = () => {
+            // Debug: stampa la data grezza
+            console.log('🔍 DEBUG Timer:', {
+                rawDate: activeSession.date,
+                parsedDate: new Date(activeSession.date).toString(),
+                now: new Date().toString(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            });
+            
             // Parsing più robusto della data
             let start = new Date(activeSession.date);
             
@@ -342,6 +350,8 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
             
             const now = new Date();
             const diff = Math.floor((now - start) / 1000);
+            
+            console.log('⏱️ Diff secondi:', diff, 'Start:', start.toISOString(), 'Now:', now.toISOString());
             
             // Assicurati che diff sia positivo
             const safeDiff = Math.max(0, diff);
@@ -380,6 +390,10 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
                     <div className="text-emerald-300 text-sm font-medium mb-1">Tempo trascorso</div>
                     <div className="text-4xl font-mono font-bold text-white tabular-nums tracking-wider">
                         {elapsedTime}
+                    </div>
+                    {/* Debug box visibile */}
+                    <div className="text-[10px] text-yellow-400 mt-2 font-mono bg-black/50 p-1 rounded">
+                        DB: {activeSession.date}
                     </div>
                 </div>
 
