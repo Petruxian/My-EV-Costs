@@ -107,9 +107,9 @@ async function stopChargeDB(sb, chargeId, endData, finalCost, vehicle, settings,
     }
 
     // Recupera il supplier e calcola il costo
-    console.log("chargeId:", chargeId); 
-    console.log("allCharges:", allCharges); 
-    console.log("currentCharge:", currentCharge);
+    console.log("suppliers:", suppliers);
+    console.log("typeof suppliers:", typeof suppliers);
+    console.log("isArray:", Array.isArray(suppliers));
     const currentSupplier = suppliers.find(s => s.id === currentCharge.supplier_id);
     let calculatedCost = finalCost;
 
