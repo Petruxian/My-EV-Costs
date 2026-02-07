@@ -201,6 +201,77 @@ function ChargeList({ charges, onDelete }) {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Card Differenza vs Costo Standard */}
+                            {charge.standard_cost_snapshot && charge.standard_cost_snapshot > 0 && (() => {
+                                const standardCost = parseFloat(charge.standard_cost_snapshot);
+                                const actualCost = parseFloat(charge.cost);
+                                const kwhAdded = parseFloat(charge.kwh_added);
+
+                                // Calcola costo che sarebbe stato al prezzo standard
+                                const wouldBeCost = kwhAdded * standardCost;
+
+                                // Differenza (negativo = risparmio, positivo = pagato di più)
+                                const difference = actualCost - wouldBeCost;
+
+                                // Solo se c'è una differenza significativa (>= 0.10€)
+                                if (Math.abs(difference) < 0.10) return null;
+
+                                const isPositive = difference > 0;
+                                const isSaving = difference < 0;
+
+                                return (
+                                    <div className={`mt-3 p-3 rounded-lg border-2 transition-all ${isSaving
+                                            ? 'bg-emerald-500/10 border-emerald-500/40'
+                                            : 'bg-red-500/10 border-red-500/40'
+                                        }`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">
+                                                    {isSaving ? '💰' : '⚠️'}
+                                                </span>
+                                                <div>
+                                                    <div className="text-xs text-muted font-medium">
+                                                        vs Costo Standard (€{standardCost.toFixed(3)}/kWh)
+                                                    </div>
+                                                    <div className={`text-sm font-bold ${isSaving ? 'text-emerald-400' : 'text-red-400'
+                                                        }`}>
+                                                        {isSaving ? 'Risparmiato' : 'Pagato in più'}:
+                                                        <span className="text-lg ml-1">
+                                                            {isSaving ? '-' : '+'}€{Math.abs(difference).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <div className="text-xs text-muted">Sarebbe stato</div>
+                                                <div className="text-sm font-mono font-semibold text-slate-300">
+                                                    €{wouldBeCost.toFixed(2)}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Barra percentuale */}
+                                        <div className="mt-2 h-1.5 bg-black/20 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full transition-all ${isSaving
+                                                        ? 'bg-gradient-to-r from-emerald-500 to-green-400'
+                                                        : 'bg-gradient-to-r from-red-500 to-orange-400'
+                                                    }`}
+                                                style={{
+                                                    width: `${Math.min(Math.abs((difference / wouldBeCost) * 100), 100)}%`
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="text-xs text-muted mt-1 text-center">
+                                            {((difference / wouldBeCost) * 100).toFixed(1)}%
+                                            {isSaving ? ' di sconto' : ' in più'}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     );
                 })}
