@@ -40,7 +40,14 @@ function EVCostTracker() {
 
     // Chart Options
     const [chartOptions, setChartOptions] = React.useState({
-        showCost: true, showKwh: true, showConsumption: true, showEurKwh: true, showEur100km: true
+        showCost: true, 
+        showKwh: true, 
+        showConsumption: true, 
+        showEurKwh: true, 
+        showEur100km: true,
+        showTrend: false,
+        showACDC: false,
+        showSuppliers: false
     });
 
     // --------------------------------------------------------
@@ -98,19 +105,6 @@ function EVCostTracker() {
             loadCharges(supabaseClient)
         ]);
 
-        console.log('🔄 Data Loaded:', {
-            vehicles: vList.length,
-            suppliers: sList.length,
-            charges: cList.length,
-            chargesDetails: cList.map(c => ({
-                id: c.id,
-                vehicle_id: c.vehicle_id,
-                status: c.status,
-                date: c.date,
-                supplier: c.supplier_name
-            }))
-        });
-
         setVehicles(vList);
         setSuppliers(sList);
         setCharges(cList);
@@ -126,14 +120,7 @@ function EVCostTracker() {
     // Filtra le ricariche per l'auto selezionata (per dashboard e grafici)
     const currentVehicleCharges = React.useMemo(() => {
         if(!selectedVehicleId) return [];
-        const filtered = charges.filter(c => c.vehicle_id === selectedVehicleId && c.status === 'completed');
-        console.log('📊 Filtered Charges:', {
-            selectedVehicleId,
-            totalCharges: charges.length,
-            filtered: filtered.length,
-            allStatuses: charges.map(c => ({id: c.id, vehicle: c.vehicle_id, status: c.status}))
-        });
-        return filtered;
+        return charges.filter(c => c.vehicle_id === selectedVehicleId && c.status === 'completed');
     }, [charges, selectedVehicleId]);
 
     const activeVehicle = vehicles.find(v => v.id === selectedVehicleId);
