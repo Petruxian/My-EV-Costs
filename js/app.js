@@ -69,7 +69,21 @@ function EVCostTracker() {
     }, [settings]);
     
     React.useEffect(() => {
-        if(settings.theme) document.body.className = settings.theme;
+        // Gestione tema auto (segue sistema)
+        if(settings.theme === 'theme-auto') {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.className = isDark ? 'theme-dark' : 'theme-light';
+            
+            // Listener per cambio tema sistema
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleChange = (e) => {
+                document.body.className = e.matches ? 'theme-dark' : 'theme-light';
+            };
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        } else if(settings.theme) {
+            document.body.className = settings.theme;
+        }
     }, [settings.theme]);
 
     React.useEffect(() => {
@@ -233,10 +247,16 @@ function EVCostTracker() {
 
             <main className="max-w-7xl mx-auto px-4 py-6">
 
+                {/* LOADING STATE */}
+                {isSyncing && view === "dashboard" && (
+                    <SkeletonLoader />
+                )}
+
                 {/* 1. SE NON CI SONO AUTO */}
                 {vehicles.length === 0 && !isSyncing && view !== "settings" && (
-                    <div className="text-center py-10">
-                        <h2 className="text-xl font-bold mb-4">Benvenuto! 👋</h2>
+                    <div className="text-center py-10 animate-scale-in">
+                        <div className="text-6xl mb-4">🚗</div>
+                        <h2 className="text-2xl font-bold mb-4">Benvenuto! 👋</h2>
                         <p className="text-muted mb-6">Per iniziare, aggiungi la tua prima auto elettrica.</p>
                         <button onClick={() => setShowVehicleModal(true)} className="btn btn-primary text-lg px-8">
                             🚘 Aggiungi Auto
@@ -245,43 +265,34 @@ function EVCostTracker() {
                 )}
 
                 {/* 2. DASHBOARD VIEW */}
-                {view === "dashboard" && vehicles.length > 0 && (
+                {view === "dashboard" && vehicles.length > 0 && !isSyncing && (
                     <div className="animate-fade-in">
                         
                         {/* BOX RICARICA ATTIVA */}
                         {activeSession ? (
-                            <div className="bg-gradient-to-r from-emerald-900/40 to-cyan-900/40 border border-emerald-500/50 rounded-2xl p-6 mb-8 text-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                                <h2 className="text-2xl font-bold text-white mb-2 animate-pulse">⚡ Ricarica in Corso...</h2>
-                                <p className="text-emerald-300 mb-6">
-                                    Iniziata il {new Date(activeSession.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} 
-                                    <br/>
-                                    <span className="text-sm opacity-80">Batteria iniziale: {activeSession.battery_start}%</span>
-                                </p>
-                                <button 
-                                    onClick={() => setShowStopModal(true)}
-                                    className="btn bg-red-500 hover:bg-red-600 text-white font-bold text-xl px-8 py-3 shadow-lg"
-                                >
-                                    ⏹ Termina Ricarica
-                                </button>
-                            </div>
+                            <ActiveChargingBox 
+                                activeSession={activeSession}
+                                onStopClick={() => setShowStopModal(true)}
+                            />
                         ) : (
                             /* PULSANTI AZIONE PRINCIPALE */
-                            <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                                 <button 
                                     onClick={() => setShowStartModal(true)}
-                                    className="btn btn-primary flex flex-col items-center justify-center py-6 gap-2 h-32"
+                                    className="btn btn-primary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] animate-scale-in"
                                 >
-                                    <span className="text-3xl">🔌</span>
-                                    <span className="font-bold">INIZIA ORA</span>
+                                    <span className="text-5xl">🔌</span>
+                                    <span className="font-bold text-lg">INIZIA ORA</span>
                                     <span className="text-xs opacity-70 font-normal">Start ricarica live</span>
                                 </button>
 
                                 <button 
                                     onClick={() => setShowManualModal(true)}
-                                    className="btn btn-secondary flex flex-col items-center justify-center py-6 gap-2 h-32 border-dashed border-2 border-card-border"
+                                    className="btn btn-secondary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] border-dashed border-2 border-card-border animate-scale-in"
+                                    style={{animationDelay: '0.1s'}}
                                 >
-                                    <span className="text-3xl">📝</span>
-                                    <span className="font-bold">MANUALE</span>
+                                    <span className="text-5xl">📝</span>
+                                    <span className="font-bold text-lg">MANUALE</span>
                                     <span className="text-xs opacity-70 font-normal">Aggiungi passata</span>
                                 </button>
                             </div>
