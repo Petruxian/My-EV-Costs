@@ -209,6 +209,17 @@ function EVCostTracker() {
         await loadData();
         setIsSyncing(false);
     }
+
+    // 5. CANCEL ACTIVE CHARGE
+    async function handleCancelCharge() {
+        if(!currentActiveSession) return;
+        if(!confirm("Annullare questa ricarica in corso? L'operazione non può essere annullata.")) return;
+        
+        setIsSyncing(true);
+        await deleteChargeFromDB(supabaseClient, currentActiveSession.id);
+        await loadData();
+        setIsSyncing(false);
+    }
     
     // --------------------------------------------------------
     // STATS CALCULATIONS
@@ -290,6 +301,7 @@ function EVCostTracker() {
                             <ActiveChargingBox 
                                 activeSession={currentActiveSession}
                                 onStopClick={() => setShowStopModal(true)}
+                                onCancelClick={handleCancelCharge}
                             />
                         ) : (
                             /* PULSANTI AZIONE PRINCIPALE */
