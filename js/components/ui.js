@@ -391,10 +391,6 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
                     <div className="text-4xl font-mono font-bold text-white tabular-nums tracking-wider">
                         {elapsedTime}
                     </div>
-                    {/* Debug box visibile */}
-                    <div className="text-[10px] text-yellow-400 mt-2 font-mono bg-black/50 p-1 rounded">
-                        DB: {activeSession.date}
-                    </div>
                 </div>
 
                 {/* Info sessione */}
@@ -403,10 +399,6 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
                         <div className="text-xs text-emerald-300/80 mb-1">Inizio</div>
                         <div className="text-sm font-bold text-white">
                             {new Date(activeSession.date).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}
-                        </div>
-                        {/* Debug info - rimuovere dopo test */}
-                        <div className="text-[8px] text-gray-400 mt-1" title={activeSession.date}>
-                            {new Date(activeSession.date).toISOString().slice(11, 19)}
                         </div>
                     </div>
                     <div className="bg-black/20 backdrop-blur-sm rounded-xl px-4 py-2">
