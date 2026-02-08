@@ -135,13 +135,13 @@ function ChargeList({ charges, onDelete }) {
     // Raggruppa ricariche per Anno/Mese
     const groupedCharges = React.useMemo(() => {
         const groups = {};
-        
+
         charges.forEach(charge => {
             const date = new Date(charge.date);
             const year = date.getFullYear();
             const month = date.getMonth(); // 0-11
             const key = `${year}-${month}`;
-            
+
             if (!groups[key]) {
                 groups[key] = {
                     year,
@@ -153,13 +153,13 @@ function ChargeList({ charges, onDelete }) {
                     count: 0
                 };
             }
-            
+
             groups[key].charges.push(charge);
             groups[key].totalCost += parseFloat(charge.cost) || 0;
             groups[key].totalKwh += parseFloat(charge.kwh_added) || 0;
             groups[key].count++;
         });
-        
+
         // Ordina gruppi per data (più recente prima)
         return Object.entries(groups)
             .sort((a, b) => {
@@ -199,13 +199,13 @@ function ChargeList({ charges, onDelete }) {
         <div className="space-y-4">
             {/* Controlli Espandi/Comprimi */}
             <div className="flex justify-end gap-2">
-                <button 
+                <button
                     onClick={expandAll}
                     className="text-xs px-3 py-1.5 rounded-lg bg-card-soft hover:bg-card border border-card-border text-muted hover:text-accent transition-all"
                 >
                     📂 Espandi tutto
                 </button>
-                <button 
+                <button
                     onClick={collapseAll}
                     className="text-xs px-3 py-1.5 rounded-lg bg-card-soft hover:bg-card border border-card-border text-muted hover:text-accent transition-all"
                 >
@@ -216,7 +216,7 @@ function ChargeList({ charges, onDelete }) {
             {/* Gruppi per Mese */}
             {groupedCharges.map(group => {
                 const isExpanded = expandedMonths[group.key];
-                
+
                 return (
                     <div key={group.key} className="card overflow-hidden">
                         {/* Header Mese (clickable) */}
@@ -229,7 +229,7 @@ function ChargeList({ charges, onDelete }) {
                                 <div className={`text-2xl transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
                                     ▶
                                 </div>
-                                
+
                                 <div className="text-left">
                                     <h3 className="text-lg font-bold text-white capitalize">
                                         {group.monthName} {group.year}
@@ -258,23 +258,23 @@ function ChargeList({ charges, onDelete }) {
                             <div className="divide-y divide-card-border animate-fade-in">
                                 {group.charges.map(charge => {
                                     const power = calculateAveragePower(charge.kwh_added, charge.date, charge.end_date);
-                                    
+
                                     return (
                                         <div key={charge.id} className="p-4 hover:bg-card-soft transition-all duration-200 group relative">
                                             {/* Hover indicator */}
                                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                            
+
                                             <div className="flex justify-between items-start mb-3">
                                                 <div className="flex items-center gap-3">
                                                     {/* Badge Tipo */}
                                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg transition-all duration-200 group-hover:scale-110
-                                                        ${charge.supplier_type === 'DC' 
-                                                            ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white' 
+                                                        ${charge.supplier_type === 'DC'
+                                                            ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white'
                                                             : 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white'
                                                         }`}>
                                                         {charge.supplier_type}
                                                     </div>
-                                                    
+
                                                     <div>
                                                         <div className="font-bold text-base text-white mb-0.5">{charge.supplier_name}</div>
                                                         <div className="text-xs text-muted flex items-center gap-1">
@@ -284,9 +284,9 @@ function ChargeList({ charges, onDelete }) {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
-                                                <button 
-                                                    onClick={() => onDelete(charge.id)} 
+
+                                                <button
+                                                    onClick={() => onDelete(charge.id)}
                                                     className="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125 text-negative p-2 rounded-lg hover:bg-red-500/10"
                                                     aria-label="Elimina ricarica"
                                                 >
@@ -328,23 +328,29 @@ function ChargeList({ charges, onDelete }) {
 
                                             {/* Card Differenza vs Costo Standard */}
                                             {charge.standard_cost_snapshot && charge.standard_cost_snapshot > 0 && (() => {
+                                                // Escludi Casa e Fotovoltaico
+                                                const supplierName = charge.supplier_name.toLowerCase();
+                                                if (supplierName === 'casa' ||
+                                                    supplierName.includes('fotovoltaico') ||
+                                                    supplierName.includes('solar')) {
+                                                    return null;
+                                                }
                                                 const standardCost = parseFloat(charge.standard_cost_snapshot);
                                                 const actualCost = parseFloat(charge.cost);
                                                 const kwhAdded = parseFloat(charge.kwh_added);
-                                                
+
                                                 const wouldBeCost = kwhAdded * standardCost;
                                                 const difference = actualCost - wouldBeCost;
-                                                
+
                                                 if (Math.abs(difference) < 0.10) return null;
-                                                
+
                                                 const isSaving = difference < 0;
-                                                
+
                                                 return (
-                                                    <div className={`mt-3 p-3 rounded-lg border-2 transition-all ${
-                                                        isSaving 
-                                                            ? 'bg-emerald-500/10 border-emerald-500/40' 
+                                                    <div className={`mt-3 p-3 rounded-lg border-2 transition-all ${isSaving
+                                                            ? 'bg-emerald-500/10 border-emerald-500/40'
                                                             : 'bg-red-500/10 border-red-500/40'
-                                                    }`}>
+                                                        }`}>
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xl">
@@ -354,17 +360,16 @@ function ChargeList({ charges, onDelete }) {
                                                                     <div className="text-xs text-muted font-medium">
                                                                         vs Costo Standard (€{standardCost.toFixed(3)}/kWh)
                                                                     </div>
-                                                                    <div className={`text-sm font-bold ${
-                                                                        isSaving ? 'text-emerald-400' : 'text-red-400'
-                                                                    }`}>
-                                                                        {isSaving ? 'Risparmiato' : 'Pagato in più'}: 
+                                                                    <div className={`text-sm font-bold ${isSaving ? 'text-emerald-400' : 'text-red-400'
+                                                                        }`}>
+                                                                        {isSaving ? 'Risparmiato' : 'Pagato in più'}:
                                                                         <span className="text-lg ml-1">
                                                                             {isSaving ? '-' : '+'}€{Math.abs(difference).toFixed(2)}
                                                                         </span>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            
+
                                                             <div className="text-right">
                                                                 <div className="text-xs text-muted">Sarebbe stato</div>
                                                                 <div className="text-sm font-mono font-semibold text-slate-300">
@@ -372,22 +377,21 @@ function ChargeList({ charges, onDelete }) {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        
+
                                                         <div className="mt-2 h-1.5 bg-black/20 rounded-full overflow-hidden">
-                                                            <div 
-                                                                className={`h-full rounded-full transition-all ${
-                                                                    isSaving 
-                                                                        ? 'bg-gradient-to-r from-emerald-500 to-green-400' 
+                                                            <div
+                                                                className={`h-full rounded-full transition-all ${isSaving
+                                                                        ? 'bg-gradient-to-r from-emerald-500 to-green-400'
                                                                         : 'bg-gradient-to-r from-red-500 to-orange-400'
-                                                                }`}
+                                                                    }`}
                                                                 style={{
                                                                     width: `${Math.min(Math.abs((difference / wouldBeCost) * 100), 100)}%`
                                                                 }}
                                                             />
                                                         </div>
-                                                        
+
                                                         <div className="text-xs text-muted mt-1 text-center">
-                                                            {((difference / wouldBeCost) * 100).toFixed(1)}% 
+                                                            {((difference / wouldBeCost) * 100).toFixed(1)}%
                                                             {isSaving ? ' di sconto' : ' in più'}
                                                         </div>
                                                     </div>
