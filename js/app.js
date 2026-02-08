@@ -311,7 +311,7 @@ function EVCostTracker() {
                 </div>
 
                 <div className="flex gap-2">
-                    <button onClick={() => setView("dashboard")} className={`btn ${view === "dashboard" ? "btn-primary" : "btn-secondary"} p-2`}>📊</button>
+                    <button onClick={() => setView("dashboard")} className={`btn ${view==="dashboard"?"btn-primary":"btn-secondary"} p-2`}>🔌</button>
                     <button onClick={() => setView("charts")} className={`btn ${view === "charts" ? "btn-primary" : "btn-secondary"} p-2`}>📈</button>
                     <button onClick={() => setView("settings")} className={`btn ${view === "settings" ? "btn-primary" : "btn-secondary"} p-2`}>⚙️</button>
                 </div>
