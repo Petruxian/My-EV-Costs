@@ -117,19 +117,13 @@ function StatsCards({ stats }) {
 // LISTA RICARICHE CON RAGGRUPPAMENTO MESE
 // ==========================================
 function ChargeList({ charges, onDelete }) {
+    // 1. HOOKS PRIMA DI TUTTO (Fix crash React "Rendered fewer hooks")
     const [expandedMonths, setExpandedMonths] = React.useState({});
-
-    if (!charges || charges.length === 0) {
-        return (
-            <div className="p-8 text-center card">
-                <div className="text-5xl mb-4 opacity-30">⚡</div>
-                <p className="text-muted">Nessuna ricarica registrata.</p>
-            </div>
-        );
-    }
 
     // Raggruppa ricariche per Anno/Mese
     const groupedCharges = React.useMemo(() => {
+        if (!charges || charges.length === 0) return []; // Gestione array vuoto dentro il memo
+
         const groups = {};
 
         charges.forEach(charge => {
@@ -166,11 +160,22 @@ function ChargeList({ charges, onDelete }) {
             .map(([key, data]) => ({ key, ...data }));
     }, [charges]);
 
+    // Auto-espandi il mese più recente
     React.useEffect(() => {
         if (groupedCharges.length > 0 && Object.keys(expandedMonths).length === 0) {
             setExpandedMonths({ [groupedCharges[0].key]: true });
         }
     }, [groupedCharges]);
+
+    // 2. ORA POSSIAMO FARE IL RETURN ANTICIPATO (Conditional Rendering)
+    if (!charges || charges.length === 0) {
+        return (
+            <div className="p-8 text-center card">
+                <div className="text-5xl mb-4 opacity-30">⚡</div>
+                <p className="text-muted">Nessuna ricarica registrata.</p>
+            </div>
+        );
+    }
 
     const toggleMonth = (key) => {
         setExpandedMonths(prev => ({ ...prev, [key]: !prev[key] }));
