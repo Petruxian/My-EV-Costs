@@ -268,9 +268,13 @@ function EVCostTracker() {
     // --------------------------------------------------------
     // STATS CALCULATIONS
     // --------------------------------------------------------
-    const stats = React.useMemo(() =>
-        calculateStats(currentVehicleCharges, settings),
-        [currentVehicleCharges, settings]);
+    const stats = React.useMemo(() => {
+        if (!currentVehicleCharges || currentVehicleCharges.length === 0) {
+            return null;
+        }
+        return calculateStats(currentVehicleCharges, settings);
+    }, [currentVehicleCharges, settings]);
+
 
     // --------------------------------------------------------
     // RENDER
