@@ -39,7 +39,10 @@ function calculateStats(charges, settings) {
     );
 
     const firstKm = parseFloat(sortedByKm[0].total_km) || 0;
-    const lastKm = parseFloat(sortedByKm.at(-1).total_km) || 0;
+    
+    // FIX COMPATIBILITÀ: uso length-1 invece di .at(-1) per evitare crash su browser vecchi
+    const lastItem = sortedByKm[sortedByKm.length - 1];
+    const lastKm = parseFloat(lastItem.total_km) || 0;
 
     const kmDriven = Math.max(0, lastKm - firstKm);
 
@@ -88,14 +91,9 @@ function calculateStats(charges, settings) {
     });
 
     // ============================
-    // IMPATTO ECOLOGICO (CO2 & ALBERI) ---
+    // IMPATTO ECOLOGICO (CO2 & ALBERI)
     // ============================
-    // Stima: Auto Termica media ~120g/km. Auto Elettrica (Mix EU) ~0g allo scarico (o ~30g produzione energia).
-    // Semplifichiamo: Risparmio netto ~100g (0.1kg) di CO2 al km.
     const co2SavedKg = kmDriven * 0.10; 
-    
-    // Un albero maturo assorbe circa 20-25kg di CO2 l'anno.
-    // Diciamo che 20kg risparmiati = 1 Albero equivalente "felice"
     const treesSaved = co2SavedKg / 20;
 
     // ============================
