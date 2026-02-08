@@ -266,6 +266,57 @@ function EVCostTracker() {
     }
 
     // --------------------------------------------------------
+    // DELETE VEHICLE FLOW
+    // --------------------------------------------------------
+    async function handleDeleteVehicle(vehicle) {
+        // 1. Prima conferma
+        if (!confirm(`⚠️ ATTENZIONE ⚠️\n\nStai per eliminare "${vehicle.name}".\nQuesta azione eliminerà anche TUTTE le ricariche associate.\n\nVuoi procedere?`)) {
+            return;
+        }
+
+        // 2. Richiesta Export CSV
+        const vehicleCharges = charges.filter(c => c.vehicle_id === vehicle.id);
+        if (vehicleCharges.length > 0) {
+            if (confirm(`Vuoi scaricare un backup (CSV) delle ${vehicleCharges.length} ricariche prima di eliminare tutto?`)) {
+                // Genera CSV
+                const filename = `Backup_${vehicle.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+                exportToCSV(filename, vehicleCharges);
+            }
+        }
+
+        // 3. Conferma Finale (Irreversibile)
+        if (!confirm(`SEI SICURO?\n\nL'auto "${vehicle.name}" verrà eliminata definitivamente dal database.\nNon potrai tornare indietro.`)) {
+            return;
+        }
+
+        setIsSyncing(true);
+        const success = await deleteVehicleFromDB(supabaseClient, vehicle.id);
+
+        if (success) {
+            // Aggiorna stato locale
+            const updatedVehicles = vehicles.filter(v => v.id !== vehicle.id);
+            setVehicles(updatedVehicles);
+
+            // Rimuovi ricariche locali
+            setCharges(charges.filter(c => c.vehicle_id !== vehicle.id));
+
+            // Se l'auto eliminata era quella selezionata, cambia selezione
+            if (selectedVehicleId === vehicle.id) {
+                if (updatedVehicles.length > 0) {
+                    setSelectedVehicleId(updatedVehicles[0].id);
+                } else {
+                    setSelectedVehicleId(null);
+                    setView("dashboard"); // Torna alla home vuota
+                }
+            }
+            alert("Auto eliminata correttamente.");
+        } else {
+            alert("Errore durante l'eliminazione.");
+        }
+        setIsSyncing(false);
+    }
+
+    // --------------------------------------------------------
     // STATS CALCULATIONS
     // --------------------------------------------------------
     const stats = React.useMemo(() => {
@@ -411,10 +462,10 @@ function EVCostTracker() {
                         saveSettings={() => alert("Salvato!")}
                         vehicles={vehicles}
                         onAddVehicle={() => setShowVehicleModal(true)}
+                        onDeleteVehicle={handleDeleteVehicle}  // <--- RIGA AGGIUNTA
                         suppliers={suppliers}
                         onAddSupplier={() => setShowSupplierModal(true)}
                         onEditSupplier={handleEditSupplier}
-                        onDeleteSupplier={(id) => {/* to implement */ }}
                     />
                 )}
 
