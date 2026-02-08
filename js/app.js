@@ -311,7 +311,7 @@ function EVCostTracker() {
                 </div>
 
                 <div className="flex gap-2">
-                    <button onClick={() => setView("dashboard")} className={`btn ${view==="dashboard"?"btn-primary":"btn-secondary"} p-2`}>🔌</button>
+                    <button onClick={() => setView("dashboard")} className={`btn ${view === "dashboard" ? "btn-primary" : "btn-secondary"} p-2`}>🔌</button>
                     <button onClick={() => setView("charts")} className={`btn ${view === "charts" ? "btn-primary" : "btn-secondary"} p-2`}>📈</button>
                     <button onClick={() => setView("settings")} className={`btn ${view === "settings" ? "btn-primary" : "btn-secondary"} p-2`}>⚙️</button>
                 </div>
@@ -372,7 +372,25 @@ function EVCostTracker() {
                         )}
 
                         {/* STATISTICHE (Solo per auto attiva) */}
-                        {stats && <StatsCards stats={stats} />}
+                        {activeVehicle && (
+                            stats ? (
+                                <StatsCards stats={stats} />
+                            ) : (
+                                <div className="card p-8 text-center mb-8">
+                                    <div className="text-5xl mb-4">📊</div>
+                                    <h3 className="text-xl font-bold mb-2">Nessuna ricarica per {activeVehicle.name}</h3>
+                                    <p className="text-muted">Inizia una nuova ricarica o inseriscine una manualmente!</p>
+                                    <div className="flex gap-3 justify-center mt-6">
+                                        <button onClick={() => setShowStartModal(true)} className="btn btn-primary">
+                                            🔌 Inizia Ricarica
+                                        </button>
+                                        <button onClick={() => setShowManualModal(true)} className="btn btn-secondary">
+                                            ✍️ Inserimento Manuale
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        )}
 
                         {/* LISTA ULTIME RICARICHE */}
                         <div className="mt-8">
