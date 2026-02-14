@@ -327,7 +327,9 @@ function EVCostTracker() {
             alert("Errore: Impossibile modificare, ID veicolo mancante.");
             return;
         }
-
+        
+        console.log("Apro modale modifica per:", vehicle); // Log per debug
+        
         setEditingVehicle({
             id: vehicle.id,
             name: vehicle.name,

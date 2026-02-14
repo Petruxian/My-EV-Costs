@@ -369,21 +369,40 @@ async function deleteVehicleFromDB(sb, vehicleId) {
 }
 
 /* =====================================================
-   UPDATE VEHICLE
-   ===================================================== */
+UPDATE VEHICLE (DEBUGGATA)
+===================================================== */
 async function updateVehicleInDB(sb, vehicle) {
-    const { error } = await sb
+    console.log("Tentativo aggiornamento veicolo:", vehicle);
+
+    if (!vehicle.id) {
+        alert("Errore Interno: Manca l'ID del veicolo.");
+        return false;
+    }
+
+    // Aggiungiamo .select() alla fine per vedere cosa torna indietro
+    const { data, error } = await sb
         .from("vehicles")
         .update({
             name: vehicle.name,
             brand: vehicle.brand,
             capacity_kwh: parseFloat(vehicle.capacity)
         })
-        .eq("id", vehicle.id);
+        .eq("id", vehicle.id)
+        .select();
 
     if (error) {
-        console.error("Errore aggiornamento veicolo:", error);
+        console.error("Errore Supabase:", error);
+        alert("Errore DB: " + error.message);
         return false;
     }
+
+    // VERIFICA CRUCIALE: Se data è vuoto, non ha aggiornato nulla!
+    if (!data || data.length === 0) {
+        console.error("Nessuna riga aggiornata! Probabile problema di permessi RLS o ID errato.");
+        alert("⚠️ ATTENZIONE: Il database non ha salvato la modifica!\n\nPossibili cause:\n1. Permessi 'UPDATE' non attivi su Supabase (RLS).\n2. L'ID dell'auto non corrisponde.");
+        return false;
+    }
+
+    console.log("Aggiornamento riuscito:", data);
     return true;
 }
