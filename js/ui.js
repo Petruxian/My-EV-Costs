@@ -337,7 +337,7 @@ function ChargeList({ charges, onDelete }) {
 }
 
 // ==========================================
-// VIEW IMPOSTAZIONI COMPLETA (Aggiornata con Edit + Delete)
+// VIEW IMPOSTAZIONI COMPLETA (Con Toggle FunStats)
 // ==========================================
 function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier }) {
     return (
@@ -364,6 +364,28 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                         <option value="theme-cyber">🤖 Cyber</option>
                         <option value="theme-sunset">🌅 Sunset</option>
                     </select>
+                </div>
+
+                {/* VISUALIZZAZIONE (NUOVA SEZIONE) */}
+                <div className="mb-6 p-4 bg-card-soft rounded-xl border border-card-border">
+                    <h3 className="text-sm font-bold text-muted mb-3 uppercase tracking-wider">👁️ Visualizzazione</h3>
+                    
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="font-semibold text-text">Badge & Fun Stats</div>
+                            <div className="text-xs text-muted">Mostra trofei e indice pizza/caffè</div>
+                        </div>
+                        {/* TOGGLE SWITCH */}
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                className="sr-only peer"
+                                checked={settings.showFunStats !== false} // Default true se undefined
+                                onChange={(e) => setSettings({ ...settings, showFunStats: e.target.checked })}
+                            />
+                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
                 </div>
 
                 {/* Prezzi Carburanti */}
@@ -403,9 +425,8 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                 <button onClick={saveSettings} className="btn btn-primary mt-6 w-full">💾 Salva Impostazioni</button>
             </div>
 
-            {/* COLONNA DX: Auto e Fornitori */}
+            {/* COLONNA DX: Auto e Fornitori (INVARIATA) */}
             <div className="space-y-6">
-                {/* AUTO */}
                 <div className="card">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-km">🚘 Le tue Auto</h2>
@@ -442,7 +463,6 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     </div>
                 </div>
 
-                {/* FORNITORI */}
                 <div className="card">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-saving">🏪 Fornitori</h2>
