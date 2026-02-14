@@ -43,17 +43,6 @@ function EVCostTracker() {
     const [newVehicle, setNewVehicle] = React.useState({ name: "", capacity: "", brand: "", image: "" });
     const [newSupplier, setNewSupplier] = React.useState({ name: "", type: "AC", standardCost: "" });
 
-    // Chart Options
-    const [chartOptions, setChartOptions] = React.useState({
-        showCost: true,
-        showKwh: true,
-        showConsumption: true,
-        showEurKwh: true,
-        showEur100km: true,
-        showTrend: false,
-        showACDC: false,
-        showSuppliers: false
-    });
 
     // --------------------------------------------------------
     // INIT & SETTINGS
@@ -327,9 +316,9 @@ function EVCostTracker() {
             alert("Errore: Impossibile modificare, ID veicolo mancante.");
             return;
         }
-        
+
         console.log("Apro modale modifica per:", vehicle); // Log per debug
-        
+
         setEditingVehicle({
             id: vehicle.id,
             name: vehicle.name,
@@ -487,7 +476,7 @@ function EVCostTracker() {
                         {/* --- FUN STATS & BADGES (CON TOGGLE) --- */}
                         {/* Mostra solo se il setting non è esplicitamente 'false' */}
                         {settings.showFunStats !== false && activeVehicle && stats && (
-                             <FunStats stats={stats} charges={currentVehicleCharges} />
+                            <FunStats stats={stats} charges={currentVehicleCharges} />
                         )}
 
                         {/* STATISTICHE (Solo per auto attiva) */}
@@ -538,7 +527,11 @@ function EVCostTracker() {
                 {view === "charts" && (
                     <div className="animate-fade-in">
                         <h2 className="text-xl font-bold mb-4 text-center">Analisi {activeVehicle?.name}</h2>
-                        <ChartSection charges={currentVehicleCharges} options={chartOptions} setOptions={setChartOptions} theme={settings.theme} />
+                        {/* Non passiamo più 'options' o 'setOptions' perché i nuovi grafici sono fissi */}
+                        <ChartSection
+                            charges={currentVehicleCharges}
+                            theme={settings.theme}
+                        />
                     </div>
                 )}
 
