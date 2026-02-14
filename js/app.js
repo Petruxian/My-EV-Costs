@@ -156,7 +156,9 @@ function EVCostTracker() {
             id: supplier.id,
             name: supplier.name,
             type: supplier.type,
-            standardCost: supplier.standard_cost
+            standardCost: supplier.standard_cost,
+            isFavorite: supplier.is_favorite, // Mappatura DB -> App
+            sortOrder: supplier.sort_order    // Mappatura DB -> App
         });
         setShowEditSupplierModal(true);
     }

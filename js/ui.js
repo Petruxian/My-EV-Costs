@@ -463,6 +463,7 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     </div>
                 </div>
 
+ {/* FORNITORI */}
                 <div className="card">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-saving">🏪 Fornitori</h2>
@@ -470,24 +471,26 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     </div>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                         {suppliers.map(s => (
-                            <div key={s.id} className="card-soft p-3 hover:bg-card transition-colors">
-                                <div className="flex justify-between items-center mb-2">
-                                    <div className="flex items-center gap-2">
+                            <div key={s.id} className={`card-soft p-3 hover:bg-card transition-colors flex justify-between items-center ${s.is_favorite ? 'border border-yellow-500/30 bg-yellow-500/5' : ''}`}>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        {s.is_favorite && <span className="text-lg" title="Preferito">⭐</span>}
                                         <span className="font-semibold">{s.name}</span>
                                         <span className={`text-xs px-2 py-0.5 rounded ${s.type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>
                                             {s.type}
                                         </span>
                                     </div>
-                                    <button
-                                        onClick={() => onEditSupplier(s)}
-                                        className="text-xs text-accent hover:text-accent-2 font-medium"
-                                    >
-                                        ✏️ Modifica
-                                    </button>
+                                    <div className="text-xs text-muted flex gap-2">
+                                        <span>€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
+                                        {s.sort_order !== 9 && <span className="text-text opacity-50">• Ordine: {s.sort_order}</span>}
+                                    </div>
                                 </div>
-                                <div className="text-xs text-muted">
-                                    Costo standard: <span className="text-saving font-bold">€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
-                                </div>
+                                <button
+                                    onClick={() => onEditSupplier(s)}
+                                    className="p-2 text-muted hover:text-accent rounded-lg"
+                                >
+                                    ✏️
+                                </button>
                             </div>
                         ))}
                     </div>

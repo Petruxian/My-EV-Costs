@@ -18,17 +18,6 @@ async function loadVehicles(sb) {
     const { data, error } = await sb.from("vehicles").select("*");
     return error ? [] : data;
 }
-
-/**
- * Carica tutti i supplier dal database
- * @param {object} sb - client Supabase
- * @returns {Array} elenco supplier
- */
-async function loadSuppliers(sb) {
-    const { data, error } = await sb.from("suppliers").select("*");
-    return error ? [] : data;
-}
-
 /**
  * Carica tutte le ricariche ordinate per data (desc)
  */
@@ -63,38 +52,47 @@ async function saveVehicleToDB(sb, vehicle) {
 
 
 /* =====================================================
-   SUPPLIERS
+   SUPPLIERS (Ordinati per Preferiti + Ordine)
    ===================================================== */
 
-/**
- * Salva un nuovo supplier
- */
+async function loadSuppliers(sb) {
+    const { data, error } = await sb
+        .from("suppliers")
+        .select("*")
+        // Ordina: Prima i Preferiti (true viene dopo false, quindi desc), poi Ordine (asc), poi Nome
+        .order("is_favorite", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true });
+
+    return error ? [] : data;
+}
+
 async function saveSupplier(sb, s) {
     const { error } = await sb.from("suppliers").insert({
         name: s.name,
         type: s.type,
-        standard_cost: parseFloat(s.standardCost) || 0
+        standard_cost: parseFloat(s.standardCost) || 0,
+        is_favorite: s.isFavorite || false,
+        sort_order: parseInt(s.sortOrder) || 9
     });
 
     return !error;
 }
 
-/**
- * Aggiorna un supplier esistente
- */
 async function updateSupplier(sb, supplierId, updates) {
     const { error } = await sb
         .from("suppliers")
         .update({
             name: updates.name,
             type: updates.type,
-            standard_cost: parseFloat(updates.standardCost) || 0
+            standard_cost: parseFloat(updates.standardCost) || 0,
+            is_favorite: updates.isFavorite,
+            sort_order: parseInt(updates.sortOrder)
         })
         .eq("id", supplierId);
 
     return !error;
 }
-
 
 /* =====================================================
    LOGICA RICARICA

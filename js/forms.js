@@ -233,16 +233,49 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
 
 // Helper per modale fornitori e settings (riutilizziamo codice esistente o placeholder semplice)
 function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave }) {
+    // Inizializza default se mancano
+    React.useEffect(() => {
+        setNewSupplier(prev => ({ ...prev, isFavorite: false, sortOrder: 9 }));
+    }, []);
+
     return (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
             <div className="modal-panel max-w-sm w-full">
                 <h2 className="text-xl font-bold mb-4">Aggiungi Fornitore</h2>
                 <div className="space-y-3">
-                    <input className="input" placeholder="Nome" value={newSupplier.name} onChange={e => setNewSupplier({ ...newSupplier, name: e.target.value })} />
-                    <select className="input" value={newSupplier.type} onChange={e => setNewSupplier({ ...newSupplier, type: e.target.value })}>
-                        <option value="AC">AC</option><option value="DC">DC</option>
-                    </select>
-                    <input className="input" type="number" placeholder="Costo std (€/kWh)" value={newSupplier.standardCost} onChange={e => setNewSupplier({ ...newSupplier, standardCost: e.target.value })} />
+                    <input className="input" placeholder="Nome (es. Enel X)" value={newSupplier.name || ""} onChange={e => setNewSupplier({ ...newSupplier, name: e.target.value })} />
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                        <select className="input" value={newSupplier.type || "AC"} onChange={e => setNewSupplier({ ...newSupplier, type: e.target.value })}>
+                            <option value="AC">AC (Lento)</option><option value="DC">DC (Fast)</option>
+                        </select>
+                        <input className="input" type="number" placeholder="€/kWh" value={newSupplier.standardCost || ""} onChange={e => setNewSupplier({ ...newSupplier, standardCost: e.target.value })} />
+                    </div>
+
+                    {/* SEZIONE PREFERITI & ORDINE */}
+                    <div className="flex items-center gap-3 bg-card-soft p-2 rounded-lg border border-card-border">
+                        <button 
+                            className={`text-2xl transition-transform active:scale-125 ${newSupplier.isFavorite ? 'grayscale-0 scale-110' : 'grayscale opacity-50'}`}
+                            onClick={() => setNewSupplier({ ...newSupplier, isFavorite: !newSupplier.isFavorite })}
+                            title="Segna come preferito"
+                        >
+                            ⭐
+                        </button>
+                        <div className="flex-1 text-xs text-muted">
+                            {newSupplier.isFavorite ? "Preferito (In cima alla lista)" : "Normale"}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs font-bold text-muted">Priorità:</label>
+                            <select 
+                                className="input py-1 px-2 w-16 text-center" 
+                                value={newSupplier.sortOrder || 9} 
+                                onChange={e => setNewSupplier({ ...newSupplier, sortOrder: parseInt(e.target.value) })}
+                            >
+                                {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
                 </div>
                 <div className="flex gap-2 mt-4">
                     <button onClick={onClose} className="btn btn-secondary flex-1">Esci</button>
@@ -265,55 +298,54 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing }
                 <div className="space-y-3">
                     <div>
                         <label className="label">Nome</label>
-                        <input
-                            className="input"
-                            type="text"
-                            value={supplier.name}
-                            onChange={e => setSupplier({ ...supplier, name: e.target.value })}
-                        />
+                        <input className="input" type="text" value={supplier.name} onChange={e => setSupplier({ ...supplier, name: e.target.value })} />
                     </div>
 
-                    <div>
-                        <label className="label">Tipo</label>
-                        <select
-                            className="input"
-                            value={supplier.type}
-                            onChange={e => setSupplier({ ...supplier, type: e.target.value })}
-                        >
-                            <option value="AC">AC</option>
-                            <option value="DC">DC</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="label">Costo Standard (€/kWh)</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.001"
-                            value={supplier.standardCost}
-                            onChange={e => setSupplier({ ...supplier, standardCost: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded p-3 text-xs text-blue-300">
-                        <div className="flex items-start gap-2">
-                            <span className="text-base">ℹ️</span>
-                            <div>
-                                <div className="font-semibold mb-1">Nota importante:</div>
-                                La modifica NON influenzerà le ricariche già salvate.
-                            </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="label">Tipo</label>
+                            <select className="input" value={supplier.type} onChange={e => setSupplier({ ...supplier, type: e.target.value })}>
+                                <option value="AC">AC</option><option value="DC">DC</option>
+                            </select>
                         </div>
+                        <div>
+                            <label className="label">Costo (€/kWh)</label>
+                            <input className="input" type="number" step="0.001" value={supplier.standardCost} onChange={e => setSupplier({ ...supplier, standardCost: e.target.value })} />
+                        </div>
+                    </div>
+
+                    {/* SEZIONE PREFERITI & ORDINE */}
+                    <div className="flex items-center gap-3 bg-card-soft p-3 rounded-lg border border-card-border mt-2">
+                        <button 
+                            className={`text-3xl transition-transform active:scale-125 ${supplier.isFavorite ? 'grayscale-0 scale-110' : 'grayscale opacity-40'}`}
+                            onClick={() => setSupplier({ ...supplier, isFavorite: !supplier.isFavorite })}
+                        >
+                            ⭐
+                        </button>
+                        <div className="flex-1">
+                            <div className="text-sm font-bold">{supplier.isFavorite ? "Preferito" : "Standard"}</div>
+                            <div className="text-xs text-muted">Apparirà per primo</div>
+                        </div>
+                        <div className="text-right">
+                            <label className="text-[10px] font-bold text-muted uppercase block mb-1">Ordine (0-9)</label>
+                            <select 
+                                className="input py-1 px-2 w-16 text-center font-bold" 
+                                value={supplier.sortOrder !== undefined ? supplier.sortOrder : 9} 
+                                onChange={e => setSupplier({ ...supplier, sortOrder: parseInt(e.target.value) })}
+                            >
+                                {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="text-xs text-muted mt-2 bg-blue-500/10 p-2 rounded">
+                        ℹ️ Nota: Le modifiche al costo non influenzano lo storico passato.
                     </div>
                 </div>
 
                 <div className="flex gap-2 mt-6">
-                    <button onClick={onClose} className="btn btn-secondary flex-1">
-                        Annulla
-                    </button>
-                    <button onClick={onSave} disabled={isSyncing} className="btn btn-primary flex-1">
-                        {isSyncing ? "💾 Salvataggio..." : "💾 Salva"}
-                    </button>
+                    <button onClick={onClose} className="btn btn-secondary flex-1">Annulla</button>
+                    <button onClick={onSave} disabled={isSyncing} className="btn btn-primary flex-1">{isSyncing ? "..." : "Salva"}</button>
                 </div>
             </div>
         </div>
