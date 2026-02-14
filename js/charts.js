@@ -4,44 +4,62 @@
 //
 
 // ===============================
-// HELPER: Raggruppa dati per Mese
+// HELPER: Aggregazione Intelligente (Giorno o Mese)
 // ===============================
-function aggregateByMonth(charges) {
-    const groups = {};
+function smartAggregate(charges) {
+    if (!charges || charges.length === 0) return { labels: [], costs: [], kwhs: [], mode: 'month' };
 
-    // Ordina
+    // Ordina cronologicamente
     const sorted = [...charges].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Controlla l'intervallo temporale
+    const firstDate = new Date(sorted[0].date);
+    const lastDate = new Date(sorted[sorted.length - 1].date);
+    const diffTime = Math.abs(lastDate - firstDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+    // SE l'intervallo è inferiore a 35 giorni, mostra per GIORNO. Altrimenti per MESE.
+    const mode = diffDays < 35 ? 'day' : 'month';
+    const groups = {};
 
     sorted.forEach(c => {
         const d = new Date(c.date);
-        const key = `${d.getFullYear()}-${d.getMonth()}`;
-        // Formato breve per mobile: "Gen 24"
-        const label = d.toLocaleDateString("it-IT", { month: 'short', year: '2-digit' });
+        let key, label;
+
+        if (mode === 'day') {
+            // Raggruppa per Giorno (es. "14 Feb")
+            key = d.toISOString().split('T')[0]; // "2024-02-14"
+            label = d.toLocaleDateString("it-IT", { day: '2-digit', month: 'short' });
+        } else {
+            // Raggruppa per Mese (es. "Feb 24")
+            key = `${d.getFullYear()}-${d.getMonth()}`;
+            label = d.toLocaleDateString("it-IT", { month: 'short', year: '2-digit' });
+        }
 
         if (!groups[key]) {
-            groups[key] = {
-                label: label,
-                cost: 0,
-                kwh: 0,
-                km: 0,
-                count: 0
-            };
+            groups[key] = { label: label, cost: 0, kwh: 0 };
         }
 
         groups[key].cost += parseFloat(c.cost) || 0;
         groups[key].kwh += parseFloat(c.kwh_added) || 0;
-        groups[key].count++;
     });
 
-    return Object.values(groups);
+    const values = Object.values(groups);
+    return {
+        labels: values.map(v => v.label),
+        costs: values.map(v => v.cost),
+        kwhs: values.map(v => v.kwh),
+        mode: mode
+    };
 }
 
 // ===============================
-// 1. PANORAMICA MENSILE (Mobile Friendly)
+// 1. PANORAMICA SMART (Auto-Switch Giorno/Mese)
 // ===============================
 function MonthlyOverviewChart({ charges, theme }) {
     const canvasRef = React.useRef(null);
     const chartRef = React.useRef(null);
+    const [viewMode, setViewMode] = React.useState('month'); // Per aggiornare il titolo
 
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
@@ -50,10 +68,9 @@ function MonthlyOverviewChart({ charges, theme }) {
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
 
-        const data = aggregateByMonth(charges);
-        const labels = data.map(d => d.label);
-        const costs = data.map(d => d.cost);
-        const kwhs = data.map(d => d.kwh);
+        // Usa l'aggregazione intelligente
+        const { labels, costs, kwhs, mode } = smartAggregate(charges);
+        setViewMode(mode); // Aggiorna stato per il titolo
 
         chartRef.current = new Chart(ctx, {
             type: "bar",
@@ -67,15 +84,17 @@ function MonthlyOverviewChart({ charges, theme }) {
                         borderColor: styles.getPropertyValue("--accent"),
                         backgroundColor: styles.getPropertyValue("--accent"),
                         borderWidth: 2,
-                        pointRadius: 3,
-                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: styles.getPropertyValue("--bg"), // Pallino col buco
+                        pointBorderWidth: 2,
+                        tension: 0.3,
                         yAxisID: 'y1',
                         order: 1
                     },
                     {
                         label: "kWh",
                         data: kwhs,
-                        backgroundColor: "rgba(59, 130, 246, 0.4)",
+                        backgroundColor: "rgba(59, 130, 246, 0.4)", // Blu trasparente
                         borderColor: "rgba(59, 130, 246, 0.8)",
                         borderWidth: 1,
                         borderRadius: 4,
@@ -94,16 +113,16 @@ function MonthlyOverviewChart({ charges, theme }) {
                         labels: { color: styles.getPropertyValue("--text-muted"), boxWidth: 10, padding: 10 } 
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
                         padding: 10,
-                        bodyFont: { size: 12 },
+                        bodyFont: { size: 13 },
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
                                 if (context.parsed.y !== null) {
-                                    if (context.datasetIndex === 0) label += "€" + context.parsed.y.toFixed(0);
-                                    else label += context.parsed.y.toFixed(0) + ' kWh';
+                                    if (context.datasetIndex === 0) label += "€" + context.parsed.y.toFixed(2);
+                                    else label += context.parsed.y.toFixed(1) + ' kWh';
                                 }
                                 return label;
                             }
@@ -113,14 +132,9 @@ function MonthlyOverviewChart({ charges, theme }) {
                 scales: {
                     x: { 
                         grid: { display: false }, 
-                        ticks: { 
-                            color: styles.getPropertyValue("--text-muted"),
-                            maxRotation: 0,
-                            autoSkip: true,
-                            maxTicksLimit: 6
-                        } 
+                        ticks: { color: styles.getPropertyValue("--text-muted"), maxTicksLimit: 8 } 
                     },
-                    y: { display: false },
+                    y: { display: false }, // Nascondi assi Y su mobile per pulizia
                     y1: { display: false }
                 }
             }
@@ -131,7 +145,9 @@ function MonthlyOverviewChart({ charges, theme }) {
 
     return (
         <div className="chart-card h-[320px]">
-            <h3 className="chart-title text-center">📅 Andamento Mensile</h3>
+            <h3 className="chart-title text-center">
+                {viewMode === 'day' ? '📅 Andamento Giornaliero' : '📅 Andamento Mensile'}
+            </h3>
             <div className="relative h-[270px] w-full">
                 <canvas ref={canvasRef}></canvas>
             </div>
