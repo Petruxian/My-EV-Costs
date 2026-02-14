@@ -568,7 +568,7 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
 }
 
 // ==========================================
-// FUN STATS & BADGES (COMPATIBILE CON I TEMI)
+// FUN STATS & BADGES (Fixed & Tamed)
 // ==========================================
 function FunStats({ stats, charges }) {
     if (!stats || !charges) return null;
@@ -576,14 +576,23 @@ function FunStats({ stats, charges }) {
     // 1. Calcolo Badge
     const badges = [];
     const totalKm = parseFloat(stats.kmDriven);
-    const solarCharges = charges.filter(c => c.supplier_name.toLowerCase().includes('fotovoltaico') || c.supplier_name.toLowerCase().includes('solar')).length;
+    const solarCharges = charges.filter(c => c.supplier_name && (c.supplier_name.toLowerCase().includes('fotovoltaico') || c.supplier_name.toLowerCase().includes('solar'))).length;
     const avgCost = parseFloat(stats.avgCostPerKwh);
 
-    if (totalKm > 1000) badges.push({ icon: "🥉", title: "Viaggiatore", desc: "Primi 1.000 km andati!" });
-    if (totalKm > 10000) badges.push({ icon: "🏎️", title: "Maratoneta", desc: "Oltre 10.000 km percorsi" });
-    if (solarCharges > 5) badges.push({ icon: "☀️", title: "Re del Sole", desc: "Sfrutti l'energia pulita" });
-    if (avgCost < 0.20) badges.push({ icon: "🦊", title: "Volpe", desc: "Ricarichi spendendo poco" });
-    if (charges.length > 50) badges.push({ icon: "🔌", title: "Veterano", desc: "Più di 50 ricariche" });
+    // BADGE DI BASE (Appare sempre, così vedi la striscia)
+    badges.push({ icon: "👋", title: "Benvenuto", desc: "Inizia il viaggio!" });
+
+    // SOGLIE ABBASSATE PER VEDERE I RISULTATI
+    if (totalKm > 100) badges.push({ icon: "🥉", title: "Viaggiatore", desc: "Primi 100 km andati!" });
+    if (totalKm > 1000) badges.push({ icon: "🥈", title: "Esploratore", desc: "Oltre 1.000 km!" });
+    if (totalKm > 10000) badges.push({ icon: "🏎️", title: "Maratoneta", desc: "Giro del mondo?" });
+    
+    if (solarCharges > 0) badges.push({ icon: "☀️", title: "Green", desc: "Prima ricarica solare" });
+    if (solarCharges > 10) badges.push({ icon: "😎", title: "Re del Sole", desc: "Sfrutti l'energia pulita" });
+    
+    if (avgCost < 0.20 && totalKm > 50) badges.push({ icon: "🦊", title: "Volpe", desc: "Spendaccione? No!" });
+    if (charges.length >= 1) badges.push({ icon: "🔋", title: "Start", desc: "Prima ricarica fatta" });
+    if (charges.length > 20) badges.push({ icon: "🔌", title: "Veterano", desc: "Più di 20 ricariche" });
 
     // 2. Calcolo "Pizza Index"
     const savings = parseFloat(stats.gasolineSavings);
@@ -595,21 +604,25 @@ function FunStats({ stats, charges }) {
     const coffees = Math.floor(savings / coffeePrice);
     const monthsNetflix = (savings / netflixPrice).toFixed(1);
 
-    if (savings <= 0) return null;
+    // Se non c'è risparmio (o è negativo), non mostrare la card Pizza ma mostra i badge se ci sono
+    const showPizza = savings > 0;
 
     return (
         <div className="space-y-6 animate-fade-in mb-8">
             
-            {/* BADGES ROW */}
+            {/* BADGES ROW - Scroll orizzontale */}
             {badges.length > 0 && (
-                <div className="card-soft overflow-x-auto">
-                    <h3 className="text-sm font-bold text-muted mb-3 uppercase tracking-wider">🏆 I tuoi Traguardi</h3>
+                <div className="overflow-x-auto pb-2"> {/* Padding bottom per l'ombra */}
+                    <h3 className="text-sm font-bold text-muted mb-3 uppercase tracking-wider sticky left-0">🏆 I tuoi Traguardi</h3>
                     <div className="flex gap-4">
                         {badges.map((b, idx) => (
-                            <div key={idx} className="min-w-[120px] bg-card p-3 rounded-xl border border-card-border text-center flex flex-col items-center shadow-lg transform transition hover:scale-105">
-                                <div className="text-3xl mb-1">{b.icon}</div>
-                                {/* Usa var(--accent) per adattarsi al tema (verde, viola, blu...) */}
-                                <div className="font-bold text-xs mb-1" style={{ color: 'var(--accent-2)' }}>
+                            <div 
+                                key={idx} 
+                                className="min-w-[130px] card-soft p-3 rounded-xl border border-card-border text-center flex flex-col items-center justify-center shadow-lg transform transition active:scale-95"
+                                style={{ backgroundColor: 'var(--card)' }} // Forza background card per coprire lo scroll
+                            >
+                                <div className="text-3xl mb-2">{b.icon}</div>
+                                <div className="font-bold text-xs mb-1 truncate w-full" style={{ color: 'var(--accent)' }}>
                                     {b.title}
                                 </div>
                                 <div className="text-[10px] text-muted leading-tight">{b.desc}</div>
@@ -620,54 +633,53 @@ function FunStats({ stats, charges }) {
             )}
 
             {/* PIZZA / SAVINGS CARD (TEMATIZZATA) */}
-            <div 
-                className="card relative overflow-hidden border-2"
-                style={{
-                    borderColor: 'rgba(var(--accent-rgb), 0.3)', // Fallback se non usi rgb var, userà il border standard
-                    border: '1px solid var(--accent)' // Usa il colore principale del tema
-                }}
-            >
-                {/* Sfondo sfumato che usa il colore del tema con bassa opacità */}
+            {showPizza && (
                 <div 
-                    className="absolute inset-0 opacity-10"
+                    className="card relative overflow-hidden border-2"
                     style={{
-                        background: `linear-gradient(to right, var(--accent), var(--accent-2))`
+                        borderColor: 'var(--card-border)',
+                        borderTopColor: 'var(--accent)' // Solo bordo sopra colorato
                     }}
-                ></div>
+                >
+                    {/* Sfondo sfumato leggero */}
+                    <div 
+                        className="absolute inset-0 opacity-5"
+                        style={{
+                            background: `linear-gradient(to right, var(--accent), transparent)`
+                        }}
+                    ></div>
 
-                <div className="relative z-10">
-                    <div className="absolute -right-6 -bottom-6 text-9xl opacity-10 rotate-12 grayscale">🍕</div>
-                    
-                    <h3 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--accent-2)' }}>
-                        <span className="text-2xl">😎</span> 
-                        Cosa ci compri con {parseFloat(stats.gasolineSavings).toFixed(0)}€?
-                    </h3>
-                    <p className="text-sm text-muted mb-4">
-                        Rispetto a un'auto a benzina, il tuo risparmio vale:
-                    </p>
+                    <div className="relative z-10">
+                        <div className="absolute -right-6 -bottom-6 text-9xl opacity-10 rotate-12 grayscale">🍕</div>
+                        
+                        <h3 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--accent-2)' }}>
+                            <span className="text-2xl">😎</span> 
+                            Risparmio reale: {parseFloat(stats.gasolineSavings).toFixed(0)}€
+                        </h3>
+                        <p className="text-xs text-muted mb-4">
+                            Equivalgono a circa:
+                        </p>
 
-                    <div className="grid grid-cols-3 gap-2">
-                        {/* Box Pizze */}
-                        <div className="bg-card-soft p-3 rounded-xl text-center backdrop-blur-sm border border-card-border">
-                            <div className="text-2xl mb-1">🍕</div>
-                            <div className="text-xl font-bold text-primary">{pizzas}</div>
-                            <div className="text-xs text-muted">Pizze</div>
-                        </div>
-                        {/* Box Caffè */}
-                        <div className="bg-card-soft p-3 rounded-xl text-center backdrop-blur-sm border border-card-border">
-                            <div className="text-2xl mb-1">☕</div>
-                            <div className="text-xl font-bold text-primary">{coffees}</div>
-                            <div className="text-xs text-muted">Caffè</div>
-                        </div>
-                        {/* Box Streaming */}
-                        <div className="bg-card-soft p-3 rounded-xl text-center backdrop-blur-sm border border-card-border">
-                            <div className="text-2xl mb-1">📺</div>
-                            <div className="text-xl font-bold text-primary">{monthsNetflix}</div>
-                            <div className="text-xs text-muted">Mesi Streaming</div>
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="bg-card-soft p-2 rounded-xl text-center backdrop-blur-sm border border-card-border">
+                                <div className="text-xl mb-1">🍕</div>
+                                <div className="text-lg font-bold text-primary">{pizzas}</div>
+                                <div className="text-[10px] text-muted uppercase">Pizze</div>
+                            </div>
+                            <div className="bg-card-soft p-2 rounded-xl text-center backdrop-blur-sm border border-card-border">
+                                <div className="text-xl mb-1">☕</div>
+                                <div className="text-lg font-bold text-primary">{coffees}</div>
+                                <div className="text-[10px] text-muted uppercase">Caffè</div>
+                            </div>
+                            <div className="bg-card-soft p-2 rounded-xl text-center backdrop-blur-sm border border-card-border">
+                                <div className="text-xl mb-1">📺</div>
+                                <div className="text-lg font-bold text-primary">{monthsNetflix}</div>
+                                <div className="text-[10px] text-muted uppercase">Mesi TV</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
