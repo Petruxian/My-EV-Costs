@@ -484,11 +484,6 @@ function EVCostTracker() {
                             </div>
                         )}
 
-                        {/* --- FUN STATS & BADGES --- */}
-                        {activeVehicle && stats && (
-                             <StatsCards stats={stats} />
-                        )}
-
                         {/* --- FUN STATS & BADGES (CON TOGGLE) --- */}
                         {/* Mostra solo se il setting non è esplicitamente 'false' */}
                         {settings.showFunStats !== false && activeVehicle && stats && (
