@@ -1,6 +1,6 @@
 //
 //  CHART COMPONENTS (React UMD + Chart.js)
-//  Version 2.1 - Mobile Optimized 📱
+//  Version 2.2 - Bugfix Variabili & Mobile Optimized
 //
 
 // ===============================
@@ -66,14 +66,14 @@ function MonthlyOverviewChart({ charges, theme }) {
                         type: "line",
                         borderColor: styles.getPropertyValue("--accent"),
                         backgroundColor: styles.getPropertyValue("--accent"),
-                        borderWidth: 2, // Linea leggermente più sottile per mobile
+                        borderWidth: 2,
                         pointRadius: 3,
                         tension: 0.4,
                         yAxisID: 'y1',
                         order: 1
                     },
                     {
-                        label: "kWh", // Label più corto
+                        label: "kWh",
                         data: kwhs,
                         backgroundColor: "rgba(59, 130, 246, 0.4)",
                         borderColor: "rgba(59, 130, 246, 0.8)",
@@ -87,10 +87,10 @@ function MonthlyOverviewChart({ charges, theme }) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false }, // Ottimo per il touch
+                interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { 
-                        position: 'bottom', // Legenda SOTTO per non rubare spazio laterale
+                        position: 'bottom',
                         labels: { color: styles.getPropertyValue("--text-muted"), boxWidth: 10, padding: 10 } 
                     },
                     tooltip: {
@@ -115,17 +115,13 @@ function MonthlyOverviewChart({ charges, theme }) {
                         grid: { display: false }, 
                         ticks: { 
                             color: styles.getPropertyValue("--text-muted"),
-                            maxRotation: 0, // Evita etichette ruotate fastidiose
-                            autoSkip: true, // Salta i mesi se non c'è spazio
-                            maxTicksLimit: 6 // Massimo 6 mesi visibili su mobile
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 6
                         } 
                     },
-                    y: {
-                        display: false, // Nascondiamo asse Y sinistro su mobile per pulizia
-                    },
-                    y1: {
-                        display: false, // Nascondiamo asse Y destro
-                    }
+                    y: { display: false },
+                    y1: { display: false }
                 }
             }
         });
@@ -134,7 +130,7 @@ function MonthlyOverviewChart({ charges, theme }) {
     }, [charges, theme]);
 
     return (
-        <div className="chart-card h-[320px]"> {/* Altezza fissa ottimizzata */}
+        <div className="chart-card h-[320px]">
             <h3 className="chart-title text-center">📅 Andamento Mensile</h3>
             <div className="relative h-[270px] w-full">
                 <canvas ref={canvasRef}></canvas>
@@ -157,11 +153,10 @@ function ConsumptionTrendChart({ charges, theme }) {
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
 
-        // Prendiamo solo le ultime 10 per mobile, così il grafico è leggibile
         const validCharges = charges
             .filter(c => c.consumption && c.consumption > 0 && c.consumption < 40)
             .sort((a, b) => new Date(a.date) - new Date(b.date))
-            .slice(-10); // <--- SOLO ULTIME 10
+            .slice(-10);
 
         const labels = validCharges.map(c => 
             new Date(c.date).toLocaleDateString("it-IT", { day: '2-digit', month: 'short' })
@@ -202,9 +197,7 @@ function ConsumptionTrendChart({ charges, theme }) {
                         grid: { display: false }, 
                         ticks: { color: styles.getPropertyValue("--text-muted"), font: {size: 10} } 
                     },
-                    y: { 
-                        display: false // Niente asse Y verticale per pulizia massima su mobile
-                    }
+                    y: { display: false }
                 }
             }
         });
@@ -223,11 +216,16 @@ function ConsumptionTrendChart({ charges, theme }) {
 }
 
 // ===============================
-// 3. DISTRIBUZIONE FORNITORI (Legenda in basso)
+// 3. DISTRIBUZIONE FORNITORI (Corretto Bug Variable)
 // ===============================
 function SuppliersPieChart({ charges, theme }) {
     const canvasRef = React.useRef(null);
     const chartRef = React.useRef(null);
+
+    // FIX: Calcoliamo il totale QUI, fuori dall'useEffect, così è visibile nel return
+    const totalCost = React.useMemo(() => {
+        return charges.reduce((sum, c) => sum + (parseFloat(c.cost) || 0), 0);
+    }, [charges]);
 
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
@@ -237,14 +235,12 @@ function SuppliersPieChart({ charges, theme }) {
         if (chartRef.current) chartRef.current.destroy();
 
         const supplierData = {};
-        let totalCost = 0;
-
+        
         charges.forEach(c => {
             const name = c.supplier_name || "Sconosciuto";
             if (!supplierData[name]) supplierData[name] = 0;
             const cost = parseFloat(c.cost) || 0;
             supplierData[name] += cost;
-            totalCost += cost;
         });
 
         const sortedSuppliers = Object.entries(supplierData).sort((a, b) => b[1] - a[1]);
@@ -253,7 +249,7 @@ function SuppliersPieChart({ charges, theme }) {
         const data = [];
         
         sortedSuppliers.forEach(([name, cost], index) => {
-            if (index < 4) { // Top 4 soltanto per mobile
+            if (index < 4) {
                 labels.push(name);
                 data.push(cost);
             } else if (index === 4) {
@@ -283,13 +279,13 @@ function SuppliersPieChart({ charges, theme }) {
                 cutout: '70%',
                 plugins: {
                     legend: {
-                        position: 'bottom', // <--- FONDAMENTALE PER MOBILE
+                        position: 'bottom',
                         labels: { 
                             color: styles.getPropertyValue("--text-muted"),
                             boxWidth: 12,
                             padding: 15,
                             font: { size: 11 },
-                            usePointStyle: true // Pallini tondi invece di quadrati
+                            usePointStyle: true
                         }
                     }
                 }
@@ -300,10 +296,11 @@ function SuppliersPieChart({ charges, theme }) {
     }, [charges, theme]);
 
     return (
-        <div className="chart-card h-[380px]"> {/* Più alto per far stare la legenda sotto */}
+        <div className="chart-card h-[380px]">
             <h3 className="chart-title text-center">💸 Top Fornitori</h3>
             <div className="relative h-[300px] w-full flex items-center justify-center">
                 <canvas ref={canvasRef}></canvas>
+                {/* Ora 'totalCost' è visibile perché calcolato con useMemo sopra */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mb-8">
                     <div className="text-xs text-muted">Totale</div>
                     <div className="text-2xl font-bold text-saving">€{totalCost.toFixed(0)}</div>
@@ -321,6 +318,7 @@ function ChartSection({ charges, theme }) {
         <div className="text-center p-10 card">
             <div className="text-4xl mb-4">📉</div>
             <div className="text-muted">Servono più dati per generare i grafici.</div>
+            <div className="text-xs text-muted opacity-50 mt-2">Inserisci almeno 2 ricariche.</div>
         </div>
     );
 
