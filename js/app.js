@@ -484,6 +484,11 @@ function EVCostTracker() {
                             </div>
                         )}
 
+                        {/* --- FUN STATS & BADGES --- */}
+                        {activeVehicle && stats && (
+                             <FunStats stats={stats} charges={currentVehicleCharges} />
+                        )}
+
                         {/* STATISTICHE (Solo per auto attiva) */}
                         {activeVehicle && (
                             stats ? (
