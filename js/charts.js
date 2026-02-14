@@ -1,6 +1,6 @@
 //
 //  CHART COMPONENTS (React UMD + Chart.js)
-//  Version 2.2 - Bugfix Variabili & Mobile Optimized
+//  Version 2.3 - Flexbox Layout (Fix Titoli su Mobile)
 //
 
 // ===============================
@@ -9,16 +9,13 @@
 function smartAggregate(charges) {
     if (!charges || charges.length === 0) return { labels: [], costs: [], kwhs: [], mode: 'month' };
 
-    // Ordina cronologicamente
     const sorted = [...charges].sort((a, b) => new Date(a.date) - new Date(b.date));
     
-    // Controlla l'intervallo temporale
     const firstDate = new Date(sorted[0].date);
     const lastDate = new Date(sorted[sorted.length - 1].date);
     const diffTime = Math.abs(lastDate - firstDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
-    // SE l'intervallo è inferiore a 35 giorni, mostra per GIORNO. Altrimenti per MESE.
     const mode = diffDays < 35 ? 'day' : 'month';
     const groups = {};
 
@@ -27,11 +24,9 @@ function smartAggregate(charges) {
         let key, label;
 
         if (mode === 'day') {
-            // Raggruppa per Giorno (es. "14 Feb")
-            key = d.toISOString().split('T')[0]; // "2024-02-14"
+            key = d.toISOString().split('T')[0];
             label = d.toLocaleDateString("it-IT", { day: '2-digit', month: 'short' });
         } else {
-            // Raggruppa per Mese (es. "Feb 24")
             key = `${d.getFullYear()}-${d.getMonth()}`;
             label = d.toLocaleDateString("it-IT", { month: 'short', year: '2-digit' });
         }
@@ -54,12 +49,12 @@ function smartAggregate(charges) {
 }
 
 // ===============================
-// 1. PANORAMICA SMART (Auto-Switch Giorno/Mese)
+// 1. PANORAMICA SMART
 // ===============================
 function MonthlyOverviewChart({ charges, theme }) {
     const canvasRef = React.useRef(null);
     const chartRef = React.useRef(null);
-    const [viewMode, setViewMode] = React.useState('month'); // Per aggiornare il titolo
+    const [viewMode, setViewMode] = React.useState('month');
 
     React.useEffect(() => {
         if (!charges || charges.length === 0) return;
@@ -68,9 +63,8 @@ function MonthlyOverviewChart({ charges, theme }) {
         const ctx = canvasRef.current.getContext("2d");
         if (chartRef.current) chartRef.current.destroy();
 
-        // Usa l'aggregazione intelligente
         const { labels, costs, kwhs, mode } = smartAggregate(charges);
-        setViewMode(mode); // Aggiorna stato per il titolo
+        setViewMode(mode);
 
         chartRef.current = new Chart(ctx, {
             type: "bar",
@@ -85,7 +79,7 @@ function MonthlyOverviewChart({ charges, theme }) {
                         backgroundColor: styles.getPropertyValue("--accent"),
                         borderWidth: 2,
                         pointRadius: 4,
-                        pointBackgroundColor: styles.getPropertyValue("--bg"), // Pallino col buco
+                        pointBackgroundColor: styles.getPropertyValue("--bg"),
                         pointBorderWidth: 2,
                         tension: 0.3,
                         yAxisID: 'y1',
@@ -94,7 +88,7 @@ function MonthlyOverviewChart({ charges, theme }) {
                     {
                         label: "kWh",
                         data: kwhs,
-                        backgroundColor: "rgba(59, 130, 246, 0.4)", // Blu trasparente
+                        backgroundColor: "rgba(59, 130, 246, 0.4)",
                         borderColor: "rgba(59, 130, 246, 0.8)",
                         borderWidth: 1,
                         borderRadius: 4,
@@ -114,8 +108,6 @@ function MonthlyOverviewChart({ charges, theme }) {
                     },
                     tooltip: {
                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        padding: 10,
-                        bodyFont: { size: 13 },
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
@@ -134,7 +126,7 @@ function MonthlyOverviewChart({ charges, theme }) {
                         grid: { display: false }, 
                         ticks: { color: styles.getPropertyValue("--text-muted"), maxTicksLimit: 8 } 
                     },
-                    y: { display: false }, // Nascondi assi Y su mobile per pulizia
+                    y: { display: false },
                     y1: { display: false }
                 }
             }
@@ -144,11 +136,12 @@ function MonthlyOverviewChart({ charges, theme }) {
     }, [charges, theme]);
 
     return (
-        <div className="chart-card h-[320px]">
-            <h3 className="chart-title text-center">
+        // FIX: flex-col permette al titolo di espandersi senza schiacciare il grafico
+        <div className="chart-card flex flex-col h-[350px]"> 
+            <h3 className="chart-title text-center mb-2 shrink-0">
                 {viewMode === 'day' ? '📅 Andamento Giornaliero' : '📅 Andamento Mensile'}
             </h3>
-            <div className="relative h-[270px] w-full">
+            <div className="relative flex-1 w-full min-h-0">
                 <canvas ref={canvasRef}></canvas>
             </div>
         </div>
@@ -156,7 +149,7 @@ function MonthlyOverviewChart({ charges, theme }) {
 }
 
 // ===============================
-// 2. TREND CONSUMI (Mobile Friendly)
+// 2. TREND CONSUMI (Flexbox Fix)
 // ===============================
 function ConsumptionTrendChart({ charges, theme }) {
     const canvasRef = React.useRef(null);
@@ -222,9 +215,12 @@ function ConsumptionTrendChart({ charges, theme }) {
     }, [charges, theme]);
 
     return (
-        <div className="chart-card h-[250px]">
-            <h3 className="chart-title text-center">⚡ Efficienza (Ultime 10 ricariche)</h3>
-            <div className="relative h-[200px] w-full">
+        // FIX: Altezza aumentata a 320px e layout flex
+        <div className="chart-card flex flex-col h-[320px]">
+            <h3 className="chart-title text-center mb-2 shrink-0 px-2">
+                ⚡ Efficienza (Ultime 10 ricariche)
+            </h3>
+            <div className="relative flex-1 w-full min-h-0">
                 <canvas ref={canvasRef}></canvas>
             </div>
         </div>
@@ -232,13 +228,12 @@ function ConsumptionTrendChart({ charges, theme }) {
 }
 
 // ===============================
-// 3. DISTRIBUZIONE FORNITORI (Corretto Bug Variable)
+// 3. DISTRIBUZIONE FORNITORI (Flexbox Fix)
 // ===============================
 function SuppliersPieChart({ charges, theme }) {
     const canvasRef = React.useRef(null);
     const chartRef = React.useRef(null);
 
-    // FIX: Calcoliamo il totale QUI, fuori dall'useEffect, così è visibile nel return
     const totalCost = React.useMemo(() => {
         return charges.reduce((sum, c) => sum + (parseFloat(c.cost) || 0), 0);
     }, [charges]);
@@ -292,7 +287,10 @@ function SuppliersPieChart({ charges, theme }) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '70%',
+                cutout: '65%', // Buco un po' più piccolo per far stare il testo
+                layout: {
+                    padding: { bottom: 10 } // Spazio extra sotto per la legenda
+                },
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -312,12 +310,12 @@ function SuppliersPieChart({ charges, theme }) {
     }, [charges, theme]);
 
     return (
-        <div className="chart-card h-[380px]">
-            <h3 className="chart-title text-center">💸 Top Fornitori</h3>
-            <div className="relative h-[300px] w-full flex items-center justify-center">
+        // FIX: Altezza 420px per accomodare Titolo + Grafico + Legenda
+        <div className="chart-card flex flex-col h-[420px]">
+            <h3 className="chart-title text-center mb-2 shrink-0">💸 Top Fornitori</h3>
+            <div className="relative flex-1 w-full min-h-0 flex items-center justify-center">
                 <canvas ref={canvasRef}></canvas>
-                {/* Ora 'totalCost' è visibile perché calcolato con useMemo sopra */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mb-8">
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
                     <div className="text-xs text-muted">Totale</div>
                     <div className="text-2xl font-bold text-saving">€{totalCost.toFixed(0)}</div>
                 </div>
