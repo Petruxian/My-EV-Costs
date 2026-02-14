@@ -35,6 +35,8 @@ function EVCostTracker() {
     const [showSupplierModal, setShowSupplierModal] = React.useState(false);
     const [showEditSupplierModal, setShowEditSupplierModal] = React.useState(false);
     const [editingSupplier, setEditingSupplier] = React.useState(null);
+    const [showEditVehicleModal, setShowEditVehicleModal] = React.useState(false);
+    const [editingVehicle, setEditingVehicle] = React.useState(null);
 
     // Dati per i form
     const [tempChargeData, setTempChargeData] = React.useState({}); // Dati temporanei form
@@ -317,6 +319,38 @@ function EVCostTracker() {
     }
 
     // --------------------------------------------------------
+    // EDIT VEHICLE FLOW
+    // --------------------------------------------------------
+    function handleEditVehicleClick(vehicle) {
+        setEditingVehicle({
+            id: vehicle.id,
+            name: vehicle.name,
+            brand: vehicle.brand,
+            capacity: vehicle.capacity_kwh // Mappiamo capacity_kwh a capacity per il form
+        });
+        setShowEditVehicleModal(true);
+    }
+
+    async function handleSaveEditedVehicle() {
+        if (!editingVehicle.name || !editingVehicle.capacity) {
+            alert("Nome e Capacità sono obbligatori!");
+            return;
+        }
+
+        setIsSyncing(true);
+        const ok = await updateVehicleInDB(supabaseClient, editingVehicle);
+        
+        if (ok) {
+            setShowEditVehicleModal(false);
+            setEditingVehicle(null);
+            await loadData(); // Ricarica i dati per aggiornare la lista
+        } else {
+            alert("Errore durante l'aggiornamento.");
+        }
+        setIsSyncing(false);
+    }
+
+    // --------------------------------------------------------
     // STATS CALCULATIONS
     // --------------------------------------------------------
     const stats = React.useMemo(() => {
@@ -462,7 +496,8 @@ function EVCostTracker() {
                         saveSettings={() => alert("Salvato!")}
                         vehicles={vehicles}
                         onAddVehicle={() => setShowVehicleModal(true)}
-                        onDeleteVehicle={handleDeleteVehicle}  // <--- RIGA AGGIUNTA
+                        onEditVehicle={handleEditVehicleClick}
+                        onDeleteVehicle={handleDeleteVehicle} 
                         suppliers={suppliers}
                         onAddSupplier={() => setShowSupplierModal(true)}
                         onEditSupplier={handleEditSupplier}
@@ -535,6 +570,19 @@ function EVCostTracker() {
                         setEditingSupplier(null);
                     }}
                     onSave={handleSaveEditSupplier}
+                    isSyncing={isSyncing}
+                />
+            )}
+
+            {showEditVehicleModal && editingVehicle && (
+                <EditVehicleModal
+                    vehicle={editingVehicle}
+                    setVehicle={setEditingVehicle}
+                    onClose={() => {
+                        setShowEditVehicleModal(false);
+                        setEditingVehicle(null);
+                    }}
+                    onSave={handleSaveEditedVehicle}
                     isSyncing={isSyncing}
                 />
             )}

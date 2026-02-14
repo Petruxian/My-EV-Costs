@@ -337,9 +337,9 @@ function ChargeList({ charges, onDelete }) {
 }
 
 // ==========================================
-// VIEW IMPOSTAZIONI COMPLETA (Aggiornata con Delete)
+// VIEW IMPOSTAZIONI COMPLETA (Aggiornata con Edit + Delete)
 // ==========================================
-function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier }) {
+function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
             {/* COLONNA SX: Parametri */}
@@ -421,13 +421,22 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                                         <div className="text-xs text-muted">{v.brand} · {v.capacity_kwh} kWh</div>
                                     </div>
                                 </div>
-                                <button 
-                                    onClick={() => onDeleteVehicle(v)}
-                                    className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                    title="Elimina Auto"
-                                >
-                                    🗑️
-                                </button>
+                                <div className="flex gap-1">
+                                    <button 
+                                        onClick={() => onEditVehicle(v)}
+                                        className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all"
+                                        title="Modifica Auto"
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button 
+                                        onClick={() => onDeleteVehicle(v)}
+                                        className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                        title="Elimina Auto"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

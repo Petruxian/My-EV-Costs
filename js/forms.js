@@ -319,3 +319,53 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing }
         </div>
     );
 }
+
+// ==========================================
+// --- MODALE MODIFICA VEICOLO ---
+// ==========================================
+function EditVehicleModal({ vehicle, setVehicle, onClose, onSave, isSyncing }) {
+    return (
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+            <div className="modal-panel max-w-sm w-full">
+                <h2 className="text-xl font-bold mb-4 text-accent">✏️ Modifica Auto</h2>
+                <div className="space-y-3">
+                    <div>
+                        <label className="label">Nome (es. La mia Tesla)</label>
+                        <input 
+                            className="input" 
+                            type="text" 
+                            value={vehicle.name} 
+                            onChange={e => setVehicle({ ...vehicle, name: e.target.value })} 
+                        />
+                    </div>
+                    <div>
+                        <label className="label">Brand (es. Tesla, Fiat)</label>
+                        <input 
+                            className="input" 
+                            type="text" 
+                            value={vehicle.brand} 
+                            onChange={e => setVehicle({ ...vehicle, brand: e.target.value })} 
+                        />
+                    </div>
+                    <div>
+                        <label className="label">Capacità Batteria (kWh)</label>
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.1" 
+                            value={vehicle.capacity} 
+                            onChange={e => setVehicle({ ...vehicle, capacity: e.target.value })} 
+                        />
+                        <p className="text-xs text-muted mt-1">Modificare la capacità non ricalcolerà lo storico.</p>
+                    </div>
+                </div>
+                <div className="flex gap-2 mt-6">
+                    <button onClick={onClose} className="btn btn-secondary flex-1">Annulla</button>
+                    <button onClick={onSave} disabled={isSyncing} className="btn btn-primary flex-1">
+                        {isSyncing ? "..." : "Salva Modifiche"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}

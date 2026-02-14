@@ -367,3 +367,23 @@ async function deleteVehicleFromDB(sb, vehicleId) {
 
     return true;
 }
+
+/* =====================================================
+   UPDATE VEHICLE
+   ===================================================== */
+async function updateVehicleInDB(sb, vehicle) {
+    const { error } = await sb
+        .from("vehicles")
+        .update({
+            name: vehicle.name,
+            brand: vehicle.brand,
+            capacity_kwh: parseFloat(vehicle.capacity)
+        })
+        .eq("id", vehicle.id);
+
+    if (error) {
+        console.error("Errore aggiornamento veicolo:", error);
+        return false;
+    }
+    return true;
+}
