@@ -319,34 +319,56 @@ function EVCostTracker() {
     }
 
     // --------------------------------------------------------
-    // EDIT VEHICLE FLOW
+    // EDIT VEHICLE FLOW (VERSIONE DEBUG)
     // --------------------------------------------------------
     function handleEditVehicleClick(vehicle) {
+        // Controllo che l'auto abbia un ID
+        if (!vehicle || !vehicle.id) {
+            alert("Errore: Impossibile modificare, ID veicolo mancante.");
+            return;
+        }
+
         setEditingVehicle({
             id: vehicle.id,
             name: vehicle.name,
             brand: vehicle.brand,
-            capacity: vehicle.capacity_kwh // Mappiamo capacity_kwh a capacity per il form
+            capacity: vehicle.capacity_kwh // Mappatura importante
         });
         setShowEditVehicleModal(true);
     }
 
     async function handleSaveEditedVehicle() {
+        // 1. Verifica preliminare
         if (!editingVehicle.name || !editingVehicle.capacity) {
-            alert("Nome e Capacità sono obbligatori!");
+            alert("⚠️ Nome e Capacità sono obbligatori!");
+            return;
+        }
+
+        // 2. Verifica esistenza funzione DB
+        if (typeof updateVehicleInDB !== 'function') {
+            alert("⛔ ERRORE CRITICO: La funzione 'updateVehicleInDB' non è stata trovata.\nControlla di aver aggiornato index.html e svuotato la cache!");
             return;
         }
 
         setIsSyncing(true);
-        const ok = await updateVehicleInDB(supabaseClient, editingVehicle);
-        
-        if (ok) {
-            setShowEditVehicleModal(false);
-            setEditingVehicle(null);
-            await loadData(); // Ricarica i dati per aggiornare la lista
-        } else {
-            alert("Errore durante l'aggiornamento.");
+
+        try {
+            // 3. Tentativo di salvataggio
+            const ok = await updateVehicleInDB(supabaseClient, editingVehicle);
+
+            if (ok) {
+                setShowEditVehicleModal(false);
+                setEditingVehicle(null);
+                await loadData();
+                alert("✅ Auto aggiornata con successo!");
+            } else {
+                alert("❌ Errore ricevuto dal Database. Le modifiche non sono state salvate.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("❌ Errore JavaScript Imprevisto:\n" + err.message);
         }
+
         setIsSyncing(false);
     }
 
@@ -497,7 +519,7 @@ function EVCostTracker() {
                         vehicles={vehicles}
                         onAddVehicle={() => setShowVehicleModal(true)}
                         onEditVehicle={handleEditVehicleClick}
-                        onDeleteVehicle={handleDeleteVehicle} 
+                        onDeleteVehicle={handleDeleteVehicle}
                         suppliers={suppliers}
                         onAddSupplier={() => setShowSupplierModal(true)}
                         onEditSupplier={handleEditSupplier}
