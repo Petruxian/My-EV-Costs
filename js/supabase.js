@@ -119,11 +119,9 @@ async function startChargeDB(sb, data, vehicleId, suppliers) {
         date: data.date,
         total_km: parseFloat(data.totalKm),
         battery_start: parseFloat(data.startPct),
-
-        // Snapshot del costo (importante se cambia in futuro)
         standard_cost_snapshot: parseFloat(supplier.standard_cost) || 0,
-
-        status: "in_progress"
+        status: "in_progress",
+        notes: data.notes || "" // <--- NUOVO CAMPO
     };
 
     const { error } = await sb.from("charges").insert(payload);
@@ -238,7 +236,8 @@ async function stopChargeDB(
 
         // Snapshot prezzi carburante
         saved_gasoline_price: settings.gasolinePrice,
-        saved_diesel_price: settings.dieselPrice
+        saved_diesel_price: settings.dieselPrice,
+        notes: endData.notes || currentCharge.notes || "" // <--- Aggiorna la nota (o mantieni la vecchia)
     };
 
     const { error } = await sb
@@ -316,7 +315,8 @@ async function saveManualChargeDB(
         km_since_last: kmSinceLast,
         consumption: consumption,
         saved_gasoline_price: settings.gasolinePrice,
-        saved_diesel_price: settings.dieselPrice
+        saved_diesel_price: settings.dieselPrice,
+        notes: data.notes || ""
     };
 
     const { error } = await sb.from("charges").insert(payload);

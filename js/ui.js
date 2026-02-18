@@ -324,6 +324,14 @@ function ChargeList({ charges, onDelete }) {
 
                                             {/* RENDERIZZA IL BLOCCO DIFFERENZA SOLO SE CALCOLATO SOPRA */}
                                             {diffBlock}
+                                            
+                                            {/* --- NUOVO BLOCCO NOTE --- */}
+                                            {charge.notes && charge.notes.trim() !== "" && (
+                                                <div className="mt-3 text-xs text-muted/80 italic bg-black/10 p-2 rounded border border-white/5 flex gap-2 items-start">
+                                                    <span>📝</span>
+                                                    <span>{charge.notes}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}

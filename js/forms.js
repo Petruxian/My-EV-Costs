@@ -36,7 +36,8 @@ function StartChargeModal({ activeVehicle, suppliers, onClose, onStart }) {
         date: new Date().toISOString().slice(0, 16),
         totalKm: "",
         startPct: "",
-        supplierId: ""
+        supplierId: "",
+        notes: ""
     });
 
     const handleSubmit = () => {
@@ -86,6 +87,16 @@ function StartChargeModal({ activeVehicle, suppliers, onClose, onStart }) {
                             {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.type})</option>)}
                         </select>
                     </div>
+
+                    <div>
+                        <label className="label">📝 Note (Opzionale)</label>
+                        <textarea 
+                            className="input min-h-[60px] text-sm" 
+                            placeholder="Es. Colonnina lenta, pioveva..." 
+                            value={data.notes} 
+                            onChange={e => setData({ ...data, notes: e.target.value })} 
+                        />
+                    </div>
                 </div>
 
                 <div className="flex gap-2 mt-6">
@@ -103,7 +114,8 @@ function StopChargeModal({ activeSession, activeVehicle, onClose, onStop }) {
         endDate: new Date().toISOString().slice(0, 16),
         endPct: "",
         kwhAdded: "",
-        cost: ""
+        cost: "",
+        notes: activeSession.notes || ""
     });
 
     const handleSubmit = () => {
@@ -141,6 +153,16 @@ function StopChargeModal({ activeSession, activeVehicle, onClose, onStop }) {
                         <label className="label">📅 Data/Ora Fine</label>
                         <input className="input" type="datetime-local" value={data.endDate} onChange={e => setData({ ...data, endDate: e.target.value })} />
                     </div>
+
+                    <div>
+                        <label className="label">📝 Aggiorna Note</label>
+                        <textarea 
+                            className="input min-h-[60px] text-sm" 
+                            placeholder="Aggiungi dettagli..." 
+                            value={data.notes} 
+                            onChange={e => setData({ ...data, notes: e.target.value })} 
+                        />
+                    </div>
                 </div>
 
                 <div className="flex gap-2 mt-6">
@@ -161,7 +183,8 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
         endPct: "",
         kwhAdded: "",
         cost: "",
-        supplierId: ""
+        supplierId: "",
+        notes: ""
     });
 
     const handleSubmit = () => {
@@ -220,7 +243,18 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
                         <label className="label">💵 Costo (€)</label>
                         <input className="input" type="number" step="0.01" value={data.cost} onChange={e => setData({ ...data, cost: e.target.value })} />
                     </div>
+
+                    <div className="col-span-2">
+                        <label className="label">📝 Note</label>
+                        <textarea 
+                            className="input min-h-[60px] text-sm" 
+                            placeholder="Dettagli ricarica..." 
+                            value={data.notes} 
+                            onChange={e => setData({ ...data, notes: e.target.value })} 
+                        />
+                    </div>
                 </div>
+
 
                 <div className="flex gap-2 mt-6">
                     <button onClick={onClose} className="btn btn-secondary flex-1">Annulla</button>
