@@ -39,7 +39,7 @@
  * - Classi custom: .card, .btn, .input, .modal-backdrop, etc.
  * 
  * @author EV Cost Tracker Team
- * @version 2.3 - Fix Timezone + Eliminazione Fornitori + Edit Charge
+ * @version 2.4 - Fix Timezone + Eliminazione Fornitori + Edit Charge con velocità
  * ============================================================
  */
 

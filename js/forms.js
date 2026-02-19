@@ -1,5 +1,3 @@
-// forms.js - Gestione Modali Start/Stop/Manual/Vehicle/Edit
-
 /**
  * ============================================================
  * FORMS.JS - Componenti Modali per EV Cost Tracker
@@ -32,7 +30,7 @@
  * Usare getLocalDateTimeString() per ottenere l'ora locale corretta.
  * 
  * @author EV Cost Tracker Team
- * @version 2.2 - Fix Timezone + Edit Charge
+ * @version 2.4 - Fix Timezone + Edit Charge con data inizio/fine per velocità
  * ============================================================
  */
 
@@ -653,13 +651,18 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
  * Modale per modificare una ricarica esistente.
  * 
  * CAMPI MODIFICABILI:
- * - date: Data/ora della ricarica
+ * - date: Data/ora INIZIO della ricarica
+ * - endDate: Data/ora FINE della ricarica
  * - total_km: Km totali odometro
  * - battery_start/end: Percentuali batteria
  * - kwh_added: kWh caricati
  * - cost: Costo
  * - supplier: Fornitore
  * - notes: Note
+ * 
+ * CALCOLI IN TEMPO REALE:
+ * - Durata ricarica (differenza tra inizio e fine)
+ * - Velocità media (kWh / durata in ore = kW)
  * 
  * RICALCOLI AUTOMATICI:
  * Quando si modificano km o kWh, vengono ricalcolati:
@@ -680,24 +683,103 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
  * @param {boolean} props.isSyncing - Stato sincronizzazione
  */
 function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSyncing }) {
+    /**
+     * Calcola la durata della ricarica in formato leggibile.
+     * @returns {string} Durata formattata (es. "1h 30min")
+     */
+    const calculateDuration = () => {
+        if (!charge.date || !charge.endDate) return "-";
+        
+        const start = new Date(charge.date);
+        const end = new Date(charge.endDate);
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return "-";
+        if (end <= start) return "⚠️ Fine prima di inizio";
+        
+        const diffMs = end - start;
+        const diffMins = Math.floor(diffMs / 60000);
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        
+        if (hours > 0) {
+            return `${hours}h ${mins}min`;
+        }
+        return `${mins} min`;
+    };
+    
+    /**
+     * Calcola la potenza media di ricarica in kW.
+     * @returns {string|null} Potenza formattata o null se non calcolabile
+     */
+    const calculatePower = () => {
+        if (!charge.date || !charge.endDate || !charge.kwhAdded) return null;
+        
+        const start = new Date(charge.date);
+        const end = new Date(charge.endDate);
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+        if (end <= start) return null;
+        
+        const diffMs = end - start;
+        const diffHours = diffMs / 3600000; // ms to hours
+        
+        if (diffHours <= 0) return null;
+        
+        const kwh = parseFloat(charge.kwhAdded);
+        if (isNaN(kwh) || kwh <= 0) return null;
+        
+        const power = kwh / diffHours;
+        return power.toFixed(1);
+    };
+    
+    const duration = calculateDuration();
+    const power = calculatePower();
+    
     return (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-            <div className="modal-panel max-w-md w-full border-2 border-blue-500/30">
+            <div className="modal-panel max-w-md w-full border-2 border-blue-500/30 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <h2 className="text-xl font-bold mb-4 text-blue-400 flex items-center gap-2">
                     ✏️ Modifica Ricarica
                 </h2>
 
                 <div className="grid grid-cols-2 gap-4">
-                    {/* Data/Ora */}
-                    <div className="col-span-2">
-                        <label className="label">📅 Data/Ora</label>
+                    {/* Data/Ora INIZIO */}
+                    <div className="col-span-2 sm:col-span-1">
+                        <label className="label">📅 Inizio Ricarica</label>
                         <input 
                             className="input" 
                             type="datetime-local" 
                             value={charge.date || ""} 
                             onChange={e => setCharge({ ...charge, date: e.target.value })} 
                         />
+                    </div>
+                    
+                    {/* Data/Ora FINE */}
+                    <div className="col-span-2 sm:col-span-1">
+                        <label className="label">🏁 Fine Ricarica</label>
+                        <input 
+                            className="input" 
+                            type="datetime-local" 
+                            value={charge.endDate || ""} 
+                            onChange={e => setCharge({ ...charge, endDate: e.target.value })} 
+                        />
+                    </div>
+                    
+                    {/* Info Durata e Velocità */}
+                    <div className="col-span-2">
+                        <div className="flex items-center gap-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                            <div className="flex-1">
+                                <div className="text-xs text-muted">⏱️ Durata</div>
+                                <div className="font-bold text-blue-300">{duration}</div>
+                            </div>
+                            {power && (
+                                <div className="flex-1">
+                                    <div className="text-xs text-muted">⚡ Potenza Media</div>
+                                    <div className="font-bold text-orange-400">{power} kW</div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Fornitore */}
@@ -805,6 +887,7 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                         ℹ️ Ricalcoli automatici
                     </div>
                     <ul className="text-[10px] text-muted space-y-1">
+                        <li>• <strong>velocità</strong>: calcolata da inizio/fine e kWh</li>
                         <li>• <strong>km_since_last</strong>: differenza con ricarica precedente</li>
                         <li>• <strong>consumo</strong>: kWh/100km</li>
                         <li>• <strong>costo</strong>: ricalcolato se Casa/Fotovoltaico</li>

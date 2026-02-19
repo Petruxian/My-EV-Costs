@@ -38,7 +38,7 @@
  * - true/data in caso di successo
  * 
  * @author EV Cost Tracker Team
- * @version 2.3 - Aggiunta updateChargeInDB con ricalcoli
+ * @version 2.4 - Aggiunta updateChargeInDB con end_date per velocità
  * ============================================================
  */
 
@@ -594,17 +594,21 @@ async function saveManualChargeDB(
  * 4. km_since_last (per la ricarica SUCCESSIVA):
  *    Se total_km cambia, anche la ricarica successiva deve essere aggiornata.
  * 
+ * 5. velocità ricarica:
+ *    Calcolata automaticamente da date, end_date e kwh_added.
+ * 
  * FLUSSO:
  * -------
  * 1. Recupera ricarica precedente (per calcolo km_since_last)
  * 2. Calcola nuovi km_since_last e consumption
- * 3. Aggiorna la ricarica modificata
+ * 3. Aggiorna la ricarica modificata (incluse date e end_date)
  * 4. Trova e aggiorna la ricarica successiva (cascade update)
  * 
  * @param {Object} sb - Client Supabase
  * @param {Object} chargeData - Dati ricarica modificati
  * @param {number} chargeData.id - ID della ricarica
- * @param {string} chargeData.date - Data/ora
+ * @param {string} chargeData.date - Data/ora INIZIO
+ * @param {string} chargeData.endDate - Data/ora FINE
  * @param {number} chargeData.totalKm - Km totali
  * @param {number} chargeData.kwhAdded - kWh caricati
  * @param {number} chargeData.batteryStart - % iniziale
@@ -679,10 +683,10 @@ async function updateChargeInDB(sb, chargeData, originalCharge, allCharges, supp
     }
 
     // ========================================
-    // 3. AGGIORNA LA RICARICA
+    // 3. GESTISCI DATE (INIZIO E FINE)
     // ========================================
     
-    // Converti la data
+    // Converti la data di inizio
     let dateISO = originalCharge.date;
     if (chargeData.date) {
         const dateObj = new Date(chargeData.date);
@@ -690,9 +694,23 @@ async function updateChargeInDB(sb, chargeData, originalCharge, allCharges, supp
             dateISO = dateObj.toISOString();
         }
     }
+    
+    // Converti la data di fine (se fornita)
+    let endDateISO = originalCharge.end_date;
+    if (chargeData.endDate) {
+        const endDateObj = new Date(chargeData.endDate);
+        if (!isNaN(endDateObj.getTime())) {
+            endDateISO = endDateObj.toISOString();
+        }
+    }
+
+    // ========================================
+    // 4. AGGIORNA LA RICARICA
+    // ========================================
 
     const updatePayload = {
         date: dateISO,
+        end_date: endDateISO,
         total_km: newTotalKm,
         battery_start: parseFloat(chargeData.batteryStart) || originalCharge.battery_start,
         battery_end: parseFloat(chargeData.batteryEnd) || originalCharge.battery_end,
@@ -718,7 +736,7 @@ async function updateChargeInDB(sb, chargeData, originalCharge, allCharges, supp
     }
 
     // ========================================
-    // 4. AGGIORNA RICARICA SUCCESSIVA (CASCADE)
+    // 5. AGGIORNA RICARICA SUCCESSIVA (CASCADE)
     // ========================================
     
     // Se total_km è cambiato, dobbiamo aggiornare anche la ricarica successiva
@@ -764,9 +782,23 @@ async function updateChargeInDB(sb, chargeData, originalCharge, allCharges, supp
         }
     }
 
+    // Calcola la potenza media per il messaggio di conferma
+    let powerMessage = "";
+    if (endDateISO && dateISO && newKwhAdded > 0) {
+        const startMs = new Date(dateISO).getTime();
+        const endMs = new Date(endDateISO).getTime();
+        if (endMs > startMs) {
+            const hours = (endMs - startMs) / 3600000;
+            if (hours > 0) {
+                const power = (newKwhAdded / hours).toFixed(1);
+                powerMessage = ` (${power} kW medi)`;
+            }
+        }
+    }
+
     return { 
         success: true, 
-        message: "Ricarica aggiornata con successo!" + cascadeMessage,
+        message: "Ricarica aggiornata con successo!" + powerMessage + cascadeMessage,
         kmSinceLast,
         consumption,
         calculatedCost

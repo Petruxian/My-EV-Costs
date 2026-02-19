@@ -48,7 +48,7 @@
  * Supporta installazione su dispositivo e funzionamento offline.
  * 
  * @author EV Cost Tracker Team
- * @version 2.3 - Fix Timezone + Eliminazione Fornitori + Edit Charge
+ * @version 2.4 - Fix Timezone + Eliminazione Fornitori + Edit Charge con velocità
  * ============================================================
  */
 
@@ -409,13 +409,16 @@ function EVCostTracker() {
     /**
      * Apre il modale di modifica ricarica con i dati precompilati.
      * Converte i dati dal formato DB al formato form.
+     * Include sia data inizio che data fine per calcolo velocità.
      */
     function handleEditChargeClick(charge) {
         // Prepara i dati per il form di modifica
         setEditingCharge({
             id: charge.id,
-            // Data in formato datetime-local
+            // Data inizio in formato datetime-local
             date: getLocalDateTimeString(charge.date),
+            // Data fine in formato datetime-local (per calcolo velocità)
+            endDate: charge.end_date ? getLocalDateTimeString(charge.end_date) : "",
             totalKm: charge.total_km || "",
             kwhAdded: charge.kwh_added || "",
             batteryStart: charge.battery_start || "",
