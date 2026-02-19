@@ -185,6 +185,51 @@ function EVCostTracker() {
     }
 
     // --------------------------------------------------------
+    // HANDLER: Elimina Fornitore (NUOVO)
+    // --------------------------------------------------------
+    async function handleDeleteSupplier(supplier) {
+        // 1. Conta quante ricariche sono associate a questo fornitore
+        const associatedCharges = charges.filter(c => c.supplier_id === supplier.id);
+        const chargesCount = associatedCharges.length;
+
+        // 2. Messaggio di conferma diverso in base alla presenza di ricariche
+        let confirmMessage;
+        if (chargesCount > 0) {
+            confirmMessage = `⚠️ ATTENZIONE ⚠️\n\nIl fornitore "${supplier.name}" ha ${chargesCount} ricarich${chargesCount === 1 ? 'a' : 'e'} associat${chargesCount === 1 ? 'a' : 'e'}.\n\n` +
+                `Le ricariche NON verranno eliminate (rimarranno nello storico con i dati salvati).\n\n` +
+                `Vuoi procedere con l'eliminazione del fornitore?`;
+        } else {
+            confirmMessage = `Sei sicuro di voler eliminare il fornitore "${supplier.name}"?`;
+        }
+
+        // 3. Prima conferma
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        // 4. Se ci sono ricariche, chiedi una seconda conferma
+        if (chargesCount > 0) {
+            const finalConfirm = confirm(`🔴 ULTERIORE CONFERMA 🔴\n\nStai per eliminare "${supplier.name}".\n\nLe ${chargesCount} ricariche rimarranno visibili ma il fornitore non sarà più selezionabile.\n\nProcedere comunque?`);
+            if (!finalConfirm) {
+                return;
+            }
+        }
+
+        // 5. Procedi con l'eliminazione
+        setIsSyncing(true);
+        const success = await deleteSupplierFromDB(supabaseClient, supplier.id);
+
+        if (success) {
+            // Aggiorna la lista locale dei fornitori
+            setSuppliers(suppliers.filter(s => s.id !== supplier.id));
+            alert(`✅ Fornitore "${supplier.name}" eliminato correttamente.`);
+        } else {
+            alert("❌ Errore durante l'eliminazione del fornitore.");
+        }
+        setIsSyncing(false);
+    }
+
+    // --------------------------------------------------------
     // ACTIONS: CHARGING FLOW
     // --------------------------------------------------------
 
@@ -522,6 +567,7 @@ function EVCostTracker() {
                         suppliers={suppliers}
                         onAddSupplier={() => setShowSupplierModal(true)}
                         onEditSupplier={handleEditSupplier}
+                        onDeleteSupplier={handleDeleteSupplier}
                     />
                 )}
 

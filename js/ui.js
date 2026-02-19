@@ -347,7 +347,7 @@ function ChargeList({ charges, onDelete }) {
 // ==========================================
 // VIEW IMPOSTAZIONI COMPLETA (Con Toggle FunStats)
 // ==========================================
-function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier }) {
+function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
             {/* COLONNA SX: Parametri */}
@@ -433,7 +433,7 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                 <button onClick={saveSettings} className="btn btn-primary mt-6 w-full">💾 Salva Impostazioni</button>
             </div>
 
-            {/* COLONNA DX: Auto e Fornitori (INVARIATA) */}
+            {/* COLONNA DX: Auto e Fornitori */}
             <div className="space-y-6">
                 <div className="card">
                     <div className="flex justify-between items-center mb-4">
@@ -471,7 +471,7 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     </div>
                 </div>
 
- {/* FORNITORI */}
+                {/* FORNITORI */}
                 <div className="card">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-saving">🏪 Fornitori</h2>
@@ -493,12 +493,22 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                                         {s.sort_order !== 9 && <span className="text-text opacity-50">• Ordine: {s.sort_order}</span>}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => onEditSupplier(s)}
-                                    className="p-2 text-muted hover:text-accent rounded-lg"
-                                >
-                                    ✏️
-                                </button>
+                                <div className="flex gap-1">
+                                    <button
+                                        onClick={() => onEditSupplier(s)}
+                                        className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all"
+                                        title="Modifica Fornitore"
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button
+                                        onClick={() => onDeleteSupplier(s)}
+                                        className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                        title="Elimina Fornitore"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

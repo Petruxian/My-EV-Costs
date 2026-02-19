@@ -95,6 +95,34 @@ async function updateSupplier(sb, supplierId, updates) {
 }
 
 /* =====================================================
+   DELETE SUPPLIER
+   ===================================================== */
+
+/**
+ * Elimina un fornitore dal database
+ * @param {object} sb - client Supabase
+ * @param {string|number} supplierId - ID del fornitore da eliminare
+ * @returns {boolean} true se eliminato con successo
+ * 
+ * NOTA: Le ricariche associate NON vengono eliminate.
+ * Il campo supplier_id nelle ricariche rimane invariato (o diventa null se ON DELETE SET NULL).
+ * I campi supplier_name e supplier_type sono già salvati come snapshot nella ricarica.
+ */
+async function deleteSupplierFromDB(sb, supplierId) {
+    const { error } = await sb
+        .from("suppliers")
+        .delete()
+        .eq("id", supplierId);
+
+    if (error) {
+        console.error("Errore eliminazione fornitore:", error);
+        return false;
+    }
+
+    return true;
+}
+
+/* =====================================================
    LOGICA RICARICA
    ===================================================== */
 
