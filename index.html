@@ -2,39 +2,169 @@
 <html lang="it">
 
 <head>
+    <!--
+    ============================================================
+    EV COST TRACKER - PWA per Tracciamento Ricariche EV
+    ============================================================
+    
+    Questa è la pagina principale dell'applicazione EV Cost Tracker,
+    una Progressive Web App per il tracciamento delle ricariche
+    di veicoli elettrici.
+    
+    ARCHITETTURA:
+    -------------
+    - HTML: Entry point e container React
+    - React 18 UMD: Framework UI (no build step)
+    - Babel: Transpilation JSX in-browser
+    - Tailwind CSS: Framework stilistico
+    - Chart.js: Grafici interattivi
+    - Supabase: Backend as a Service
+    
+    PWA FEATURES:
+    -------------
+    - Service Worker per cache offline
+    - Manifest per installazione
+    - Tema personalizzabile
+    - Icone multiple per diversi dispositivi
+    
+    STRUTTURA FILE:
+    ---------------
+    - index.html     → Questo file (entry point)
+    - js/ui.js       → Componenti UI React
+    - js/charts.js   → Grafici Chart.js
+    - js/analysis.js → Funzioni analisi dati
+    - js/forms.js    → Modali e form
+    - js/supabase.js → Servizio database
+    - js/utils.js    → Utility globali
+    - js/stats.js    → Calcolo statistiche
+    - js/app.js      → App React principale
+    - css/styles.css → Stili e temi
+    
+    CARICAMENTO:
+    ------------
+    1. Browser carica HTML
+    2. Script CDN (React, Babel, Chart.js, Supabase)
+    3. CSS personalizzato
+    4. Componenti React (ordine importante per dipendenze)
+    5. Service Worker registration (PWA)
+    
+    @author EV Cost Tracker Team
+    @version 2.2
+    ============================================================
+    -->
+
+    <!-- ================================================
+         META TAG BASE
+         ================================================ -->
+    <!-- Codifica caratteri UTF-8 per supporto internazionale -->
     <meta charset="UTF-8" />
+    
+    <!-- Viewport responsive per dispositivi mobile -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Titolo applicazione -->
     <title>EV Cost Tracker</title>
 
-    <!-- PWA Setup -->
+    <!-- ================================================
+         PWA (Progressive Web App) SETUP
+         ================================================ -->
+    <!--
+    Questi meta tag e link abilitano le funzionalità PWA:
+    - Installazione su home screen
+    - Avvio standalone (senza browser UI)
+    - Colore tema personalizzato
+    -->
+    
+    <!-- Manifest per installazione PWA -->
     <link rel="manifest" href="manifest.json" />
+    
+    <!-- Colore tema browser (Android Chrome) -->
     <meta name="theme-color" content="#0f172a" />
+    
+    <!-- Supporto iOS Safari full-screen -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- Icona per iOS home screen -->
     <link rel="apple-touch-icon" href="icon-192.png" />
 
-    <!-- Tailwind -->
+    <!-- ================================================
+         FRAMEWORK CSS - TAILWIND
+         ================================================ -->
+    <!--
+    Tailwind CSS via CDN per utility classes.
+    In produzione, considerare build custom per ridurre bundle.
+    -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- CSS personalizzato -->
+    <!-- ================================================
+         STILI PERSONALIZZATI
+         ================================================ -->
+    <!--
+    File CSS con:
+    - 10 temi grafici
+    - Classi custom (.card, .btn, .modal-*, etc.)
+    - Animazioni (fadeIn, slideUp, scaleIn)
+    - Media queries responsive
+    -->
     <link rel="stylesheet" href="css/styles.css" />
 
-
-    <!-- React + ReactDOM (UMD) -->
+    <!-- ================================================
+         REACT 18 (UMD - No Build Step)
+         ================================================ -->
+    <!--
+    React in modalità UMD (Universal Module Definition).
+    Espone React e ReactDOM come variabili globali.
+    Versione development per debugging (cambiare in production.min per deploy).
+    -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-    <!-- Babel per JSX in-browser -->
+    <!-- ================================================
+         BABEL - JSX Transpilation In-Browser
+         ================================================ -->
+    <!--
+    Babel standalone per transpilare JSX in JavaScript puro.
+    Necessario perché non abbiamo un build step.
+    In produzione, considerare Vite/Webpack per pre-compilazione.
+    -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Chart.js -->
+    <!-- ================================================
+         CHART.JS - Grafici Interattivi
+         ================================================ -->
+    <!--
+    Chart.js per grafici responsive e animati.
+    Usato per:
+    - Grafico panoramica mensile (bar + line)
+    - Trend consumi (area chart)
+    - Distribuzione fornitori (doughnut)
+    -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Supabase -->
+    <!-- ================================================
+         SUPABASE - Backend as a Service
+         ================================================ -->
+    <!--
+    Client Supabase per:
+    - Database PostgreSQL
+    - Autenticazione (se implementata)
+    - Real-time subscriptions (se implementate)
+    
+    Le credenziali sono configurate in js/app.js
+    -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-    <!-- Stile personalizzato opzionale -->
+    <!-- ================================================
+         STILI INLINE - Spinner e Background
+         ================================================ -->
+    <!--
+    Stili inline per:
+    - Background di base (corrisponde a tema default)
+    - Animazione spinner loading
+    Questi stili devono essere inline per evitare flash
+    di contenuto non stilizzato prima del CSS load.
+    -->
     <style>
         body {
             background-color: #020617;
@@ -59,34 +189,77 @@
 
 <body class="min-h-screen theme-default">
 
-    <!-- ROOT REACT -->
+    <!-- ================================================
+         ROOT REACT - Container Applicazione
+         ================================================ -->
+    <!--
+    Questo div è il punto di mount per l'app React.
+    ReactDOM.createRoot() renderizza <EVCostTracker /> qui.
+    Non modificare l'id="root" senza aggiornare app.js
+    -->
     <div id="root"></div>
 
-    <!-- =============================== -->
-    <!--      COMPONENTI UI              -->
-    <!-- =============================== -->
+    <!-- ================================================
+         COMPONENTI UI
+         ================================================ -->
+    <!--
+    NOTA: L'ordine di caricamento è importante!
+    I file vengono eseguiti nell'ordine, quindi le dipendenze
+    devono essere caricate prima dei file che le usano.
+    -->
+    
+    <!-- Componenti UI base: Skeleton, Cards, ChargeList, Settings, etc. -->
     <script type="text/babel" src="js/ui.js"></script>
+    
+    <!-- Componenti grafici: ChartSection, MonthlyOverview, etc. -->
     <script type="text/babel" src="js/charts.js"></script>
+    
+    <!-- Funzioni analisi: calculateAdvancedAnalysis, calculateForecast -->
     <script type="text/babel" src="js/analysis.js"></script>
+    
+    <!-- Componenti modali: StartCharge, StopCharge, ManualCharge, etc. -->
     <script type="text/babel" src="js/forms.js"></script>
 
-    <!-- =============================== -->
-    <!--      SERVICES                   -->
-    <!-- =============================== -->
+    <!-- ================================================
+         SERVICES
+         ================================================ -->
+    
+    <!-- Servizio Supabase: CRUD operations per database -->
     <script type="text/babel" src="js/supabase.js"></script>
 
-    <!-- =============================== -->
-    <!--      UTILS                      -->
-    <!-- =============================== -->
+    <!-- ================================================
+         UTILITÀ
+         ================================================ -->
+    
+    <!-- Utility globali: formattazione, export CSV, calcoli vari -->
     <script type="text/babel" src="js/utils.js"></script>
+    
+    <!-- Calcolo statistiche: totali, medie, risparmi -->
     <script type="text/babel" src="js/stats.js"></script>
 
-    <!-- =============================== -->
-    <!--      APP PRINCIPALE             -->
-    <!-- =============================== -->
+    <!-- ================================================
+         APPLICAZIONE PRINCIPALE
+         ================================================ -->
+    <!--
+    App React principale: EVCostTracker
+    - Gestisce stato globale
+    - Coordina tutti i componenti
+    - Renderizza nel div#root
+    DEVE essere l'ultimo script caricato!
+    -->
     <script type="text/babel" src="js/app.js"></script>
 
-    <!-- PWA Service Worker Registration -->
+    <!-- ================================================
+         PWA SERVICE WORKER REGISTRATION
+         ================================================ -->
+    <!--
+    Registra il Service Worker per funzionalità PWA:
+    - Cache offline
+    - Background sync
+    - Push notifications (se implementate)
+    
+    Il file sw.js deve essere nella root del progetto.
+    -->
     <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
