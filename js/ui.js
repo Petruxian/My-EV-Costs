@@ -1,17 +1,69 @@
-// js/components/ui.js
-// Componenti Grafici per EV Tracker — FIX DEFINITIVO UI & LOGICA
+/**
+ * ============================================================
+ * UI.JS - Componenti Grafici per EV Cost Tracker
+ * ============================================================
+ * 
+ * Questo file contiene tutti i componenti UI (User Interface)
+ * dell'applicazione EV Cost Tracker. I componenti sono scritti
+ * in JSX e compatibili con React 18 in modalità UMD.
+ * 
+ * COMPONENTI INCLUSI:
+ * -------------------
+ * 1. SkeletonLoader     - Placeholder animato durante caricamento
+ * 2. UICard             - Card generica riutilizzabile
+ * 3. StatsCards         - 4 card dashboard (speso, km, risparmio, eco)
+ * 4. ChargeList         - Lista ricariche raggruppate per mese
+ * 5. SettingsView       - Vista impostazioni completa
+ * 6. ChartSection       - Container sezione grafici
+ * 7. ActiveChargingBox  - Box ricarica in corso con timer live
+ * 8. FunStats           - Badge traguardi + equivalenza pizza/caffè
+ * 
+ * DIPENDENZE:
+ * -----------
+ * - React 18 (UMD - globale)
+ * - ReactDOM 18 (UMD - globale)
+ * - Tailwind CSS (CDN)
+ * - Funzioni da utils.js: calculateAveragePower
+ * - Funzioni da stats.js: calculateStats
+ * 
+ * ARCHITETTURA:
+ * -------------
+ * - Tutti i componenti sono funzioni pure React
+ * - Lo stato è gestito nel componente padre (app.js)
+ * - La comunicazione avviene via props (down) e callback (up)
+ * 
+ * STILI:
+ * ------
+ * - Utilizza classi Tailwind CSS
+ * - Variabili CSS definite in styles.css per temi
+ * - Classi custom: .card, .btn, .input, .modal-backdrop, etc.
+ * 
+ * @author EV Cost Tracker Team
+ * @version 2.3 - Fix Timezone + Eliminazione Fornitori + Edit Charge
+ * ============================================================
+ */
 
-// ==========================================
+// ============================================================
 // SKELETON LOADER
-// ==========================================
+// ============================================================
+/**
+ * Placeholder animato mostrato durante il caricamento dati.
+ * 
+ * Mostra 4 card skeleton + una card lista con testo placeholder.
+ * Utilizza l'animazione shimmer definita in styles.css.
+ * 
+ * @returns {JSX.Element} Skeleton UI
+ */
 function SkeletonLoader() {
     return (
         <div className="space-y-6 animate-fade-in">
+            {/* 4 Card skeleton per le stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map(i => (
                     <div key={i} className="skeleton skeleton-card"></div>
                 ))}
             </div>
+            {/* Card lista skeleton */}
             <div className="card">
                 <div className="skeleton skeleton-title"></div>
                 <div className="space-y-3">
@@ -24,9 +76,17 @@ function SkeletonLoader() {
     );
 }
 
-// ==========================================
+// ============================================================
 // CARD GENERICA
-// ==========================================
+// ============================================================
+/**
+ * Componente card generico e riutilizzabile.
+ * 
+ * @param {Object} props - Props del componente
+ * @param {JSX.Element} props.children - Contenuto della card
+ * @param {string} [props.className=""] - Classi CSS aggiuntive
+ * @returns {JSX.Element} Card con contenuto
+ */
 function UICard({ children, className = "" }) {
     return (
         <div className={"card " + className}>
@@ -35,15 +95,28 @@ function UICard({ children, className = "" }) {
     );
 }
 
-// ==========================================
-// STATS CARDS (Le card in alto)
-// ==========================================
+// ============================================================
+// STATS CARDS - Le 4 Card Dashboard
+// ============================================================
+/**
+ * Le 4 card statistiche mostrate in cima alla dashboard.
+ * 
+ * CARD:
+ * 1. Totale Speso + Energia (kWh)
+ * 2. Km Percorsi + Consumo (kWh/100km)
+ * 3. Risparmio vs Benzina e Diesel
+ * 4. Impatto Ecologico (CO2, Alberi)
+ * 
+ * @param {Object} props - Props del componente
+ * @param {Object} props.stats - Oggetto statistiche da calculateStats()
+ * @returns {JSX.Element|null} 4 card statistiche o null se no data
+ */
 function StatsCards({ stats }) {
     if (!stats) return null;
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fade-in">
-            {/* 1. Energia & Costo */}
+            {/* CARD 1: Energia & Costo */}
             <div className="card hover-card">
                 <div className="flex justify-between items-start">
                     <div>
@@ -57,7 +130,7 @@ function StatsCards({ stats }) {
                 </div>
             </div>
 
-            {/* 2. Km & Consumo */}
+            {/* CARD 2: Km & Consumo */}
             <div className="card hover-card">
                 <div className="flex justify-between items-start">
                     <div>
@@ -71,22 +144,17 @@ function StatsCards({ stats }) {
                 </div>
             </div>
 
-            {/* 3. Risparmio vs Benzina & Diesel */}
+            {/* CARD 3: Risparmio vs Carburanti */}
             <div className="card hover-card bg-gradient-to-br from-slate-800 to-slate-900 border-emerald-500/30">
                 <div className="text-xs sm:text-sm text-emerald-400 mb-3 font-bold flex items-center gap-2">
                     <span className="text-lg">💰</span> Risparmio Reale
                 </div>
-
                 <div className="grid grid-cols-2 gap-0 relative">
                     <div className="absolute left-1/2 top-1 bottom-1 w-px bg-slate-700/50 -translate-x-1/2"></div>
-
-                    {/* Colonna Benzina */}
                     <div className="text-center pr-1">
                         <div className="text-2xl sm:text-xl font-bold text-white truncate">€{stats.gasolineSavings}</div>
                         <div className="text-[10px] sm:text-[9px] uppercase tracking-wider text-emerald-200/70 mt-1.5">Benzina</div>
                     </div>
-
-                    {/* Colonna Diesel */}
                     <div className="text-center pl-1">
                         <div className="text-2xl sm:text-xl font-bold text-white truncate">€{stats.dieselSavings}</div>
                         <div className="text-[10px] sm:text-[9px] uppercase tracking-wider text-cyan-200/70 mt-1.5">Diesel</div>
@@ -94,10 +162,9 @@ function StatsCards({ stats }) {
                 </div>
             </div>
 
-            {/* 4. ECO IMPACT (Alberi) */}
+            {/* CARD 4: Impatto Ecologico */}
             <div className="card hover-card bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-500/30 relative overflow-hidden">
                 <div className="absolute -right-4 -bottom-4 text-8xl opacity-10">🌳</div>
-
                 <div className="text-xs sm:text-sm text-green-300 mb-2 font-bold flex items-center gap-1">
                     <span className="text-lg">🌍</span> Impatto Green
                 </div>
@@ -105,31 +172,47 @@ function StatsCards({ stats }) {
                     <div className="text-4xl sm:text-3xl font-bold text-white">{stats.treesSaved}</div>
                     <div className="text-sm text-green-200 mb-1.5">Alberi 🌲</div>
                 </div>
-                <div className="text-xs text-green-400/70 mt-2">
-                    -{stats.co2SavedKg} kg di CO₂
-                </div>
+                <div className="text-xs text-green-400/70 mt-2">-{stats.co2SavedKg} kg di CO₂</div>
             </div>
         </div>
     );
 }
 
-// ==========================================
-// LISTA RICARICHE (CORRETTA)
-// ==========================================
-function ChargeList({ charges, onDelete }) {
-    // 1. HOOKS PRIMA DI TUTTO (Fix crash React "Rendered fewer hooks")
+// ============================================================
+// LISTA RICARICHE - Raggruppate per Mese
+// ============================================================
+/**
+ * Lista delle ricariche raggruppate per anno/mese con espansione.
+ * 
+ * FUNZIONALITÀ:
+ * - Raggruppamento automatico per mese
+ * - Espandi/comprimi singolo mese
+ * - Pulsanti "Espandi tutto" / "Comprimi tutto"
+ * - Calcolo differenza vs costo standard
+ * - Badge potenza media ricarica
+ * - Note opzionali
+ * - Pulsanti modifica ed elimina (hover)
+ * 
+ * @param {Object} props - Props del componente
+ * @param {Array} props.charges - Array ricariche completate
+ * @param {Function} props.onEdit - Callback modifica (charge) => void
+ * @param {Function} props.onDelete - Callback eliminazione (id) => void
+ * @returns {JSX.Element} Lista raggruppata o messaggio vuoto
+ */
+function ChargeList({ charges, onEdit, onDelete }) {
+    // HOOKS (DEVONO ESSERE PRIMA DI TUTTO)
     const [expandedMonths, setExpandedMonths] = React.useState({});
 
-    // Raggruppa ricariche per Anno/Mese
+    // Raggruppamento per mese
     const groupedCharges = React.useMemo(() => {
-        if (!charges || charges.length === 0) return []; 
+        if (!charges || charges.length === 0) return [];
 
         const groups = {};
 
         charges.forEach(charge => {
             const date = new Date(charge.date);
             const year = date.getFullYear();
-            const month = date.getMonth(); // 0-11
+            const month = date.getMonth();
             const key = `${year}-${month}`;
 
             if (!groups[key]) {
@@ -160,14 +243,14 @@ function ChargeList({ charges, onDelete }) {
             .map(([key, data]) => ({ key, ...data }));
     }, [charges]);
 
-    // Auto-espandi il mese più recente
+    // Auto-espansione mese più recente
     React.useEffect(() => {
         if (groupedCharges.length > 0 && Object.keys(expandedMonths).length === 0) {
             setExpandedMonths({ [groupedCharges[0].key]: true });
         }
     }, [groupedCharges]);
 
-    // 2. RETURN ANTICIPATO (Conditional Rendering)
+    // Guard clause
     if (!charges || charges.length === 0) {
         return (
             <div className="p-8 text-center card">
@@ -203,10 +286,7 @@ function ChargeList({ charges, onDelete }) {
 
                 return (
                     <div key={group.key} className="card overflow-hidden">
-                        <button
-                            onClick={() => toggleMonth(group.key)}
-                            className="w-full p-4 flex items-center justify-between hover:bg-card-soft transition-all group"
-                        >
+                        <button onClick={() => toggleMonth(group.key)} className="w-full p-4 flex items-center justify-between hover:bg-card-soft transition-all group">
                             <div className="flex items-center gap-3">
                                 <div className={`text-2xl transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>▶</div>
                                 <div className="text-left">
@@ -229,18 +309,12 @@ function ChargeList({ charges, onDelete }) {
                         {isExpanded && (
                             <div className="divide-y divide-card-border animate-fade-in">
                                 {group.charges.map(charge => {
-                                    // LOGICA ESTRATTA: Calcoli fatti PRIMA del render per sicurezza
                                     const power = calculateAveragePower(charge.kwh_added, charge.date, charge.end_date);
-                                    
                                     const supplierName = charge.supplier_name || "";
                                     const lowerName = supplierName.toLowerCase();
-                                    
-                                    // 1. Determina se è Casa o Fotovoltaico
-                                    const isHomeOrSolar = lowerName.includes('casa') || 
-                                                          lowerName.includes('solar') || 
-                                                          lowerName.includes('fotovoltaico');
+                                    const isHomeOrSolar = lowerName.includes('casa') || lowerName.includes('solar') || lowerName.includes('fotovoltaico');
 
-                                    // 2. Calcola la differenza (solo se non è casa e c'è uno standard cost)
+                                    // Calcolo differenza vs standard
                                     let diffBlock = null;
                                     const standardCost = parseFloat(charge.standard_cost_snapshot || 0);
 
@@ -250,13 +324,11 @@ function ChargeList({ charges, onDelete }) {
                                         const wouldBeCost = kwhAdded * standardCost;
                                         const difference = actualCost - wouldBeCost;
 
-                                        // MOSTRA SOLO SE la differenza è maggiore di 5 centesimi (evita lo 0.00)
                                         if (Math.abs(difference) > 0.05) {
                                             const isSaving = difference < 0;
                                             const diffAbs = Math.abs(difference).toFixed(2);
                                             const percent = ((difference / wouldBeCost) * 100).toFixed(1);
                                             
-                                            // Crea il blocco HTML qui
                                             diffBlock = (
                                                 <div className={`mt-3 p-3 rounded-lg border-2 transition-all ${isSaving ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-red-500/10 border-red-500/40'}`}>
                                                     <div className="flex items-center justify-between">
@@ -300,7 +372,23 @@ function ChargeList({ charges, onDelete }) {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button onClick={() => onDelete(charge.id)} className="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-125 text-negative p-2 rounded-lg hover:bg-red-500/10">🗑️</button>
+                                                {/* PULSANTI AZIONE */}
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                                    <button 
+                                                        onClick={() => onEdit(charge)} 
+                                                        className="p-2 text-muted hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+                                                        title="Modifica ricarica"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => onDelete(charge.id)} 
+                                                        className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                        title="Elimina ricarica"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
@@ -322,10 +410,8 @@ function ChargeList({ charges, onDelete }) {
                                                 </div>
                                             </div>
 
-                                            {/* RENDERIZZA IL BLOCCO DIFFERENZA SOLO SE CALCOLATO SOPRA */}
                                             {diffBlock}
-                                            
-                                            {/* --- NUOVO BLOCCO NOTE --- */}
+
                                             {charge.notes && charge.notes.trim() !== "" && (
                                                 <div className="mt-3 text-xs text-muted/80 italic bg-black/10 p-2 rounded border border-white/5 flex gap-2 items-start">
                                                     <span>📝</span>
@@ -344,24 +430,25 @@ function ChargeList({ charges, onDelete }) {
     );
 }
 
-// ==========================================
-// VIEW IMPOSTAZIONI COMPLETA (Con Toggle FunStats)
-// ==========================================
+// ============================================================
+// VISTA IMPOSTAZIONI
+// ============================================================
+/**
+ * Vista completa delle impostazioni dell'applicazione.
+ * 
+ * @param {Object} props - Props del componente
+ * @param {Function} props.onDeleteSupplier - Callback elimina fornitore
+ * @returns {JSX.Element} Vista impostazioni
+ */
 function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
-            {/* COLONNA SX: Parametri */}
             <div className="card">
                 <h2 className="text-xl font-bold text-saving mb-4">⚙️ Impostazioni</h2>
 
-                {/* Tema */}
                 <div className="mb-6">
                     <label className="block text-muted mb-2 font-semibold">🎨 Tema Grafico</label>
-                    <select
-                        className="input-field"
-                        value={settings.theme || "theme-default"}
-                        onChange={(e) => setSettings({ ...settings, theme: e.target.value })}
-                    >
+                    <select className="input-field" value={settings.theme || "theme-default"} onChange={(e) => setSettings({ ...settings, theme: e.target.value })}>
                         <option value="theme-auto">🌓 Auto (Segui Sistema)</option>
                         <option value="theme-default">✨ Default</option>
                         <option value="theme-dark">🌙 Dark</option>
@@ -374,29 +461,20 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     </select>
                 </div>
 
-                {/* VISUALIZZAZIONE (NUOVA SEZIONE) */}
                 <div className="mb-6 p-4 bg-card-soft rounded-xl border border-card-border">
                     <h3 className="text-sm font-bold text-muted mb-3 uppercase tracking-wider">👁️ Visualizzazione</h3>
-                    
                     <div className="flex items-center justify-between">
                         <div>
                             <div className="font-semibold text-text">Badge & Fun Stats</div>
                             <div className="text-xs text-muted">Mostra trofei e indice pizza/caffè</div>
                         </div>
-                        {/* TOGGLE SWITCH */}
                         <label className="relative inline-flex items-center cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                className="sr-only peer"
-                                checked={settings.showFunStats !== false} // Default true se undefined
-                                onChange={(e) => setSettings({ ...settings, showFunStats: e.target.checked })}
-                            />
+                            <input type="checkbox" className="sr-only peer" checked={settings.showFunStats !== false} onChange={(e) => setSettings({ ...settings, showFunStats: e.target.checked })} />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                         </label>
                     </div>
                 </div>
 
-                {/* Prezzi Carburanti */}
                 <div className="space-y-4 text-sm">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -414,26 +492,14 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     </div>
                     <div>
                         <label className="label">☀️ Fotovoltaico (€/kWh)</label>
-                        <input
-                            type="number"
-                            step="0.001"
-                            className="input"
-                            value={settings.solarElectricityPrice || 0}
-                            onChange={e => setSettings({
-                                ...settings,
-                                solarElectricityPrice: parseFloat(e.target.value) || 0
-                            })}
-                        />
-                        <p className="text-xs text-muted mt-1">
-                            Costo simbolico pannelli solari (€0.00 se totalmente gratuito)
-                        </p>
+                        <input type="number" step="0.001" className="input" value={settings.solarElectricityPrice || 0} onChange={e => setSettings({ ...settings, solarElectricityPrice: parseFloat(e.target.value) || 0 })} />
+                        <p className="text-xs text-muted mt-1">Costo simbolico pannelli solari (€0.00 se totalmente gratuito)</p>
                     </div>
                 </div>
 
                 <button onClick={saveSettings} className="btn btn-primary mt-6 w-full">💾 Salva Impostazioni</button>
             </div>
 
-            {/* COLONNA DX: Auto e Fornitori */}
             <div className="space-y-6">
                 <div className="card">
                     <div className="flex justify-between items-center mb-4">
@@ -451,27 +517,14 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                                     </div>
                                 </div>
                                 <div className="flex gap-1">
-                                    <button 
-                                        onClick={() => onEditVehicle(v)}
-                                        className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all"
-                                        title="Modifica Auto"
-                                    >
-                                        ✏️
-                                    </button>
-                                    <button 
-                                        onClick={() => onDeleteVehicle(v)}
-                                        className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                        title="Elimina Auto"
-                                    >
-                                        🗑️
-                                    </button>
+                                    <button onClick={() => onEditVehicle(v)} className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all" title="Modifica Auto">✏️</button>
+                                    <button onClick={() => onDeleteVehicle(v)} className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Elimina Auto">🗑️</button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* FORNITORI */}
                 <div className="card">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-saving">🏪 Fornitori</h2>
@@ -484,9 +537,7 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                                     <div className="flex items-center gap-2 mb-1">
                                         {s.is_favorite && <span className="text-lg" title="Preferito">⭐</span>}
                                         <span className="font-semibold">{s.name}</span>
-                                        <span className={`text-xs px-2 py-0.5 rounded ${s.type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                                            {s.type}
-                                        </span>
+                                        <span className={`text-xs px-2 py-0.5 rounded ${s.type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>{s.type}</span>
                                     </div>
                                     <div className="text-xs text-muted flex gap-2">
                                         <span>€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
@@ -494,20 +545,8 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                                     </div>
                                 </div>
                                 <div className="flex gap-1">
-                                    <button
-                                        onClick={() => onEditSupplier(s)}
-                                        className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all"
-                                        title="Modifica Fornitore"
-                                    >
-                                        ✏️
-                                    </button>
-                                    <button
-                                        onClick={() => onDeleteSupplier(s)}
-                                        className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                        title="Elimina Fornitore"
-                                    >
-                                        🗑️
-                                    </button>
+                                    <button onClick={() => onEditSupplier(s)} className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all" title="Modifica Fornitore">✏️</button>
+                                    <button onClick={() => onDeleteSupplier(s)} className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Elimina Fornitore">🗑️</button>
                                 </div>
                             </div>
                         ))}
@@ -518,9 +557,9 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
     );
 }
 
-// ==========================================
+// ============================================================
 // SEZIONE GRAFICI
-// ==========================================
+// ============================================================
 function ChartSection({ charges, options, setOptions, theme }) {
     if (!charges || charges.length < 2) return <div className="text-center p-10 text-muted">Servono almeno 2 ricariche per i grafici.</div>;
 
@@ -534,7 +573,6 @@ function ChartSection({ charges, options, setOptions, theme }) {
                 <button className={`toggle-btn ${options.showACDC ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showACDC: !o.showACDC }))}>⚡ AC/DC</button>
                 <button className={`toggle-btn ${options.showSuppliers ? "active" : ""}`} onClick={() => setOptions(o => ({ ...o, showSuppliers: !o.showSuppliers }))}>🏪 Fornitori</button>
             </div>
-
             {options.showCost && <CostChart charges={charges} theme={theme} />}
             {options.showKwh && <KwhChart charges={charges} theme={theme} />}
             {options.showConsumption && <ConsumptionChart charges={charges} theme={theme} />}
@@ -545,9 +583,9 @@ function ChartSection({ charges, options, setOptions, theme }) {
     );
 }
 
-// ==========================================
-// ACTIVE CHARGING SESSION BOX
-// ==========================================
+// ============================================================
+// BOX RICARICA ATTIVA
+// ============================================================
 function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
     const [elapsedTime, setElapsedTime] = React.useState('');
 
@@ -608,64 +646,46 @@ function ActiveChargingBox({ activeSession, onStopClick, onCancelClick }) {
     );
 }
 
-// ==========================================
-// FUN STATS & BADGES (Fixed & Tamed)
-// ==========================================
+// ============================================================
+// FUN STATS & BADGES
+// ============================================================
 function FunStats({ stats, charges }) {
     if (!stats || !charges) return null;
 
-    // 1. Calcolo Badge
     const badges = [];
     const totalKm = parseFloat(stats.kmDriven);
     const solarCharges = charges.filter(c => c.supplier_name && (c.supplier_name.toLowerCase().includes('fotovoltaico') || c.supplier_name.toLowerCase().includes('solar'))).length;
     const avgCost = parseFloat(stats.avgCostPerKwh);
 
-    // BADGE DI BASE (Appare sempre, così vedi la striscia)
     badges.push({ icon: "👋", title: "Benvenuto", desc: "Inizia il viaggio!" });
-
-    // SOGLIE ABBASSATE PER VEDERE I RISULTATI
     if (totalKm > 100) badges.push({ icon: "🥉", title: "Viaggiatore", desc: "Primi 100 km andati!" });
     if (totalKm > 1000) badges.push({ icon: "🥈", title: "Esploratore", desc: "Oltre 1.000 km!" });
     if (totalKm > 10000) badges.push({ icon: "🏎️", title: "Maratoneta", desc: "Giro del mondo?" });
-    
     if (solarCharges > 0) badges.push({ icon: "☀️", title: "Green", desc: "Prima ricarica solare" });
     if (solarCharges > 10) badges.push({ icon: "😎", title: "Re del Sole", desc: "Sfrutti l'energia pulita" });
-    
     if (avgCost < 0.20 && totalKm > 50) badges.push({ icon: "🦊", title: "Volpe", desc: "Spendaccione? No!" });
     if (charges.length >= 1) badges.push({ icon: "🔋", title: "Start", desc: "Prima ricarica fatta" });
     if (charges.length > 20) badges.push({ icon: "🔌", title: "Veterano", desc: "Più di 20 ricariche" });
 
-    // 2. Calcolo "Pizza Index"
     const savings = parseFloat(stats.gasolineSavings);
-    const pizzaPrice = 8.50; 
-    const coffeePrice = 1.20; 
-    const netflixPrice = 13.00; 
-
+    const pizzaPrice = 8.50;
+    const coffeePrice = 1.20;
+    const netflixPrice = 13.00;
     const pizzas = Math.floor(savings / pizzaPrice);
     const coffees = Math.floor(savings / coffeePrice);
     const monthsNetflix = (savings / netflixPrice).toFixed(1);
-
-    // Se non c'è risparmio (o è negativo), non mostrare la card Pizza ma mostra i badge se ci sono
     const showPizza = savings > 0;
 
     return (
         <div className="space-y-6 animate-fade-in mb-8">
-            
-            {/* BADGES ROW - Scroll orizzontale */}
             {badges.length > 0 && (
-                <div className="overflow-x-auto pb-2"> {/* Padding bottom per l'ombra */}
+                <div className="overflow-x-auto pb-2">
                     <h3 className="text-sm font-bold text-muted mb-3 uppercase tracking-wider sticky left-0">🏆 I tuoi Traguardi</h3>
                     <div className="flex gap-4">
                         {badges.map((b, idx) => (
-                            <div 
-                                key={idx} 
-                                className="min-w-[130px] card-soft p-3 rounded-xl border border-card-border text-center flex flex-col items-center justify-center shadow-lg transform transition active:scale-95"
-                                style={{ backgroundColor: 'var(--card)' }} // Forza background card per coprire lo scroll
-                            >
+                            <div key={idx} className="min-w-[130px] card-soft p-3 rounded-xl border border-card-border text-center flex flex-col items-center justify-center shadow-lg transform transition active:scale-95" style={{ backgroundColor: 'var(--card)' }}>
                                 <div className="text-3xl mb-2">{b.icon}</div>
-                                <div className="font-bold text-xs mb-1 truncate w-full" style={{ color: 'var(--accent)' }}>
-                                    {b.title}
-                                </div>
+                                <div className="font-bold text-xs mb-1 truncate w-full" style={{ color: 'var(--accent)' }}>{b.title}</div>
                                 <div className="text-[10px] text-muted leading-tight">{b.desc}</div>
                             </div>
                         ))}
@@ -673,34 +693,15 @@ function FunStats({ stats, charges }) {
                 </div>
             )}
 
-            {/* PIZZA / SAVINGS CARD (TEMATIZZATA) */}
             {showPizza && (
-                <div 
-                    className="card relative overflow-hidden border-2"
-                    style={{
-                        borderColor: 'var(--card-border)',
-                        borderTopColor: 'var(--accent)' // Solo bordo sopra colorato
-                    }}
-                >
-                    {/* Sfondo sfumato leggero */}
-                    <div 
-                        className="absolute inset-0 opacity-5"
-                        style={{
-                            background: `linear-gradient(to right, var(--accent), transparent)`
-                        }}
-                    ></div>
-
+                <div className="card relative overflow-hidden border-2" style={{ borderColor: 'var(--card-border)', borderTopColor: 'var(--accent)' }}>
+                    <div className="absolute inset-0 opacity-5" style={{ background: `linear-gradient(to right, var(--accent), transparent)` }}></div>
                     <div className="relative z-10">
                         <div className="absolute -right-6 -bottom-6 text-9xl opacity-10 rotate-12 grayscale">🍕</div>
-                        
                         <h3 className="text-lg font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--accent-2)' }}>
-                            <span className="text-2xl">😎</span> 
-                            Risparmio reale: {parseFloat(stats.gasolineSavings).toFixed(0)}€
+                            <span className="text-2xl">😎</span> Risparmio reale: {parseFloat(stats.gasolineSavings).toFixed(0)}€
                         </h3>
-                        <p className="text-xs text-muted mb-4">
-                            Equivalgono a circa:
-                        </p>
-
+                        <p className="text-xs text-muted mb-4">Equivalgono a circa:</p>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="bg-card-soft p-2 rounded-xl text-center backdrop-blur-sm border border-card-border">
                                 <div className="text-xl mb-1">🍕</div>
