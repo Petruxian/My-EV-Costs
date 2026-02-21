@@ -48,7 +48,7 @@
  * Supporta installazione su dispositivo e funzionamento offline.
  * 
  * @author EV Cost Tracker Team
- * @version 2.4 - Fix Timezone + Eliminazione Fornitori + Edit Charge con velocità
+ * @version 2.5 - Aggiunti FilterBar, BudgetIndicator, QuickActions, Tags
  * ============================================================
  */
 
@@ -88,8 +88,26 @@ function EVCostTracker() {
         homeElectricityPrice: 0.25,
         solarElectricityPrice: 0.00,
         theme: "theme-default",
-        showFunStats: true
+        showFunStats: true,
+        monthlyBudget: 0,  // 0 = disabilitato
+        budgetAlertThreshold: 80
     });
+
+    // ========================================================
+    // STATO FILTRI E QUICK ACTIONS (NUOVO)
+    // ========================================================
+    const [filters, setFilters] = React.useState({
+        supplier: 'all',
+        type: 'all',
+        dateFrom: '',
+        dateTo: '',
+        search: '',
+        tags: [],
+        sortBy: 'date',
+        sortOrder: 'desc'
+    });
+    
+    const [recentSuppliers, setRecentSuppliers] = React.useState([]);
 
     // ========================================================
     // STATO MODALI
@@ -127,6 +145,17 @@ function EVCostTracker() {
         }
         const lastVehicle = localStorage.getItem("ev_last_vehicle");
         if (lastVehicle) setSelectedVehicleId(parseInt(lastVehicle));
+        
+        // Carica fornitori recenti per Quick Actions
+        const savedRecent = localStorage.getItem("ev_recent_suppliers");
+        if (savedRecent) {
+            try {
+                setRecentSuppliers(JSON.parse(savedRecent));
+            } catch (e) {
+                console.error("Errore parsing recent suppliers:", e);
+            }
+        }
+        
         loadData();
     }, []);
 
@@ -175,10 +204,89 @@ function EVCostTracker() {
     // ========================================================
     // MEMO: DATI DERIVATI
     // ========================================================
+    
+    // Ricariche del veicolo corrente (senza filtri)
     const currentVehicleCharges = React.useMemo(() => {
         if (!selectedVehicleId) return [];
         return charges.filter(c => c.vehicle_id === selectedVehicleId && c.status === 'completed');
     }, [charges, selectedVehicleId]);
+
+    // Ricariche filtrate (con tutti i filtri applicati)
+    const filteredCharges = React.useMemo(() => {
+        let result = [...currentVehicleCharges];
+        
+        // Filtro fornitore
+        if (filters.supplier && filters.supplier !== 'all') {
+            result = result.filter(c => c.supplier_id == filters.supplier);
+        }
+        
+        // Filtro tipo AC/DC
+        if (filters.type && filters.type !== 'all') {
+            result = result.filter(c => c.supplier_type === filters.type);
+        }
+        
+        // Filtro data da
+        if (filters.dateFrom) {
+            const fromDate = new Date(filters.dateFrom);
+            fromDate.setHours(0, 0, 0, 0);
+            result = result.filter(c => new Date(c.date) >= fromDate);
+        }
+        
+        // Filtro data a
+        if (filters.dateTo) {
+            const toDate = new Date(filters.dateTo);
+            toDate.setHours(23, 59, 59, 999);
+            result = result.filter(c => new Date(c.date) <= toDate);
+        }
+        
+        // Filtro ricerca testuale
+        if (filters.search && filters.search.trim()) {
+            const searchLower = filters.search.toLowerCase().trim();
+            result = result.filter(c => 
+                (c.notes && c.notes.toLowerCase().includes(searchLower)) ||
+                (c.supplier_name && c.supplier_name.toLowerCase().includes(searchLower))
+            );
+        }
+        
+        // Filtro tag
+        if (filters.tags && filters.tags.length > 0) {
+            result = result.filter(c => {
+                if (!c.tags) return false;
+                const chargeTags = c.tags.split(',').map(t => t.trim().toLowerCase());
+                return filters.tags.some(tag => chargeTags.includes(tag.toLowerCase()));
+            });
+        }
+        
+        // Ordinamento
+        result.sort((a, b) => {
+            let valA, valB;
+            switch (filters.sortBy) {
+                case 'cost':
+                    valA = parseFloat(a.cost) || 0;
+                    valB = parseFloat(b.cost) || 0;
+                    break;
+                case 'kwh':
+                    valA = parseFloat(a.kwh_added) || 0;
+                    valB = parseFloat(b.kwh_added) || 0;
+                    break;
+                case 'efficiency':
+                    valA = parseFloat(a.consumption) || 999;
+                    valB = parseFloat(b.consumption) || 999;
+                    break;
+                default: // date
+                    valA = new Date(a.date).getTime();
+                    valB = new Date(b.date).getTime();
+            }
+            
+            if (filters.sortOrder === 'asc') {
+                return valA > valB ? 1 : -1;
+            } else {
+                return valA < valB ? 1 : -1;
+            }
+        });
+        
+        return result;
+    }, [currentVehicleCharges, filters]);
 
     const activeVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
@@ -191,10 +299,25 @@ function EVCostTracker() {
         return charges.filter(c => c.status === 'in_progress' && c.vehicle_id !== selectedVehicleId);
     }, [charges, selectedVehicleId]);
 
+    // Statistiche calcolate sulle ricariche filtrate
     const stats = React.useMemo(() => {
-        if (!currentVehicleCharges || currentVehicleCharges.length === 0) return null;
-        return calculateStats(currentVehicleCharges, settings);
-    }, [currentVehicleCharges, settings]);
+        if (!filteredCharges || filteredCharges.length === 0) return null;
+        return calculateStats(filteredCharges, settings);
+    }, [filteredCharges, settings]);
+    
+    // Spesa del mese corrente per Budget Indicator
+    const monthlySpent = React.useMemo(() => {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        return currentVehicleCharges
+            .filter(c => {
+                const date = new Date(c.date);
+                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+            })
+            .reduce((sum, c) => sum + (parseFloat(c.cost) || 0), 0);
+    }, [currentVehicleCharges]);
 
     // ========================================================
     // HANDLER: VEICOLI
@@ -353,9 +476,36 @@ function EVCostTracker() {
         const ok = await startChargeDB(supabaseClient, data, selectedVehicleId, suppliers);
         if (ok) {
             setShowStartModal(false);
+            
+            // Aggiorna fornitori recenti per Quick Actions
+            const updated = [data.supplierId, ...recentSuppliers.filter(id => id != data.supplierId)].slice(0, 3);
+            setRecentSuppliers(updated);
+            localStorage.setItem("ev_recent_suppliers", JSON.stringify(updated));
+            
             await loadData();
         }
         setIsSyncing(false);
+    }
+    
+    // Handler per Quick Actions - apre modale con fornitore preselezionato
+    function handleQuickStart(supplierId) {
+        setShowStartModal(true);
+        // Il fornitore viene preselezionato tramite stato temporaneo
+        // (gestito nel StartChargeModal se viene passata una prop)
+    }
+    
+    // Reset filtri
+    function clearFilters() {
+        setFilters({
+            supplier: 'all',
+            type: 'all',
+            dateFrom: '',
+            dateTo: '',
+            search: '',
+            tags: [],
+            sortBy: 'date',
+            sortOrder: 'desc'
+        });
     }
 
     async function handleStopCharge(endData) {
@@ -425,7 +575,8 @@ function EVCostTracker() {
             batteryEnd: charge.battery_end || "",
             cost: charge.cost || "",
             supplierId: charge.supplier_id || "",
-            notes: charge.notes || ""
+            notes: charge.notes || "",
+            tags: charge.tags || ""
         });
         // Salva anche la ricarica originale per i ricalcoli
         setTempChargeData(charge);
@@ -537,22 +688,40 @@ function EVCostTracker() {
                                 onCancelClick={handleCancelCharge}
                             />
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                                <button onClick={() => setShowStartModal(true)} className="btn btn-primary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] animate-scale-in">
-                                    <span className="text-5xl">🔌</span>
-                                    <span className="font-bold text-lg">INIZIA ORA</span>
-                                    <span className="text-xs opacity-70 font-normal">Start ricarica live</span>
-                                </button>
-                                <button onClick={() => setShowManualModal(true)} className="btn btn-secondary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] border-dashed border-2 border-card-border animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                                    <span className="text-5xl">📝</span>
-                                    <span className="font-bold text-lg">MANUALE</span>
-                                    <span className="text-xs opacity-70 font-normal">Aggiungi passata</span>
-                                </button>
-                            </div>
+                            <>
+                                {/* Quick Actions */}
+                                <QuickActions 
+                                    recentSuppliers={recentSuppliers}
+                                    suppliers={suppliers}
+                                    onQuickStart={handleQuickStart}
+                                />
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                                    <button onClick={() => setShowStartModal(true)} className="btn btn-primary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] animate-scale-in">
+                                        <span className="text-5xl">🔌</span>
+                                        <span className="font-bold text-lg">INIZIA ORA</span>
+                                        <span className="text-xs opacity-70 font-normal">Start ricarica live</span>
+                                    </button>
+                                    <button onClick={() => setShowManualModal(true)} className="btn btn-secondary flex flex-col items-center justify-center py-8 gap-3 min-h-[140px] border-dashed border-2 border-card-border animate-scale-in" style={{ animationDelay: '0.1s' }}>
+                                        <span className="text-5xl">📝</span>
+                                        <span className="font-bold text-lg">MANUALE</span>
+                                        <span className="text-xs opacity-70 font-normal">Aggiungi passata</span>
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Budget Indicator */}
+                        {settings.monthlyBudget > 0 && (
+                            <BudgetIndicator 
+                                spent={monthlySpent}
+                                budget={settings.monthlyBudget}
+                                threshold={settings.budgetAlertThreshold || 80}
+                            />
                         )}
 
                         {settings.showFunStats !== false && activeVehicle && stats && (
-                            <FunStats stats={stats} charges={currentVehicleCharges} />
+                            <FunStats stats={stats} charges={filteredCharges} />
                         )}
 
                         {activeVehicle && (
@@ -573,8 +742,17 @@ function EVCostTracker() {
 
                         <div className="mt-8">
                             <h3 className="text-lg font-bold text-muted mb-4">Storico {activeVehicle?.name}</h3>
+                            
+                            {/* Filter Bar */}
+                            <FilterBar 
+                                filters={filters}
+                                setFilters={setFilters}
+                                suppliers={suppliers}
+                                onClearFilters={clearFilters}
+                            />
+                            
                             <ChargeList 
-                                charges={currentVehicleCharges} 
+                                charges={filteredCharges} 
                                 onEdit={handleEditChargeClick}
                                 onDelete={handleDeleteCharge} 
                             />
@@ -602,7 +780,7 @@ function EVCostTracker() {
                 {view === "charts" && (
                     <div className="animate-fade-in">
                         <h2 className="text-xl font-bold mb-4 text-center">Analisi {activeVehicle?.name}</h2>
-                        <ChartSection charges={currentVehicleCharges} theme={settings.theme} />
+                        <ChartSection charges={filteredCharges} theme={settings.theme} />
                     </div>
                 )}
 

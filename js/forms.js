@@ -30,7 +30,7 @@
  * Usare getLocalDateTimeString() per ottenere l'ora locale corretta.
  * 
  * @author EV Cost Tracker Team
- * @version 2.4 - Fix Timezone + Edit Charge con data inizio/fine per velocità
+ * @version 2.5 - Aggiunto campo tags in ManualChargeModal e EditChargeModal
  * ============================================================
  */
 
@@ -508,7 +508,8 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
         kwhAdded: "",
         cost: "",
         supplierId: "",
-        notes: ""
+        notes: "",
+        tags: ""
     });
 
     /**
@@ -631,6 +632,38 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
                             value={data.notes} 
                             onChange={e => setData({ ...data, notes: e.target.value })} 
                         />
+                    </div>
+
+                    {/* Tags */}
+                    <div className="col-span-2">
+                        <label className="label">🏷️ Tag (separati da virgola)</label>
+                        <input 
+                            className="input" 
+                            type="text"
+                            placeholder="#lavoro, #viaggio, #notturna..." 
+                            value={data.tags || ""} 
+                            onChange={e => setData({ ...data, tags: e.target.value })} 
+                        />
+                        <div className="flex flex-wrap gap-1 mt-2">
+                            {['#lavoro', '#viaggio', '#notturna', '#urgente', '#economica', '#lunga'].map(tag => (
+                                <button 
+                                    key={tag} 
+                                    type="button"
+                                    onClick={() => {
+                                        const currentTags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+                                        if (!currentTags.includes(tag)) {
+                                            const newTags = currentTags.length > 0 
+                                                ? [...currentTags, tag].join(', ') 
+                                                : tag;
+                                            setData({ ...data, tags: newTags });
+                                        }
+                                    }}
+                                    className="text-[10px] px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full hover:bg-blue-500/30 transition-all"
+                                >
+                                    +{tag}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -878,6 +911,48 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                             value={charge.notes || ""} 
                             onChange={e => setCharge({ ...charge, notes: e.target.value })} 
                         />
+                    </div>
+
+                    {/* Tags */}
+                    <div className="col-span-2">
+                        <label className="label">🏷️ Tag (separati da virgola)</label>
+                        <input 
+                            className="input" 
+                            type="text"
+                            placeholder="#lavoro, #viaggio, #notturna..." 
+                            value={charge.tags || ""} 
+                            onChange={e => setCharge({ ...charge, tags: e.target.value })} 
+                        />
+                        <div className="flex flex-wrap gap-1 mt-2">
+                            {['#lavoro', '#viaggio', '#notturna', '#urgente', '#economica', '#lunga'].map(tag => {
+                                const currentTags = (charge.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+                                const isActive = currentTags.includes(tag);
+                                return (
+                                    <button 
+                                        key={tag} 
+                                        type="button"
+                                        onClick={() => {
+                                            let newTags;
+                                            if (isActive) {
+                                                newTags = currentTags.filter(t => t !== tag).join(', ');
+                                            } else {
+                                                newTags = currentTags.length > 0 
+                                                    ? [...currentTags, tag].join(', ') 
+                                                    : tag;
+                                            }
+                                            setCharge({ ...charge, tags: newTags });
+                                        }}
+                                        className={`text-[10px] px-2 py-1 rounded-full transition-all ${
+                                            isActive 
+                                                ? 'bg-blue-500 text-white' 
+                                                : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                                        }`}
+                                    >
+                                        {isActive ? '✓ ' : '+'}{tag}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 

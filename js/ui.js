@@ -12,11 +12,14 @@
  * 1. SkeletonLoader     - Placeholder animato durante caricamento
  * 2. UICard             - Card generica riutilizzabile
  * 3. StatsCards         - 4 card dashboard (speso, km, risparmio, eco)
- * 4. ChargeList         - Lista ricariche raggruppate per mese
- * 5. SettingsView       - Vista impostazioni completa
- * 6. ChartSection       - Container sezione grafici
- * 7. ActiveChargingBox  - Box ricarica in corso con timer live
- * 8. FunStats           - Badge traguardi + equivalenza pizza/caffè
+ * 4. FilterBar          - Barra filtri e ricerca ricariche
+ * 5. BudgetIndicator    - Indicatore budget mensile con progress bar
+ * 6. QuickActions       - Pulsanti rapidi per ricariche frequenti
+ * 7. ChargeList         - Lista ricariche raggruppate per mese
+ * 8. SettingsView       - Vista impostazioni completa
+ * 9. ChartSection       - Container sezione grafici
+ * 10. ActiveChargingBox - Box ricarica in corso con timer live
+ * 11. FunStats          - Badge traguardi + equivalenza pizza/caffè
  * 
  * DIPENDENZE:
  * -----------
@@ -39,7 +42,7 @@
  * - Classi custom: .card, .btn, .input, .modal-backdrop, etc.
  * 
  * @author EV Cost Tracker Team
- * @version 2.4 - Fix Timezone + Eliminazione Fornitori + Edit Charge con velocità
+ * @version 2.5 - Aggiunti FilterBar, BudgetIndicator, QuickActions, Tags
  * ============================================================
  */
 
@@ -174,6 +177,359 @@ function StatsCards({ stats }) {
                 </div>
                 <div className="text-xs text-green-400/70 mt-2">-{stats.co2SavedKg} kg di CO₂</div>
             </div>
+        </div>
+    );
+}
+
+// ============================================================
+// BUDGET INDICATOR - Indicatore Budget Mensile
+// ============================================================
+/**
+ * Indicatore visuale del budget mensile con barra di progresso.
+ * Mostra quanto del budget è stato speso e alert visivi.
+ * 
+ * @param {Object} props - Props del componente
+ * @param {number} props.spent - Importo speso questo mese
+ * @param {number} props.budget - Budget mensile totale
+ * @param {number} [props.threshold=80] - Soglia percentuale per warning
+ * @returns {JSX.Element} Indicatore budget
+ */
+function BudgetIndicator({ spent, budget, threshold = 80 }) {
+    if (!budget || budget <= 0) return null;
+    
+    const percentage = Math.min((spent / budget) * 100, 100);
+    const isWarning = percentage >= threshold && percentage < 100;
+    const isOver = percentage >= 100;
+    const remaining = budget - spent;
+    
+    // Colori dinamici
+    const barColor = isOver 
+        ? 'bg-gradient-to-r from-red-500 to-red-400' 
+        : isWarning 
+            ? 'bg-gradient-to-r from-yellow-500 to-orange-400' 
+            : 'bg-gradient-to-r from-emerald-500 to-cyan-400';
+    
+    const borderColor = isOver 
+        ? 'border-red-500/50' 
+        : isWarning 
+            ? 'border-yellow-500/50' 
+            : 'border-emerald-500/30';
+    
+    return (
+        <div className={`card p-4 mb-6 ${borderColor} border-2 animate-fade-in`}>
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <span className="text-xl">{isOver ? '🚨' : isWarning ? '⚠️' : '💰'}</span>
+                    <span className="font-bold text-sm">Budget Mensile</span>
+                </div>
+                <div className="text-right">
+                    <span className={`font-bold text-lg ${isOver ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-emerald-400'}`}>
+                        €{spent.toFixed(2)}
+                    </span>
+                    <span className="text-muted text-sm"> / €{budget}</span>
+                </div>
+            </div>
+            
+            <div className="h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                <div 
+                    className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                    style={{ width: `${percentage}%` }}
+                />
+            </div>
+            
+            <div className="flex justify-between items-center mt-2">
+                <span className="text-xs text-muted">
+                    {isOver 
+                        ? `Superato di €${Math.abs(remaining).toFixed(2)}` 
+                        : `Rimangono €${remaining.toFixed(2)}`
+                    }
+                </span>
+                <span className={`text-xs font-bold ${
+                    isOver ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-emerald-400'
+                }`}>
+                    {percentage.toFixed(0)}%
+                </span>
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// QUICK ACTIONS - Pulsanti Rapidi Ricarica
+// ============================================================
+/**
+ * Pulsanti rapidi per avviare ricariche con fornitori usati di recente.
+ * Permette di saltare la selezione del fornitore.
+ * 
+ * @param {Object} props - Props del componente
+ * @param {Array} props.recentSuppliers - IDs fornitori recenti
+ * @param {Array} props.suppliers - Lista completa fornitori
+ * @param {Function} props.onQuickStart - Callback (supplierId) => void
+ * @returns {JSX.Element|null} Pulsanti rapidi o null se no recenti
+ */
+function QuickActions({ recentSuppliers, suppliers, onQuickStart }) {
+    if (!recentSuppliers || recentSuppliers.length === 0) return null;
+    
+    // Filtra fornitori validi
+    const validSuppliers = recentSuppliers
+        .map(id => suppliers.find(s => s.id === id))
+        .filter(Boolean);
+    
+    if (validSuppliers.length === 0) return null;
+    
+    return (
+        <div className="mb-4 animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-bold text-accent">⚡ Ricarica Rapida</span>
+                <span className="text-xs text-muted">Ultimi fornitori usati</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+                {validSuppliers.map(supplier => (
+                    <button
+                        key={supplier.id}
+                        onClick={() => onQuickStart(supplier.id)}
+                        className={`btn font-semibold text-sm px-4 py-2 flex items-center gap-2 transition-all hover:scale-105 ${
+                            supplier.type === 'DC' 
+                                ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500' 
+                                : 'bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500'
+                        } text-white`}
+                    >
+                        <span>{supplier.type === 'DC' ? '⚡' : '🔌'}</span>
+                        <span>{supplier.name}</span>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// FILTER BAR - Barra Filtri e Ricerca
+// ============================================================
+/**
+ * Barra filtri completa per la lista ricariche.
+ * Include ricerca testuale, filtri per fornitore, tipo, date e ordinamento.
+ * 
+ * @param {Object} props - Props del componente
+ * @param {Object} props.filters - Stato filtri corrente
+ * @param {Function} props.setFilters - Setter filtri
+ * @param {Array} props.suppliers - Lista fornitori per dropdown
+ * @param {Function} props.onClearFilters - Callback reset filtri
+ * @returns {JSX.Element} Barra filtri
+ */
+function FilterBar({ filters, setFilters, suppliers, onClearFilters }) {
+    const [isExpanded, setIsExpanded] = React.useState(false);
+    
+    // Conta filtri attivi
+    const activeFiltersCount = [
+        filters.supplier !== 'all',
+        filters.type !== 'all',
+        filters.dateFrom,
+        filters.dateTo,
+        filters.search,
+        filters.tags && filters.tags.length > 0
+    ].filter(Boolean).length;
+    
+    // Tag predefiniti comuni
+    const commonTags = ['#lavoro', '#viaggio', '#notturna', '#urgente', '#economica', '#lunga'];
+    
+    return (
+        <div className="card p-4 mb-4 animate-fade-in">
+            {/* Barra principale con ricerca */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                {/* Campo ricerca */}
+                <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Cerca per note, fornitore..."
+                        className="input pl-10 w-full"
+                        value={filters.search || ''}
+                        onChange={e => setFilters({ ...filters, search: e.target.value })}
+                    />
+                </div>
+                
+                {/* Toggle filtri avanzati */}
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className={`btn ${isExpanded ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
+                >
+                    <span>🎛️</span>
+                    <span>Filtri</span>
+                    {activeFiltersCount > 0 && (
+                        <span className="bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {activeFiltersCount}
+                        </span>
+                    )}
+                </button>
+            </div>
+            
+            {/* Filtri avanzati espandibili */}
+            {isExpanded && (
+                <div className="mt-4 pt-4 border-t border-card-border animate-fade-in">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Filtro fornitore */}
+                        <div>
+                            <label className="text-xs text-muted block mb-1">🏪 Fornitore</label>
+                            <select
+                                className="input w-full"
+                                value={filters.supplier || 'all'}
+                                onChange={e => setFilters({ ...filters, supplier: e.target.value })}
+                            >
+                                <option value="all">Tutti i fornitori</option>
+                                {suppliers.map(s => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        {/* Filtro tipo AC/DC */}
+                        <div>
+                            <label className="text-xs text-muted block mb-1">⚡ Tipo</label>
+                            <select
+                                className="input w-full"
+                                value={filters.type || 'all'}
+                                onChange={e => setFilters({ ...filters, type: e.target.value })}
+                            >
+                                <option value="all">AC e DC</option>
+                                <option value="AC">Solo AC (Lento)</option>
+                                <option value="DC">Solo DC (Fast)</option>
+                            </select>
+                        </div>
+                        
+                        {/* Data da */}
+                        <div>
+                            <label className="text-xs text-muted block mb-1">📅 Dal</label>
+                            <input
+                                type="date"
+                                className="input w-full"
+                                value={filters.dateFrom || ''}
+                                onChange={e => setFilters({ ...filters, dateFrom: e.target.value })}
+                            />
+                        </div>
+                        
+                        {/* Data a */}
+                        <div>
+                            <label className="text-xs text-muted block mb-1">📅 Al</label>
+                            <input
+                                type="date"
+                                className="input w-full"
+                                value={filters.dateTo || ''}
+                                onChange={e => setFilters({ ...filters, dateTo: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* Filtro Tag */}
+                    <div className="mt-4">
+                        <label className="text-xs text-muted block mb-2">🏷️ Filtra per Tag</label>
+                        <div className="flex flex-wrap gap-2">
+                            {commonTags.map(tag => {
+                                const isActive = filters.tags?.includes(tag);
+                                return (
+                                    <button
+                                        key={tag}
+                                        onClick={() => {
+                                            const currentTags = filters.tags || [];
+                                            const newTags = isActive
+                                                ? currentTags.filter(t => t !== tag)
+                                                : [...currentTags, tag];
+                                            setFilters({ ...filters, tags: newTags });
+                                        }}
+                                        className={`text-xs px-3 py-1.5 rounded-full transition-all ${
+                                            isActive 
+                                                ? 'bg-blue-500 text-white' 
+                                                : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                                        }`}
+                                    >
+                                        {tag}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    
+                    {/* Ordinamento e Reset */}
+                    <div className="mt-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs text-muted">Ordina per:</label>
+                            <select
+                                className="input py-1 px-2 text-sm"
+                                value={filters.sortBy || 'date'}
+                                onChange={e => setFilters({ ...filters, sortBy: e.target.value })}
+                            >
+                                <option value="date">Data</option>
+                                <option value="cost">Costo</option>
+                                <option value="kwh">kWh</option>
+                                <option value="efficiency">Efficienza</option>
+                            </select>
+                            <button
+                                onClick={() => setFilters({ 
+                                    ...filters, 
+                                    sortOrder: filters.sortOrder === 'desc' ? 'asc' : 'desc' 
+                                })}
+                                className="btn btn-secondary py-1 px-3 text-sm"
+                                title={filters.sortOrder === 'desc' ? 'Decrescente' : 'Crescente'}
+                            >
+                                {filters.sortOrder === 'desc' ? '⬇️ Desc' : '⬆️ Asc'}
+                            </button>
+                        </div>
+                        
+                        {activeFiltersCount > 0 && (
+                            <button
+                                onClick={onClearFilters}
+                                className="text-sm text-red-400 hover:text-red-300 flex items-center gap-1"
+                            >
+                                <span>🗑️</span>
+                                <span>Cancella filtri ({activeFiltersCount})</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ============================================================
+// TAG BADGE - Badge per mostrare tag nelle ricariche
+// ============================================================
+/**
+ * Mostra i tag di una ricarica come badge colorati.
+ * 
+ * @param {Object} props - Props del componente
+ * @param {string} props.tags - Stringa tag separati da virgola
+ * @returns {JSX.Element|null} Badge tag o null
+ */
+function TagBadges({ tags }) {
+    if (!tags || tags.trim() === '') return null;
+    
+    const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+    if (tagList.length === 0) return null;
+    
+    // Colori per tag diversi
+    const getTagColor = (tag) => {
+        const colors = {
+            '#lavoro': 'bg-purple-500/30 text-purple-300',
+            '#viaggio': 'bg-blue-500/30 text-blue-300',
+            '#notturna': 'bg-indigo-500/30 text-indigo-300',
+            '#urgente': 'bg-red-500/30 text-red-300',
+            '#economica': 'bg-green-500/30 text-green-300',
+            '#lunga': 'bg-orange-500/30 text-orange-300'
+        };
+        return colors[tag.toLowerCase()] || 'bg-slate-500/30 text-slate-300';
+    };
+    
+    return (
+        <div className="flex flex-wrap gap-1 mt-2">
+            {tagList.map((tag, idx) => (
+                <span
+                    key={idx}
+                    className={`text-[10px] px-2 py-0.5 rounded-full ${getTagColor(tag)}`}
+                >
+                    {tag}
+                </span>
+            ))}
         </div>
     );
 }
@@ -412,6 +768,9 @@ function ChargeList({ charges, onEdit, onDelete }) {
 
                                             {diffBlock}
 
+                                            {/* TAG */}
+                                            <TagBadges tags={charge.tags} />
+
                                             {charge.notes && charge.notes.trim() !== "" && (
                                                 <div className="mt-3 text-xs text-muted/80 italic bg-black/10 p-2 rounded border border-white/5 flex gap-2 items-start">
                                                     <span>📝</span>
@@ -494,6 +853,39 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                         <label className="label">☀️ Fotovoltaico (€/kWh)</label>
                         <input type="number" step="0.001" className="input" value={settings.solarElectricityPrice || 0} onChange={e => setSettings({ ...settings, solarElectricityPrice: parseFloat(e.target.value) || 0 })} />
                         <p className="text-xs text-muted mt-1">Costo simbolico pannelli solari (€0.00 se totalmente gratuito)</p>
+                    </div>
+                </div>
+
+                {/* Budget Mensile */}
+                <div className="mt-6 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/30">
+                    <h3 className="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                        <span>💰</span> Budget Mensile
+                    </h3>
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-xs text-muted block mb-1">Budget (€/mese) - 0 per disabilitare</label>
+                            <input 
+                                type="number" 
+                                step="1" 
+                                className="input" 
+                                value={settings.monthlyBudget || 0} 
+                                onChange={e => setSettings({ ...settings, monthlyBudget: parseFloat(e.target.value) || 0 })} 
+                            />
+                        </div>
+                        {settings.monthlyBudget > 0 && (
+                            <div>
+                                <label className="text-xs text-muted block mb-1">Allerta al (% del budget)</label>
+                                <input 
+                                    type="number" 
+                                    step="5" 
+                                    min="50" 
+                                    max="95"
+                                    className="input" 
+                                    value={settings.budgetAlertThreshold || 80} 
+                                    onChange={e => setSettings({ ...settings, budgetAlertThreshold: parseInt(e.target.value) || 80 })} 
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
