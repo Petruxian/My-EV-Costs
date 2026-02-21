@@ -837,16 +837,26 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                 <div className="space-y-4 text-sm">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="label">Benzina (€/L)</label>
+                            <label className="label">⛽ Benzina (€/L)</label>
                             <input type="number" step="0.01" className="input" value={settings.gasolinePrice} onChange={e => setSettings({ ...settings, gasolinePrice: e.target.value })} />
                         </div>
                         <div>
-                            <label className="label">Consumo (km/L)</label>
+                            <label className="label">🚗 Consumo (km/L)</label>
                             <input type="number" step="0.1" className="input" value={settings.gasolineConsumption} onChange={e => setSettings({ ...settings, gasolineConsumption: e.target.value })} />
                         </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="label">⛽ Diesel (€/L)</label>
+                            <input type="number" step="0.01" className="input" value={settings.dieselPrice} onChange={e => setSettings({ ...settings, dieselPrice: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className="label">🚗 Consumo (km/L)</label>
+                            <input type="number" step="0.1" className="input" value={settings.dieselConsumption} onChange={e => setSettings({ ...settings, dieselConsumption: e.target.value })} />
+                        </div>
+                    </div>
                     <div>
-                        <label className="label">Costo Energia Casa (€/kWh)</label>
+                        <label className="label">⚡ Costo Energia Casa (€/kWh)</label>
                         <input type="number" step="0.001" className="input" value={settings.homeElectricityPrice} onChange={e => setSettings({ ...settings, homeElectricityPrice: e.target.value })} />
                     </div>
                     <div>
