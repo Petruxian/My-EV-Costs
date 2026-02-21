@@ -42,7 +42,7 @@
  * - Classi custom: .card, .btn, .input, .modal-backdrop, etc.
  * 
  * @author EV Cost Tracker Team
- * @version 2.5 - Aggiunti FilterBar, BudgetIndicator, QuickActions, Tags
+ * @version 2.6 - Settings globali separate da per-veicolo, fornitori esclusivi
  * ============================================================
  */
 
@@ -795,44 +795,36 @@ function ChargeList({ charges, onEdit, onDelete }) {
 /**
  * Vista completa delle impostazioni dell'applicazione.
  * 
+ * IMPOSTAZIONI GLOBALI:
+ * - Prezzi carburanti (benzina, diesel)
+ * - Consumi medi auto combustione
+ * - Costi energia (casa, fotovoltaico)
+ * 
+ * IMPOSTAZIONI PER VEICOLO (in EditVehicleModal):
+ * - Tema grafico
+ * - Badge & Fun Stats
+ * - Budget mensile
+ * 
  * @param {Object} props - Props del componente
  * @param {Function} props.onDeleteSupplier - Callback elimina fornitore
+ * @param {number} [props.activeVehicleId] - ID veicolo attivo per filtro fornitori
  * @returns {JSX.Element} Vista impostazioni
  */
-function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier }) {
+function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier, activeVehicleId }) {
+    // Filtra fornitori: comuni + esclusivi per il veicolo attivo
+    const filteredSuppliers = suppliers.filter(s => 
+        !s.vehicle_id || s.vehicle_id === activeVehicleId
+    );
+    
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
             <div className="card">
-                <h2 className="text-xl font-bold text-saving mb-4">⚙️ Impostazioni</h2>
-
-                <div className="mb-6">
-                    <label className="block text-muted mb-2 font-semibold">🎨 Tema Grafico</label>
-                    <select className="input-field" value={settings.theme || "theme-default"} onChange={(e) => setSettings({ ...settings, theme: e.target.value })}>
-                        <option value="theme-auto">🌓 Auto (Segui Sistema)</option>
-                        <option value="theme-default">✨ Default</option>
-                        <option value="theme-dark">🌙 Dark</option>
-                        <option value="theme-light">☀️ Light</option>
-                        <option value="theme-emerald">💎 Emerald</option>
-                        <option value="theme-neon">🔮 Neon</option>
-                        <option value="theme-nord">❄️ Nord</option>
-                        <option value="theme-cyber">🤖 Cyber</option>
-                        <option value="theme-sunset">🌅 Sunset</option>
-                    </select>
-                </div>
-
-                <div className="mb-6 p-4 bg-card-soft rounded-xl border border-card-border">
-                    <h3 className="text-sm font-bold text-muted mb-3 uppercase tracking-wider">👁️ Visualizzazione</h3>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="font-semibold text-text">Badge & Fun Stats</div>
-                            <div className="text-xs text-muted">Mostra trofei e indice pizza/caffè</div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={settings.showFunStats !== false} onChange={(e) => setSettings({ ...settings, showFunStats: e.target.checked })} />
-                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                        </label>
-                    </div>
-                </div>
+                <h2 className="text-xl font-bold text-saving mb-4">⚙️ Impostazioni Globali</h2>
+                
+                <p className="text-xs text-muted mb-4">
+                    I prezzi carburanti e i consumi sono usati per calcolare il risparmio rispetto alle auto a combustione.
+                    Le impostazioni personali (tema, budget) si trovano in ogni singola auto.
+                </p>
 
                 <div className="space-y-4 text-sm">
                     <div className="grid grid-cols-2 gap-4">
@@ -863,39 +855,6 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                         <label className="label">☀️ Fotovoltaico (€/kWh)</label>
                         <input type="number" step="0.001" className="input" value={settings.solarElectricityPrice || 0} onChange={e => setSettings({ ...settings, solarElectricityPrice: parseFloat(e.target.value) || 0 })} />
                         <p className="text-xs text-muted mt-1">Costo simbolico pannelli solari (€0.00 se totalmente gratuito)</p>
-                    </div>
-                </div>
-
-                {/* Budget Mensile */}
-                <div className="mt-6 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/30">
-                    <h3 className="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
-                        <span>💰</span> Budget Mensile
-                    </h3>
-                    <div className="space-y-3">
-                        <div>
-                            <label className="text-xs text-muted block mb-1">Budget (€/mese) - 0 per disabilitare</label>
-                            <input 
-                                type="number" 
-                                step="1" 
-                                className="input" 
-                                value={settings.monthlyBudget || 0} 
-                                onChange={e => setSettings({ ...settings, monthlyBudget: parseFloat(e.target.value) || 0 })} 
-                            />
-                        </div>
-                        {settings.monthlyBudget > 0 && (
-                            <div>
-                                <label className="text-xs text-muted block mb-1">Allerta al (% del budget)</label>
-                                <input 
-                                    type="number" 
-                                    step="5" 
-                                    min="50" 
-                                    max="95"
-                                    className="input" 
-                                    value={settings.budgetAlertThreshold || 80} 
-                                    onChange={e => setSettings({ ...settings, budgetAlertThreshold: parseInt(e.target.value) || 80 })} 
-                                />
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -932,26 +891,37 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                         <h2 className="text-xl font-bold text-saving">🏪 Fornitori</h2>
                         <button onClick={onAddSupplier} className="btn btn-secondary px-2 py-1 text-sm">➕ Aggiungi</button>
                     </div>
+                    <p className="text-xs text-muted mb-3">
+                        {activeVehicleId ? "Mostrati: comuni + esclusivi per l'auto selezionata" : "Tutti i fornitori"}
+                    </p>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {suppliers.map(s => (
-                            <div key={s.id} className={`card-soft p-3 hover:bg-card transition-colors flex justify-between items-center ${s.is_favorite ? 'border border-yellow-500/30 bg-yellow-500/5' : ''}`}>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        {s.is_favorite && <span className="text-lg" title="Preferito">⭐</span>}
-                                        <span className="font-semibold">{s.name}</span>
-                                        <span className={`text-xs px-2 py-0.5 rounded ${s.type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>{s.type}</span>
+                        {filteredSuppliers.map(s => {
+                            const exclusiveVehicle = s.vehicle_id ? vehicles.find(v => v.id === s.vehicle_id) : null;
+                            return (
+                                <div key={s.id} className={`card-soft p-3 hover:bg-card transition-colors flex justify-between items-center ${s.is_favorite ? 'border border-yellow-500/30 bg-yellow-500/5' : ''}`}>
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            {s.is_favorite && <span className="text-lg" title="Preferito">⭐</span>}
+                                            <span className="font-semibold">{s.name}</span>
+                                            <span className={`text-xs px-2 py-0.5 rounded ${s.type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>{s.type}</span>
+                                            {exclusiveVehicle && (
+                                                <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300" title={`Esclusivo per ${exclusiveVehicle.name}`}>
+                                                    🔒 {exclusiveVehicle.name}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-muted flex gap-2">
+                                            <span>€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
+                                            {s.sort_order !== 9 && <span className="text-text opacity-50">• Ordine: {s.sort_order}</span>}
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-muted flex gap-2">
-                                        <span>€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
-                                        {s.sort_order !== 9 && <span className="text-text opacity-50">• Ordine: {s.sort_order}</span>}
+                                    <div className="flex gap-1">
+                                        <button onClick={() => onEditSupplier(s)} className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all" title="Modifica Fornitore">✏️</button>
+                                        <button onClick={() => onDeleteSupplier(s)} className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Elimina Fornitore">🗑️</button>
                                     </div>
                                 </div>
-                                <div className="flex gap-1">
-                                    <button onClick={() => onEditSupplier(s)} className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all" title="Modifica Fornitore">✏️</button>
-                                    <button onClick={() => onDeleteSupplier(s)} className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Elimina Fornitore">🗑️</button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>

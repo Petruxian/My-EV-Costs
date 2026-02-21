@@ -38,7 +38,7 @@
  * - true/data in caso di successo
  * 
  * @author EV Cost Tracker Team
- * @version 2.5 - Aggiunto campo tags in saveManualChargeDB e updateChargeInDB
+ * @version 2.6 - Settings per veicolo (theme, budget) + fornitori esclusivi per veicolo
  * ============================================================
  */
 
@@ -96,6 +96,10 @@ async function loadCharges(sb) {
  * @param {string} vehicle.brand - Marca del veicolo
  * @param {number|string} vehicle.capacity - Capacità batteria in kWh
  * @param {string} [vehicle.image] - URL immagine (opzionale)
+ * @param {string} [vehicle.theme] - Tema grafico preferito
+ * @param {boolean} [vehicle.showFunStats] - Mostra badge fun stats
+ * @param {number} [vehicle.monthlyBudget] - Budget mensile
+ * @param {number} [vehicle.budgetAlertThreshold] - Soglia alert %
  * @returns {boolean} true se salvato con successo
  */
 async function saveVehicleToDB(sb, vehicle) {
@@ -103,7 +107,11 @@ async function saveVehicleToDB(sb, vehicle) {
         name: vehicle.name,
         brand: vehicle.brand,
         capacity_kwh: parseFloat(vehicle.capacity),
-        image_url: vehicle.image
+        image_url: vehicle.image,
+        theme: vehicle.theme || 'theme-default',
+        show_fun_stats: vehicle.showFunStats !== false,
+        monthly_budget: parseFloat(vehicle.monthlyBudget) || 0,
+        budget_alert_threshold: parseInt(vehicle.budgetAlertThreshold) || 80
     });
 
     if (error) console.error(error);
@@ -122,6 +130,10 @@ async function saveVehicleToDB(sb, vehicle) {
  * @param {string} vehicle.name - Nuovo nome
  * @param {string} vehicle.brand - Nuovo brand
  * @param {number|string} vehicle.capacity - Nuova capacità
+ * @param {string} [vehicle.theme] - Tema grafico
+ * @param {boolean} [vehicle.showFunStats] - Mostra fun stats
+ * @param {number} [vehicle.monthlyBudget] - Budget mensile
+ * @param {number} [vehicle.budgetAlertThreshold] - Soglia alert
  * @returns {boolean} true se aggiornato con successo
  */
 async function updateVehicleInDB(sb, vehicle) {
@@ -138,7 +150,11 @@ async function updateVehicleInDB(sb, vehicle) {
         .update({
             name: vehicle.name,
             brand: vehicle.brand,
-            capacity_kwh: parseFloat(vehicle.capacity)
+            capacity_kwh: parseFloat(vehicle.capacity),
+            theme: vehicle.theme || 'theme-default',
+            show_fun_stats: vehicle.showFunStats !== false,
+            monthly_budget: parseFloat(vehicle.monthlyBudget) || 0,
+            budget_alert_threshold: parseInt(vehicle.budgetAlertThreshold) || 80
         })
         .eq("id", vehicle.id)
         .select();
@@ -231,6 +247,7 @@ async function loadSuppliers(sb) {
  * @param {number|string} s.standardCost - Costo €/kWh
  * @param {boolean} [s.isFavorite=false] - Se è preferito
  * @param {number} [s.sortOrder=9] - Ordine (0=primo)
+ * @param {number|null} [s.vehicleId=null] - Se impostato, fornitore esclusivo per quel veicolo
  * @returns {boolean} true se salvato con successo
  */
 async function saveSupplier(sb, s) {
@@ -239,7 +256,8 @@ async function saveSupplier(sb, s) {
         type: s.type,
         standard_cost: parseFloat(s.standardCost) || 0,
         is_favorite: s.isFavorite || false,
-        sort_order: parseInt(s.sortOrder) || 9
+        sort_order: parseInt(s.sortOrder) || 9,
+        vehicle_id: s.vehicleId || null
     });
 
     return !error;
@@ -251,6 +269,7 @@ async function saveSupplier(sb, s) {
  * @param {Object} sb - Client Supabase
  * @param {number} supplierId - ID del fornitore
  * @param {Object} updates - Dati da aggiornare
+ * @param {number|null} [updates.vehicleId] - Se impostato, fornitore esclusivo per quel veicolo
  * @returns {boolean} true se aggiornato con successo
  */
 async function updateSupplier(sb, supplierId, updates) {
@@ -261,7 +280,8 @@ async function updateSupplier(sb, supplierId, updates) {
             type: updates.type,
             standard_cost: parseFloat(updates.standardCost) || 0,
             is_favorite: updates.isFavorite,
-            sort_order: parseInt(updates.sortOrder)
+            sort_order: parseInt(updates.sortOrder),
+            vehicle_id: updates.vehicleId || null
         })
         .eq("id", supplierId);
 

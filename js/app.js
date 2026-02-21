@@ -48,16 +48,19 @@
  * Supporta installazione su dispositivo e funzionamento offline.
  * 
  * @author EV Cost Tracker Team
- * @version 2.5 - Aggiunti FilterBar, BudgetIndicator, QuickActions, Tags
+ * @version 2.6 - Settings per-veicolo (theme, budget, funStats) + fornitori esclusivi
  * ============================================================
  */
 
 // ============================================================
 // CONFIGURAZIONE SUPABASE
 // ============================================================
-const SUPABASE_URL = "https://hcmyzwkgzyqxogzakpxc.supabase.co"; // TUA URL
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjbXl6d2tnenlxeG9nemFrcHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MDM2NTEsImV4cCI6MjA4NTM3OTY1MX0.2kK1ocMpoEJgOn31sDYQeYcwpcxmkZuHzq39ZQAMkGw"; // TUA KEY
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Le credenziali sono ora in js/config.js
+// Assicurarsi che config.js sia caricato prima di questo file
+const supabaseClient = supabase.createClient(
+    window.SUPABASE_CONFIG.url, 
+    window.SUPABASE_CONFIG.key
+);
 
 // ============================================================
 // COMPONENTE PRINCIPALE
@@ -78,19 +81,16 @@ function EVCostTracker() {
     const [suppliers, setSuppliers] = React.useState([]);
 
     // ========================================================
-    // STATO IMPOSTAZIONI
+    // STATO IMPOSTAZIONI GLOBALI
     // ========================================================
+    // Nota: theme, showFunStats, monthlyBudget sono ora per-veicolo
     const [settings, setSettings] = React.useState({
         gasolinePrice: 1.9,
         gasolineConsumption: 15,
         dieselPrice: 1.8,
         dieselConsumption: 18,
         homeElectricityPrice: 0.25,
-        solarElectricityPrice: 0.00,
-        theme: "theme-default",
-        showFunStats: true,
-        monthlyBudget: 0,  // 0 = disabilitato
-        budgetAlertThreshold: 80
+        solarElectricityPrice: 0.00
     });
 
     // ========================================================
@@ -141,7 +141,7 @@ function EVCostTracker() {
         if (saved) {
             const parsed = JSON.parse(saved);
             setSettings(parsed);
-            document.body.className = parsed.theme || "theme-default";
+            // Theme non più globale, gestito per veicolo
         }
         const lastVehicle = localStorage.getItem("ev_last_vehicle");
         if (lastVehicle) setSelectedVehicleId(parseInt(lastVehicle));
@@ -163,8 +163,13 @@ function EVCostTracker() {
         localStorage.setItem("ev_settings_v2", JSON.stringify(settings));
     }, [settings]);
 
+    // TEMA PER VEICOLO - Applica il tema del veicolo attivo
     React.useEffect(() => {
-        if (settings.theme === 'theme-auto') {
+        if (!activeVehicle) return;
+        
+        const theme = activeVehicle.theme || 'theme-default';
+        
+        if (theme === 'theme-auto') {
             const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             document.body.className = isDark ? 'theme-dark' : 'theme-light';
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -173,10 +178,10 @@ function EVCostTracker() {
             };
             mediaQuery.addEventListener('change', handleChange);
             return () => mediaQuery.removeEventListener('change', handleChange);
-        } else if (settings.theme) {
-            document.body.className = settings.theme;
+        } else {
+            document.body.className = theme;
         }
-    }, [settings.theme]);
+    }, [activeVehicle?.theme, activeVehicle?.id]);
 
     React.useEffect(() => {
         if (selectedVehicleId) localStorage.setItem("ev_last_vehicle", selectedVehicleId);
@@ -305,7 +310,7 @@ function EVCostTracker() {
         return calculateStats(filteredCharges, settings);
     }, [filteredCharges, settings]);
     
-    // Spesa del mese corrente per Budget Indicator
+    // Spesa del mese corrente per Budget Indicator (per veicolo attivo)
     const monthlySpent = React.useMemo(() => {
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -318,6 +323,22 @@ function EVCostTracker() {
             })
             .reduce((sum, c) => sum + (parseFloat(c.cost) || 0), 0);
     }, [currentVehicleCharges]);
+    
+    // Fornitori filtrati per veicolo attivo (comuni + esclusivi)
+    const filteredSuppliersForVehicle = React.useMemo(() => {
+        return suppliers.filter(s => !s.vehicle_id || s.vehicle_id === selectedVehicleId);
+    }, [suppliers, selectedVehicleId]);
+    
+    // Impostazioni per-veicolo (con fallback)
+    const vehicleSettings = React.useMemo(() => {
+        if (!activeVehicle) return { theme: 'theme-default', showFunStats: true, monthlyBudget: 0, budgetAlertThreshold: 80 };
+        return {
+            theme: activeVehicle.theme || 'theme-default',
+            showFunStats: activeVehicle.show_fun_stats !== false,
+            monthlyBudget: parseFloat(activeVehicle.monthly_budget) || 0,
+            budgetAlertThreshold: parseInt(activeVehicle.budget_alert_threshold) || 80
+        };
+    }, [activeVehicle]);
 
     // ========================================================
     // HANDLER: VEICOLI
@@ -346,7 +367,11 @@ function EVCostTracker() {
             id: vehicle.id,
             name: vehicle.name,
             brand: vehicle.brand,
-            capacity: vehicle.capacity_kwh
+            capacity: vehicle.capacity_kwh,
+            theme: vehicle.theme || 'theme-default',
+            showFunStats: vehicle.show_fun_stats !== false,
+            monthlyBudget: vehicle.monthly_budget || 0,
+            budgetAlertThreshold: vehicle.budget_alert_threshold || 80
         });
         setShowEditVehicleModal(true);
     }
@@ -419,7 +444,8 @@ function EVCostTracker() {
             type: supplier.type,
             standardCost: supplier.standard_cost,
             isFavorite: supplier.is_favorite,
-            sortOrder: supplier.sort_order
+            sortOrder: supplier.sort_order,
+            vehicleId: supplier.vehicle_id || null
         });
         setShowEditSupplierModal(true);
     }
@@ -711,16 +737,16 @@ function EVCostTracker() {
                             </>
                         )}
 
-                        {/* Budget Indicator */}
-                        {settings.monthlyBudget > 0 && (
+                        {/* Budget Indicator - per veicolo */}
+                        {activeVehicle && (activeVehicle.monthly_budget > 0) && (
                             <BudgetIndicator 
                                 spent={monthlySpent}
-                                budget={settings.monthlyBudget}
-                                threshold={settings.budgetAlertThreshold || 80}
+                                budget={activeVehicle.monthly_budget}
+                                threshold={activeVehicle.budget_alert_threshold || 80}
                             />
                         )}
 
-                        {settings.showFunStats !== false && activeVehicle && stats && (
+                        {activeVehicle && (activeVehicle.show_fun_stats !== false) && stats && (
                             <FunStats stats={stats} charges={filteredCharges} />
                         )}
 
@@ -773,6 +799,7 @@ function EVCostTracker() {
                         onAddSupplier={() => setShowSupplierModal(true)}
                         onEditSupplier={handleEditSupplier}
                         onDeleteSupplier={handleDeleteSupplier}
+                        activeVehicleId={selectedVehicleId}
                     />
                 )}
 
@@ -780,7 +807,7 @@ function EVCostTracker() {
                 {view === "charts" && (
                     <div className="animate-fade-in">
                         <h2 className="text-xl font-bold mb-4 text-center">Analisi {activeVehicle?.name}</h2>
-                        <ChartSection charges={filteredCharges} theme={settings.theme} />
+                        <ChartSection charges={filteredCharges} theme={activeVehicle?.theme || 'theme-default'} />
                     </div>
                 )}
 
@@ -820,16 +847,29 @@ function EVCostTracker() {
             )}
 
             {showSupplierModal && (
-                <AddSupplierModal newSupplier={newSupplier} setNewSupplier={setNewSupplier} onClose={() => setShowSupplierModal(false)} onSave={async () => {
-                    await saveSupplier(supabaseClient, newSupplier);
-                    setNewSupplier({ name: "", type: "AC", standardCost: "" });
-                    setShowSupplierModal(false);
-                    loadData();
-                }} />
+                <AddSupplierModal 
+                    newSupplier={newSupplier} 
+                    setNewSupplier={setNewSupplier} 
+                    onClose={() => setShowSupplierModal(false)} 
+                    onSave={async () => {
+                        await saveSupplier(supabaseClient, newSupplier);
+                        setNewSupplier({ name: "", type: "AC", standardCost: "", vehicleId: null });
+                        setShowSupplierModal(false);
+                        loadData();
+                    }}
+                    vehicles={vehicles}
+                />
             )}
 
             {showEditSupplierModal && editingSupplier && (
-                <EditSupplierModal supplier={editingSupplier} setSupplier={setEditingSupplier} onClose={() => { setShowEditSupplierModal(false); setEditingSupplier(null); }} onSave={handleSaveEditSupplier} isSyncing={isSyncing} />
+                <EditSupplierModal 
+                    supplier={editingSupplier} 
+                    setSupplier={setEditingSupplier} 
+                    onClose={() => { setShowEditSupplierModal(false); setEditingSupplier(null); }} 
+                    onSave={handleSaveEditSupplier} 
+                    isSyncing={isSyncing}
+                    vehicles={vehicles}
+                />
             )}
 
             {showEditVehicleModal && editingVehicle && (

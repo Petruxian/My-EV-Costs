@@ -30,7 +30,7 @@
  * Usare getLocalDateTimeString() per ottenere l'ora locale corretta.
  * 
  * @author EV Cost Tracker Team
- * @version 2.5 - Aggiunto campo tags in ManualChargeModal e EditChargeModal
+ * @version 2.6 - Settings per veicolo in EditVehicleModal + veicolo esclusivo in fornitori
  * ============================================================
  */
 
@@ -998,14 +998,16 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
  * - standardCost: Costo standard in €/kWh
  * - isFavorite: Se è un fornitore preferito (in cima alla lista)
  * - sortOrder: Ordine di visualizzazione (0-9, 0 = primo)
+ * - vehicleId: Se impostato, fornitore esclusivo per quel veicolo
  * 
  * @param {Object} props - Props del componente
  * @param {Object} props.newSupplier - Stato nuovo fornitore
  * @param {Function} props.setNewSupplier - Setter stato
  * @param {Function} props.onClose - Callback chiusura
  * @param {Function} props.onSave - Callback salvataggio
+ * @param {Array} [props.vehicles] - Lista veicoli per selezione esclusiva
  */
-function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave }) {
+function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave, vehicles }) {
     /**
      * Inizializza i valori di default al mount del componente.
      * sortOrder 9 = ultima posizione, isFavorite false = normale.
@@ -1014,7 +1016,8 @@ function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave }) {
         setNewSupplier(prev => ({ 
             ...prev, 
             isFavorite: prev.isFavorite ?? false, 
-            sortOrder: prev.sortOrder ?? 9 
+            sortOrder: prev.sortOrder ?? 9,
+            vehicleId: prev.vehicleId ?? null
         }));
     }, []);
 
@@ -1084,6 +1087,24 @@ function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave }) {
                             </select>
                         </div>
                     </div>
+                    
+                    {/* Veicolo Esclusivo */}
+                    {vehicles && vehicles.length > 1 && (
+                        <div className="bg-blue-500/10 p-2 rounded-lg border border-blue-500/30">
+                            <label className="text-xs text-muted block mb-1">🚗 Esclusivo per veicolo (opzionale)</label>
+                            <select 
+                                className="input" 
+                                value={newSupplier.vehicleId || ""} 
+                                onChange={e => setNewSupplier({ ...newSupplier, vehicleId: e.target.value || null })}
+                            >
+                                <option value="">Comune a tutti i veicoli</option>
+                                {vehicles.map(v => (
+                                    <option key={v.id} value={v.id}>{v.name}</option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-muted mt-1">Se impostato, solo quel veicolo potrà usare questo fornitore</p>
+                        </div>
+                    )}
                 </div>
                 
                 {/* Pulsanti Azione */}
@@ -1112,8 +1133,9 @@ function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave }) {
  * @param {Function} props.onClose - Callback chiusura
  * @param {Function} props.onSave - Callback salvataggio
  * @param {boolean} props.isSyncing - Stato sincronizzazione
+ * @param {Array} [props.vehicles] - Lista veicoli per selezione esclusiva
  */
-function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing }) {
+function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing, vehicles }) {
     return (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
             <div className="modal-panel max-w-sm w-full">
@@ -1194,6 +1216,24 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing }
                         </div>
                     </div>
 
+                    {/* Veicolo Esclusivo */}
+                    {vehicles && vehicles.length > 1 && (
+                        <div className="bg-blue-500/10 p-2 rounded-lg border border-blue-500/30 mt-2">
+                            <label className="text-xs text-muted block mb-1">🚗 Esclusivo per veicolo (opzionale)</label>
+                            <select 
+                                className="input" 
+                                value={supplier.vehicleId || ""} 
+                                onChange={e => setSupplier({ ...supplier, vehicleId: e.target.value || null })}
+                            >
+                                <option value="">Comune a tutti i veicoli</option>
+                                {vehicles.map(v => (
+                                    <option key={v.id} value={v.id}>{v.name}</option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-muted mt-1">Se impostato, solo quel veicolo potrà usare questo fornitore</p>
+                        </div>
+                    )}
+
                     {/* Nota Informativa */}
                     <div className="text-xs text-muted mt-2 bg-blue-500/10 p-2 rounded">
                         ℹ️ Nota: Le modifiche al costo non influenzano lo storico passato.
@@ -1232,7 +1272,7 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing }
 function EditVehicleModal({ vehicle, setVehicle, onClose, onSave, isSyncing }) {
     return (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-            <div className="modal-panel max-w-sm w-full">
+            <div className="modal-panel max-w-md w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <h2 className="text-xl font-bold mb-4 text-accent">✏️ Modifica Auto</h2>
                 
@@ -1272,6 +1312,76 @@ function EditVehicleModal({ vehicle, setVehicle, onClose, onSave, isSyncing }) {
                         <p className="text-xs text-muted mt-1">
                             Modificare la capacità non ricalcolerà lo storico.
                         </p>
+                    </div>
+                    
+                    {/* Separatore */}
+                    <hr className="border-card-border my-4" />
+                    
+                    {/* Impostazioni Veicolo */}
+                    <h3 className="text-sm font-bold text-muted uppercase tracking-wider">Impostazioni Veicolo</h3>
+                    
+                    {/* Tema */}
+                    <div>
+                        <label className="label">🎨 Tema Grafico</label>
+                        <select 
+                            className="input" 
+                            value={vehicle.theme || 'theme-default'} 
+                            onChange={e => setVehicle({ ...vehicle, theme: e.target.value })}
+                        >
+                            <option value="theme-auto">🌓 Auto (Segui Sistema)</option>
+                            <option value="theme-default">✨ Default</option>
+                            <option value="theme-dark">🌙 Dark</option>
+                            <option value="theme-light">☀️ Light</option>
+                            <option value="theme-emerald">💎 Emerald</option>
+                            <option value="theme-neon">🔮 Neon</option>
+                            <option value="theme-nord">❄️ Nord</option>
+                            <option value="theme-cyber">🤖 Cyber</option>
+                            <option value="theme-sunset">🌅 Sunset</option>
+                        </select>
+                    </div>
+                    
+                    {/* Badge Fun Stats */}
+                    <div className="flex items-center justify-between bg-card-soft p-3 rounded-lg border border-card-border">
+                        <div>
+                            <div className="font-semibold">🏆 Badge & Fun Stats</div>
+                            <div className="text-xs text-muted">Mostra trofei e indice pizza/caffè</div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" className="sr-only peer" checked={vehicle.showFunStats !== false} onChange={(e) => setVehicle({ ...vehicle, showFunStats: e.target.checked })} />
+                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+                    
+                    {/* Budget Mensile */}
+                    <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                        <h4 className="text-sm font-bold text-emerald-400 mb-2 flex items-center gap-2">
+                            <span>💰</span> Budget Mensile
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs text-muted block mb-1">Budget (€/mese)</label>
+                                <input 
+                                    type="number" 
+                                    step="1" 
+                                    className="input" 
+                                    value={vehicle.monthlyBudget || 0} 
+                                    onChange={e => setVehicle({ ...vehicle, monthlyBudget: parseFloat(e.target.value) || 0 })} 
+                                />
+                                <p className="text-[10px] text-muted mt-1">0 = disabilitato</p>
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted block mb-1">Allerta (%)</label>
+                                <input 
+                                    type="number" 
+                                    step="5" 
+                                    min="50" 
+                                    max="95"
+                                    className="input" 
+                                    value={vehicle.budgetAlertThreshold || 80} 
+                                    onChange={e => setVehicle({ ...vehicle, budgetAlertThreshold: parseInt(e.target.value) || 80 })} 
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
