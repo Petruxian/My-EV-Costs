@@ -820,7 +820,13 @@ function EVCostTracker() {
             )}
 
             {showStartModal && (
-                <StartChargeModal activeVehicle={activeVehicle} suppliers={suppliers} onClose={() => setShowStartModal(false)} onStart={handleStartCharge} />
+                <StartChargeModal 
+                    activeVehicle={activeVehicle} 
+                    suppliers={filteredSuppliersForVehicle} 
+                    lastKm={currentVehicleCharges[0]?.total_km || null}
+                    onClose={() => setShowStartModal(false)} 
+                    onStart={handleStartCharge} 
+                />
             )}
 
             {showStopModal && currentActiveSession && (
