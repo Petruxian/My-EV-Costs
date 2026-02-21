@@ -168,6 +168,7 @@ function EVCostTracker() {
         if (!activeVehicle) return;
         
         const theme = activeVehicle.theme || 'theme-default';
+        console.log('Applying theme:', theme, 'for vehicle:', activeVehicle.name);
         
         if (theme === 'theme-auto') {
             const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -181,7 +182,7 @@ function EVCostTracker() {
         } else {
             document.body.className = theme;
         }
-    }, [activeVehicle?.theme, activeVehicle?.id]);
+    }, [selectedVehicleId, vehicles]);
 
     React.useEffect(() => {
         if (selectedVehicleId) localStorage.setItem("ev_last_vehicle", selectedVehicleId);
