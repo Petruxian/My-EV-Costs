@@ -220,9 +220,9 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
      * Converte la data in ISO per il database.
      */
     const handleSubmit = () => {
-        // Validazione campi obbligatori
-        if (!data.totalKm || !data.startPct || !data.supplierId) {
-            return alert("Compila tutti i campi!");
+        // Validazione campi obbligatori (km ora opzionale)
+        if (!data.startPct || !data.supplierId) {
+            return alert("Compila % batteria e fornitore!");
         }
 
         // Converti la data locale in ISO completo per il database
@@ -230,6 +230,7 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
         
         onStart({
             ...data,
+            totalKm: data.totalKm || null,  // Km opzionale
             date: dateObj.toISOString()  // Salvataggio in ISO (standard DB)
         });
     };
@@ -261,7 +262,7 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
 
                     {/* Km Odometro */}
                     <div>
-                        <label className="label">🚗 Km Attuali (Odometer)</label>
+                        <label className="label">🚗 Km Attuali <span className="text-muted font-normal">(opzionale)</span></label>
                         <input 
                             className="input text-lg font-mono" 
                             type="number" 
@@ -342,7 +343,7 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
  * 
  * FLUSSO:
  * 1. Mostra dati sessione in corso (batteria iniziale, ora inizio)
- * 2. Utente inserisce dati finali (batteria, kWh, costo)
+ * 2. Utente inserisce dati finali (batteria, kWh, costo, km)
  * 3. Il record viene aggiornato con status "completed"
  * 4. Vengono calcolati km percorsi e consumo
  * 
@@ -351,15 +352,17 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
  * - endPct: Percentuale batteria finale
  * - kwhAdded: kWh erogati dalla colonnina
  * - cost: Costo totale (opzionale per ricariche casa)
+ * - totalKm: Km totali odometro (opzionale, necessario per statistiche)
  * - notes: Note aggiornabili
  * 
  * @param {Object} props - Props del componente
  * @param {Object} props.activeSession - Sessione di ricarica in corso
  * @param {Object} props.activeVehicle - Veicolo associato
+ * @param {number} [props.lastKm] - Km dell'ultima ricarica (suggerimento)
  * @param {Function} props.onClose - Callback chiusura
  * @param {Function} props.onStop - Callback terminazione
  */
-function StopChargeModal({ activeSession, activeVehicle, onClose, onStop }) {
+function StopChargeModal({ activeSession, activeVehicle, lastKm, onClose, onStop }) {
     /**
      * STATO LOCALE DEL FORM
      * Inizializzato con ora locale corrente e note della sessione
@@ -369,6 +372,7 @@ function StopChargeModal({ activeSession, activeVehicle, onClose, onStop }) {
         endPct: "",
         kwhAdded: "",
         cost: "",
+        totalKm: activeSession.total_km || "",  // Km già inseriti all'inizio o vuoto
         notes: activeSession.notes || ""
     });
 
@@ -381,7 +385,10 @@ function StopChargeModal({ activeSession, activeVehicle, onClose, onStop }) {
         if (!data.endPct || !data.kwhAdded) {
             return alert("Inserisci % finale e kWh erogati!");
         }
-        onStop(data);
+        onStop({
+            ...data,
+            totalKm: data.totalKm || null  // Km opzionale
+        });
     };
 
     return (
@@ -423,6 +430,28 @@ function StopChargeModal({ activeSession, activeVehicle, onClose, onStop }) {
                             value={data.kwhAdded} 
                             onChange={e => setData({ ...data, kwhAdded: e.target.value })} 
                         />
+                    </div>
+
+                    {/* Km Odometro */}
+                    <div>
+                        <label className="label">🚗 Km Totali <span className="text-muted font-normal">(opzionale)</span></label>
+                        <input 
+                            className="input text-lg font-mono" 
+                            type="number" 
+                            placeholder={lastKm ? `es. ${lastKm.toLocaleString('it-IT')}` : "es. 12500"} 
+                            value={data.totalKm} 
+                            onChange={e => setData({ ...data, totalKm: e.target.value })} 
+                        />
+                        {lastKm && !data.totalKm && (
+                            <p className="text-[10px] text-muted mt-1">
+                                💡 Ultima ricarica: <span className="text-accent font-bold">{lastKm.toLocaleString('it-IT')}</span> km
+                            </p>
+                        )}
+                        {!data.totalKm && (
+                            <p className="text-[10px] text-yellow-400 mt-1">
+                                ⚠️ Senza km, la ricarica non sarà conteggiata nelle statistiche
+                            </p>
+                        )}
                     </div>
 
                     {/* Costo Totale */}
@@ -522,9 +551,16 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
      * Valida i campi obbligatori e converte la data.
      */
     const handleSubmit = () => {
-        // Validazione campi essenziali
-        if (!data.totalKm || !data.kwhAdded || !data.supplierId) {
-            return alert("Dati mancanti!");
+        // Validazione campi essenziali (km ora opzionali)
+        if (!data.kwhAdded || !data.supplierId) {
+            return alert("Inserisci almeno kWh e Fornitore!");
+        }
+
+        // Avviso se mancano i km
+        if (!data.totalKm) {
+            if (!confirm("⚠️ Non hai inserito i km totali.\n\nLa ricarica sarà salvata ma non sarà conteggiata nelle statistiche di consumo.\n\nVuoi continuare?")) {
+                return;
+            }
         }
 
         // Converti la data in ISO completo per evitare problemi di timezone
@@ -532,6 +568,7 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
 
         onSave({
             ...data,
+            totalKm: data.totalKm || null,  // Km opzionali
             date: dateObj.toISOString()  // Salvataggio in ISO (standard DB)
         });
     };
@@ -571,13 +608,17 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
 
                     {/* Km Totali */}
                     <div>
-                        <label className="label">🚗 Km Totali</label>
+                        <label className="label">🚗 Km Totali <span className="text-muted font-normal">(opzionale)</span></label>
                         <input 
                             className="input" 
                             type="number" 
+                            placeholder="Es. 12500"
                             value={data.totalKm} 
                             onChange={e => setData({ ...data, totalKm: e.target.value })} 
                         />
+                        <p className="text-[10px] text-muted mt-1">
+                            Necessari per statistiche consumo
+                        </p>
                     </div>
 
                     {/* kWh Totali */}
@@ -837,7 +878,7 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
 
                     {/* Km Totali */}
                     <div>
-                        <label className="label">🚗 Km Totali</label>
+                        <label className="label">🚗 Km Totali <span className="text-muted font-normal">(opzionale)</span></label>
                         <input 
                             className="input" 
                             type="number" 
@@ -845,7 +886,7 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                             onChange={e => setCharge({ ...charge, totalKm: e.target.value })} 
                         />
                         <p className="text-[10px] text-muted mt-1">
-                            Influenza km_since_last
+                            Necessari per statistiche consumo
                         </p>
                     </div>
 

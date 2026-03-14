@@ -546,7 +546,8 @@ async function saveManualChargeDB(
 
     const kwh = parseFloat(data.kwhAdded);
     const cost = parseFloat(data.cost);
-    const totalKm = parseFloat(data.totalKm);
+    // Gestione km opzionali: null invece di NaN
+    const totalKm = data.totalKm ? parseFloat(data.totalKm) : null;
 
     // Trova ultima ricarica completata per calcolare km
     const previousCharge = allCharges
@@ -556,11 +557,14 @@ async function saveManualChargeDB(
     let kmSinceLast = null;
     let consumption = null;
 
-    if (previousCharge) {
+    // Calcola km percorsi solo se abbiamo km validi
+    if (previousCharge && totalKm !== null && !isNaN(totalKm)) {
         const prevKm = parseFloat(previousCharge.total_km);
-        if (totalKm > prevKm) {
+        if (prevKm && !isNaN(prevKm) && totalKm > prevKm) {
             kmSinceLast = totalKm - prevKm;
-            consumption = (kwh / kmSinceLast) * 100;
+            if (kmSinceLast > 0 && kwh > 0) {
+                consumption = (kwh / kmSinceLast) * 100;
+            }
         }
     }
 
@@ -652,7 +656,8 @@ async function saveManualChargeDB(
  */
 async function updateChargeInDB(sb, chargeData, originalCharge, allCharges, suppliers, settings) {
     const chargeId = chargeData.id;
-    const newTotalKm = parseFloat(chargeData.totalKm);
+    // Gestione km opzionali: null invece di NaN
+    const newTotalKm = chargeData.totalKm ? parseFloat(chargeData.totalKm) : null;
     const newKwhAdded = parseFloat(chargeData.kwhAdded);
     const newCost = parseFloat(chargeData.cost);
     
@@ -682,9 +687,10 @@ async function updateChargeInDB(sb, chargeData, originalCharge, allCharges, supp
     let kmSinceLast = null;
     let consumption = null;
 
-    if (previousCharge) {
+    // Calcola km percorsi solo se abbiamo km validi
+    if (previousCharge && newTotalKm !== null && !isNaN(newTotalKm)) {
         const prevKm = parseFloat(previousCharge.total_km);
-        if (newTotalKm > prevKm) {
+        if (prevKm && !isNaN(prevKm) && newTotalKm > prevKm) {
             kmSinceLast = newTotalKm - prevKm;
             if (kmSinceLast > 0 && newKwhAdded > 0) {
                 consumption = (newKwhAdded / kmSinceLast) * 100;
@@ -768,9 +774,10 @@ async function updateChargeInDB(sb, chargeData, originalCharge, allCharges, supp
     // 5. AGGIORNA RICARICA SUCCESSIVA (CASCADE)
     // ========================================
     
-    // Se total_km è cambiato, dobbiamo aggiornare anche la ricarica successiva
-    const oldTotalKm = parseFloat(originalCharge.total_km);
-    const kmChanged = Math.abs(newTotalKm - oldTotalKm) > 0.1;
+    // Se total_km è cambiato (ed entrambi validi), aggiorniamo anche la ricarica successiva
+    const oldTotalKm = originalCharge.total_km ? parseFloat(originalCharge.total_km) : null;
+    // kmChanged solo se entrambi sono numeri validi e diversi
+    const kmChanged = newTotalKm !== null && oldTotalKm !== null && Math.abs(newTotalKm - oldTotalKm) > 0.1;
 
     let cascadeMessage = "";
     

@@ -134,6 +134,15 @@ function EVCostTracker() {
     const [newSupplier, setNewSupplier] = React.useState({ name: "", type: "AC", standardCost: "" });
 
     // ========================================================
+    // MEMO: DATI DERIVATI (DEVONO ESSERE PRIMA DEGLI useEffect!)
+    // ========================================================
+    
+    // Veicolo attivo - fondamentale per il tema e altre funzionalità
+    const activeVehicle = React.useMemo(() => {
+        return vehicles.find(v => v.id === selectedVehicleId) || null;
+    }, [vehicles, selectedVehicleId]);
+
+    // ========================================================
     // EFFETTI: INIZIALIZZAZIONE E PERSISTENZA
     // ========================================================
     React.useEffect(() => {
@@ -181,7 +190,7 @@ function EVCostTracker() {
         } else {
             document.body.className = theme;
         }
-    }, [activeVehicle?.theme, activeVehicle?.id]);
+    }, [activeVehicle]);
 
     React.useEffect(() => {
         if (selectedVehicleId) localStorage.setItem("ev_last_vehicle", selectedVehicleId);
@@ -292,8 +301,6 @@ function EVCostTracker() {
         
         return result;
     }, [currentVehicleCharges, filters]);
-
-    const activeVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
     const currentActiveSession = React.useMemo(() => {
         if (!selectedVehicleId) return null;
@@ -614,8 +621,9 @@ function EVCostTracker() {
      * Include aggiornamento cascade alla ricarica successiva.
      */
     async function handleSaveEditedCharge() {
-        if (!editingCharge.kwhAdded || !editingCharge.totalKm) {
-            alert("⚠️ kWh e Km sono obbligatori!");
+        // Solo kWh è obbligatorio, km opzionali
+        if (!editingCharge.kwhAdded) {
+            alert("⚠️ kWh è obbligatorio!");
             return;
         }
 
