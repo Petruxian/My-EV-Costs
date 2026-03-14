@@ -75,16 +75,13 @@ function calculateStats(charges, settings) {
     if (!charges || charges.length === 0) return null;
 
     // ============================
-    // TOTALE kWh
+    // TOTALE kWh E COSTI (tutte le ricariche)
     // ============================
     const totalKwh = charges.reduce(
         (sum, c) => sum + (parseFloat(c.kwh_added) || 0),
         0
     );
 
-    // ============================
-    // TOTALE COSTI
-    // ============================
     const totalCost = charges.reduce(
         (sum, c) => sum + (parseFloat(c.cost) || 0),
         0
@@ -94,32 +91,44 @@ function calculateStats(charges, settings) {
     const avgCostPerKwh = totalKwh > 0 ? totalCost / totalKwh : 0;
 
     // ============================
-    // KM TOTALI PERCORSI
+    // FILTRA RICARICHE CON KM VALIDI
     // ============================
-    // Ordina per km totali per trovare min e max odometro
-    const sortedByKm = [...charges].sort(
-        (a, b) =>
-            (parseFloat(a.total_km) || 0) -
-            (parseFloat(b.total_km) || 0)
-    );
-
-    // Primo odometro (minimo)
-    const firstKm = parseFloat(sortedByKm[0].total_km) || 0;
-    
-    // Ultimo odometro (massimo)
-    // FIX: uso length-1 invece di .at(-1) per compatibilità browser vecchi
-    const lastItem = sortedByKm[sortedByKm.length - 1];
-    const lastKm = parseFloat(lastItem.total_km) || 0;
-
-    // Km percorsi = differenza odometro
-    const kmDriven = Math.max(0, lastKm - firstKm);
+    // Solo le ricariche con km validi contribuiscono alle statistiche km/consumo
+    const chargesWithKm = charges.filter(c => {
+        const km = parseFloat(c.total_km);
+        return km && km > 0;
+    });
 
     // ============================
-    // CONSUMO MEDIO GLOBALE
+    // KM TOTALI PERCORSI (solo ricariche con km)
     // ============================
-    // Formula: (kWh totali / km totali) * 100 = kWh/100km
-    const consumption =
-        kmDriven > 0 ? (totalKwh / kmDriven) * 100 : 0;
+    let kmDriven = 0;
+    let consumption = 0;
+
+    if (chargesWithKm.length >= 2) {
+        // Ordina per km totali per trovare min e max odometro
+        const sortedByKm = [...chargesWithKm].sort(
+            (a, b) =>
+                (parseFloat(a.total_km) || 0) -
+                (parseFloat(b.total_km) || 0)
+        );
+
+        // Primo odometro (minimo)
+        const firstKm = parseFloat(sortedByKm[0].total_km) || 0;
+        
+        // Ultimo odometro (massimo)
+        const lastItem = sortedByKm[sortedByKm.length - 1];
+        const lastKm = parseFloat(lastItem.total_km) || 0;
+
+        // Km percorsi = differenza odometro
+        kmDriven = Math.max(0, lastKm - firstKm);
+
+        // ============================
+        // CONSUMO MEDIO GLOBALE
+        // ============================
+        // Formula: (kWh totali / km totali) * 100 = kWh/100km
+        consumption = kmDriven > 0 ? (totalKwh / kmDriven) * 100 : 0;
+    }
 
     // ============================
     // CONFRONTO CON BENZINA E DIESEL
@@ -134,6 +143,7 @@ function calculateStats(charges, settings) {
     let gasolineCost = 0;
     let dieselCost = 0;
 
+    // Usa tutte le ricariche per il confronto costi, con stima km se non disponibili
     charges.forEach(charge => {
         // Prezzi carburante (snapshot o attuali)
         const gasPrice =
@@ -156,8 +166,9 @@ function calculateStats(charges, settings) {
         const kwh = parseFloat(charge.kwh_added) || 0;
 
         // Km stimati percorsi con questa ricarica
-        const estimatedKm =
-            consumption > 0 ? (kwh / (consumption / 100)) : 0;
+        // Se abbiamo consumo medio globale lo usiamo, altrimenti stima 5 km/kWh
+        const avgConsumption = consumption > 0 ? consumption : 20; // default 20 kWh/100km
+        const estimatedKm = (kwh / (avgConsumption / 100));
 
         // Costo equivalente benzina
         // Formula: (km / km_per_litro) * prezzo_al_litro
@@ -172,7 +183,7 @@ function calculateStats(charges, settings) {
     });
 
     // ============================
-    // IMPATTO ECOLOGICO (CO2 & ALBERI)
+    // IMPATTO ECOLOGICO (CO2 & ALBERI) - solo se abbiamo km
     // ============================
     /**
      * Stima della CO2 risparmiata:
@@ -203,6 +214,7 @@ function calculateStats(charges, settings) {
         gasolineSavings: (gasolineCost - totalCost).toFixed(2),
         dieselSavings: (dieselCost - totalCost).toFixed(2),
         chargesCount: charges.length,
+        chargesWithKmCount: chargesWithKm.length,
         co2SavedKg: co2SavedKg.toFixed(1),
         treesSaved: treesSaved.toFixed(1)
     };

@@ -361,7 +361,7 @@ async function startChargeDB(sb, data, vehicleId, suppliers) {
         supplier_name: supplier.name,
         supplier_type: supplier.type,
         date: data.date,
-        total_km: parseFloat(data.totalKm),
+        total_km: data.totalKm ? parseFloat(data.totalKm) : null,  // Km opzionale
         battery_start: parseFloat(data.startPct),
         standard_cost_snapshot: parseFloat(supplier.standard_cost) || 0,
         status: "in_progress",
@@ -423,7 +423,8 @@ async function stopChargeDB(
         return false;
     }
 
-    const currentTotalKm = parseFloat(currentCharge.total_km);
+    // Km totali: usa quello nuovo se fornito, altrimenti quello esistente
+    const currentTotalKm = endData.totalKm ? parseFloat(endData.totalKm) : parseFloat(currentCharge.total_km);
 
     // Trova l'ultima ricarica COMPLETATA dello stesso veicolo
     const previousCharge = allCharges
@@ -434,13 +435,14 @@ async function stopChargeDB(
         )
         .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
 
-    // Calcola km percorsi e consumo
+    // Calcola km percorsi e consumo (solo se abbiamo km validi)
     let kmSinceLast = null;
     let consumption = null;
 
-    if (previousCharge) {
+    if (previousCharge && currentTotalKm) {
         const prevKm = parseFloat(previousCharge.total_km);
-        if (currentTotalKm > prevKm) {
+        // Il previous deve avere km validi
+        if (prevKm && currentTotalKm > prevKm) {
             kmSinceLast = currentTotalKm - prevKm;
             // Consumo: kWh / km * 100
             if (kmSinceLast > 0) {
@@ -486,6 +488,11 @@ async function stopChargeDB(
         saved_diesel_price: settings.dieselPrice,
         notes: endData.notes || currentCharge.notes || ""
     };
+    
+    // Aggiorna total_km se fornito
+    if (endData.totalKm) {
+        payload.total_km = parseFloat(endData.totalKm);
+    }
 
     const { error } = await sb
         .from("charges")
