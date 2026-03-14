@@ -222,15 +222,20 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
     }, [defaultSupplierId]);
 
     /**
-     * Gestisce il submit del form.
-     * Valida i campi obbligatori e invia i dati al parent.
-     * Converte la data in ISO per il database.
+     * I km sono OPZIONALI. Possono essere inseriti:
+     * - All'avvio della ricarica
+     * - Alla fine (StopChargeModal)
+     * - A posteriori (EditChargeModal)
      */
     const handleSubmit = () => {
-        // Validazione campi obbligatori (km ora opzionale)
-        if (!data.startPct || !data.supplierId) {
-            return alert("Compila % batteria e fornitore!");
+        // Validazione: solo % batteria e fornitore sono OBBLIGATORI
+        if (!data.startPct) {
+            return alert("⚠️ Inserisci la % batteria iniziale!");
         }
+        if (!data.supplierId) {
+            return alert("⚠️ Seleziona un fornitore!");
+        }
+
 
         // Converti la data locale in ISO completo per il database
         const dateObj = new Date(data.date);

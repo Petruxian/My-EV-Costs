@@ -349,18 +349,27 @@ async function deleteSupplierFromDB(sb, supplierId) {
  * @returns {boolean} true se avviato con successo
  */
 async function startChargeDB(sb, data, vehicleId, suppliers) {
+    console.log("=== startChargeDB chiamata ===", { data, vehicleId, suppliersCount: suppliers?.length });
+    
     // Trova il fornitore selezionato nell'array
     // Fix: Confronto con String() per gestire tipi misti (number vs string)
     const supplier = suppliers.find(s => String(s.id) === String(data.supplierId));
 
     if (!supplier) {
-        console.error("Supplier non trovato in startChargeDB", {
+        console.error("❌ Supplier non trovato in startChargeDB", {
             supplierId: data.supplierId,
             supplierIdType: typeof data.supplierId,
             availableSuppliers: suppliers.map(s => ({ id: s.id, type: typeof s.id }))
         });
         return false;
     }
+    
+    console.log("✅ Supplier trovato:", supplier.name, supplier.id);
+
+    // Gestione km opzionali: se vuoto o non valido, NON inviare il campo
+    // Questo evita errori se il DB ha vincoli NOT NULL
+    const totalKmValue = data.totalKm ? parseFloat(data.totalKm) : null;
+    console.log("📊 totalKm:", data.totalKm, "-> parsed:", totalKmValue);
 
     const payload = {
         vehicle_id: vehicleId,
@@ -368,18 +377,28 @@ async function startChargeDB(sb, data, vehicleId, suppliers) {
         supplier_name: supplier.name,
         supplier_type: supplier.type,
         date: data.date,
-        total_km: data.totalKm ? parseFloat(data.totalKm) : null,  // Km opzionale
         battery_start: parseFloat(data.startPct),
         standard_cost_snapshot: parseFloat(supplier.standard_cost) || 0,
         status: "in_progress",
         notes: data.notes || ""
     };
+    
+    // Aggiungi total_km solo se ha un valore valido
+    // NOTA: Se il DB ha NOT NULL constraint, questo evita l'errore
+    // ma è meglio modificare il DB per permettere NULL
+    if (totalKmValue !== null && !isNaN(totalKmValue)) {
+        payload.total_km = totalKmValue;
+    }
+
+    console.log("📝 Payload da inserire:", payload);
 
     const { error } = await sb.from("charges").insert(payload);
     if (error) {
-        console.error(error);
+        console.error("❌ Errore inserimento charges:", error);
         return false;
     }
+    
+    console.log("✅ Ricarica avviata con successo");
 
     return true;
 }
