@@ -761,7 +761,7 @@ function ChargeList({ charges, onEdit, onDelete }) {
                                                     <div className="font-bold text-lg text-km">{charge.km_since_last ? parseFloat(charge.km_since_last).toFixed(0) : "-"}</div>
                                                 </div>
                                                 <div className="bg-card-soft p-3 rounded-lg text-center border border-card-border hover:border-orange-400 transition-colors">
-                                                    <div className="text-xs text-muted mb-1 flex items-center justify-center gap-1">⚙️ Velocità</div>
+                                                    <div className="text-xs text-muted mb-1 flex items-center justify-center gap-1">⚡ kW medi</div>
                                                     <div className="font-bold text-lg text-orange-300">{power ? power + " kW" : "-"}</div>
                                                 </div>
                                             </div>
@@ -868,55 +868,21 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                         <button onClick={onAddVehicle} className="btn btn-secondary px-2 py-1 text-sm">➕ Aggiungi</button>
                     </div>
                     <div className="space-y-2">
-                        {vehicles.map(v => {
-                            // Theme label mapping
-                            const themeLabels = {
-                                'theme-auto': '🌓 Auto',
-                                'theme-default': '✨ Default',
-                                'theme-dark': '🌙 Dark',
-                                'theme-light': '☀️ Light',
-                                'theme-emerald': '💎 Emerald',
-                                'theme-neon': '🔮 Neon',
-                                'theme-nord': '❄️ Nord',
-                                'theme-cyber': '🤖 Cyber',
-                                'theme-sunset': '🌅 Sunset'
-                            };
-                            const themeLabel = themeLabels[v.theme] || '✨ Default';
-                            const hasBudget = v.monthly_budget && parseFloat(v.monthly_budget) > 0;
-                            const showFunStats = v.show_fun_stats !== false;
-                            
-                            return (
-                                <div key={v.id} className="card-soft p-3 group">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-2xl">🚗</div>
-                                            <div>
-                                                <div className="font-bold">{v.name}</div>
-                                                <div className="text-xs text-muted">{v.brand} · {v.capacity_kwh} kWh</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-1">
-                                            <button onClick={() => onEditVehicle(v)} className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all" title="Modifica Auto">✏️</button>
-                                            <button onClick={() => onDeleteVehicle(v)} className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Elimina Auto">🗑️</button>
-                                        </div>
-                                    </div>
-                                    {/* Impostazioni per-veicolo */}
-                                    <div className="mt-3 pt-3 border-t border-card-border flex flex-wrap gap-2">
-                                        <span className="text-[10px] px-2 py-1 rounded-full bg-purple-500/20 text-purple-300" title="Tema grafico">
-                                            🎨 {themeLabel}
-                                        </span>
-                                        <span className={`text-[10px] px-2 py-1 rounded-full ${showFunStats ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-500/20 text-gray-400'}`} title="Badge e Fun Stats">
-                                            {showFunStats ? '🏆 Badge ON' : '🏆 Badge OFF'}
-                                        </span>
-                                        {hasBudget && (
-                                            <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300" title="Budget mensile">
-                                                💰 €{parseFloat(v.monthly_budget).toFixed(0)}/mese
-                                            </span>
-                                        )}
+                        {vehicles.map(v => (
+                            <div key={v.id} className="card-soft flex items-center justify-between p-3 group">
+                                <div className="flex items-center gap-3">
+                                    <div className="text-2xl">🚗</div>
+                                    <div>
+                                        <div className="font-bold">{v.name}</div>
+                                        <div className="text-xs text-muted">{v.brand} · {v.capacity_kwh} kWh</div>
                                     </div>
                                 </div>
-                            );
-                        })}
+                                <div className="flex gap-1">
+                                    <button onClick={() => onEditVehicle(v)} className="p-2 text-muted hover:text-accent hover:bg-emerald-500/10 rounded-lg transition-all" title="Modifica Auto">✏️</button>
+                                    <button onClick={() => onDeleteVehicle(v)} className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Elimina Auto">🗑️</button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 

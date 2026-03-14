@@ -197,7 +197,6 @@ function AddVehicleModal({ newVehicle, setNewVehicle, onClose, onSave, isSyncing
  * @param {Object} props - Props del componente
  * @param {Object} props.activeVehicle - Veicolo attualmente selezionato
  * @param {Array} props.suppliers - Lista fornitori disponibili
- * @param {number} [props.lastKm] - Km dell'ultima ricarica (suggerimento)
  * @param {Function} props.onClose - Callback chiusura
  * @param {Function} props.onStart - Callback avvio ricarica
  */
@@ -206,13 +205,10 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
      * STATO LOCALE DEL FORM
      * Nota: getLocalDateTimeString() restituisce l'ora locale corretta,
      * non UTC come toISOString().slice(0,16)
-     * 
-     * Il campo totalKm viene pre-compilato con i km dell'ultima ricarica
-     * come suggerimento per l'utente.
      */
     const [data, setData] = React.useState({
         date: getLocalDateTimeString(),  // FIX: Ora locale invece di UTC
-        totalKm: lastKm || "",  // Pre-compilato con km ultima ricarica
+        totalKm: "",  // Campo vuoto, il valore precedente è mostrato come placeholder
         startPct: "",
         supplierId: "",
         notes: ""
@@ -269,13 +265,13 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
                         <input 
                             className="input text-lg font-mono" 
                             type="number" 
-                            placeholder="es. 12500" 
+                            placeholder={lastKm ? `es. ${lastKm.toLocaleString('it-IT')} (ultimo)` : "es. 12500"} 
                             value={data.totalKm} 
                             onChange={e => setData({ ...data, totalKm: e.target.value })} 
                         />
                         {lastKm && (
-                            <p className="text-[10px] text-muted mt-1 flex items-center gap-1">
-                                💡 Suggerimento: ultima ricarica a <span className="text-accent font-bold">{lastKm.toLocaleString('it-IT')}</span> km
+                            <p className="text-[10px] text-muted mt-1">
+                                💡 Ultima ricarica: <span className="text-accent font-bold">{lastKm.toLocaleString('it-IT')}</span> km
                             </p>
                         )}
                     </div>
