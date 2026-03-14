@@ -1,11 +1,52 @@
-/* ============================================================
-   EV COST TRACKER — STYLESHEET COMPLETO (VERSIONE FINALE)
-   10 Temi coerenti + UI moderna + classi semantiche
-   ============================================================ */
+/**
+ * ============================================================
+ * STYLES.CSS - Foglio di Stile EV Cost Tracker
+ * ============================================================
+ * 
+ * Questo file contiene tutti gli stili per l'applicazione
+ * EV Cost Tracker, organizzati in sezioni logiche.
+ * 
+ * STRUTTURA:
+ * ----------
+ * 1. Reset Base          - Stili fondamentali e transizioni
+ * 2. Card & Superfici    - .card, .card-soft, .hover-card
+ * 3. Bottoni             - .btn-primary, .btn-secondary, .btn-danger
+ * 4. Toggle Buttons      - Pulsanti attivabili
+ * 5. Badge               - Etichette efficienza
+ * 6. Modali              - Backdrop, panel, animazioni
+ * 7. Input Fields        - Campi form
+ * 8. Testi Semantici     - Classi colore testo
+ * 9. Grafici             - Container Chart.js
+ * 10. Animazioni         - fadeIn, slideUp, scaleIn, pulse
+ * 11. Responsive         - Breakpoints mobile/tablet
+ * 12. Variabili Temi     - 10 temi completi
+ * 
+ * TEMI DISPONIBILI:
+ * -----------------
+ * - theme-default   : Blu scuro + emerald/cyan
+ * - theme-dark      : Nero puro + lime
+ * - theme-light     : Bianco/grigio chiaro
+ * - theme-emerald   : Verde foresta
+ * - theme-neon      : Viola psichedelico
+ * - theme-nord      : Nord frost (blu/grigio)
+ * - theme-solarized : Solarized light
+ * - theme-material  : Indigo material
+ * - theme-cyber     : Matrix verde neon
+ * - theme-sunset    : Rosa/viola tramonto
+ * 
+ * UTILIZZO:
+ * ---------
+ * Applicare la classe del tema al body:
+ * document.body.className = "theme-dark";
+ * 
+ * @author EV Cost Tracker Team
+ * @version 2.0 - 10 Temi Coerenti
+ * ============================================================
+ */
 
-/* ------------------------------------------------------------
+/* ============================================================
    0) RESET BASE
-   ------------------------------------------------------------ */
+   ============================================================ */
 
 body {
     margin: 0;
@@ -20,17 +61,21 @@ body {
     color: var(--text);
 }
 
-/* Smooth transitions per cambio tema */
+/* Transizioni smooth per cambio tema */
 * {
     transition-property: background-color, border-color, color, fill, stroke;
     transition-duration: 0.3s;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    1) CARD & SUPERFICI
-   ------------------------------------------------------------ */
+   ============================================================ */
 
+/**
+ * Card principale con effetto glassmorphism.
+ * Usata per contenitori generici di contenuti.
+ */
 .card {
     background: var(--card);
     border: 1px solid var(--card-border);
@@ -47,6 +92,10 @@ body {
     border-color: rgba(148, 163, 184, 0.4);
 }
 
+/**
+ * Card soft per elementi secondari.
+ * Sfondo più trasparente, meno evidente.
+ */
 .card-soft {
     background: var(--card-soft);
     border: 1px solid var(--card-border);
@@ -60,10 +109,15 @@ body {
     border-color: var(--accent-2);
 }
 
+/* Classi utility */
 .bg-card { background: var(--card); }
 .bg-card-soft { background: var(--card-soft); }
 .border-card { border-color: var(--card-border); }
 
+/**
+ * Card con hover interattivo.
+ * Effetto scale + cambio sfondo.
+ */
 .hover-card {
     cursor: pointer;
     transition: all 0.25s ease;
@@ -78,10 +132,13 @@ body {
     transform: scale(0.98);
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    2) BOTTONI
-   ------------------------------------------------------------ */
+   ============================================================ */
 
+/**
+ * Base button con effetto ripple.
+ */
 .btn {
     padding: 0.6rem 1.2rem;
     border-radius: 0.75rem;
@@ -94,6 +151,7 @@ body {
     outline: none;
 }
 
+/* Effetto ripple on click */
 .btn::before {
     content: '';
     position: absolute;
@@ -121,6 +179,10 @@ body {
     transform: translateY(0);
 }
 
+/**
+ * Primary button - Azione principale.
+ * Colore accent del tema.
+ */
 .btn-primary {
     background: var(--accent);
     color: var(--btn-text);
@@ -131,6 +193,10 @@ body {
     box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
 }
 
+/**
+ * Secondary button - Azione secondaria.
+ * Sfondo neutro con bordo.
+ */
 .btn-secondary {
     background: var(--btn-secondary);
     color: var(--text);
@@ -142,6 +208,10 @@ body {
     border-color: var(--accent-2);
 }
 
+/**
+ * Danger button - Azione distruttiva.
+ * Rosso per segnalare attenzione.
+ */
 .btn-danger {
     background: var(--btn-danger);
     color: var(--danger-text);
@@ -153,10 +223,14 @@ body {
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    3) TOGGLE BUTTONS
-   ------------------------------------------------------------ */
+   ============================================================ */
 
+/**
+ * Pulsanti attivabili (on/off).
+ * Usati nei filtri grafici.
+ */
 .toggle-btn {
     padding: 4px 12px;
     border-radius: 9999px;
@@ -171,9 +245,9 @@ body {
     color: var(--btn-text);
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    4) BADGE EFFICIENZA
-   ------------------------------------------------------------ */
+   ============================================================ */
 
 .badge {
     padding: 2px 8px;
@@ -184,10 +258,13 @@ body {
     line-height: 1.2;
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    5) MODALI
-   ------------------------------------------------------------ */
+   ============================================================ */
 
+/**
+ * Sfondo semi-trasparente con blur.
+ */
 .modal-backdrop {
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(12px);
@@ -195,6 +272,9 @@ body {
     animation: fadeIn 0.3s ease-out;
 }
 
+/**
+ * Pannello modale principale.
+ */
 .modal-panel {
     background: var(--card);
     border: 1px solid var(--card-border);
@@ -243,9 +323,9 @@ body {
     border-top: 1px solid var(--card-border);
 }
 
-/* ------------------------------------------------------------
-   6) INPUT FIELD (SEMANTICO)
-   ------------------------------------------------------------ */
+/* ============================================================
+   6) INPUT FIELD
+   ============================================================ */
 
 .input-field,
 .input {
@@ -265,7 +345,6 @@ body {
     box-shadow: 0 0 0 2px var(--accent-2);
 }
 
-/* Label per form */
 .label {
     display: block;
     color: var(--text-muted);
@@ -274,9 +353,9 @@ body {
     font-weight: 500;
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    7) TESTI SEMANTICI
-   ------------------------------------------------------------ */
+   ============================================================ */
 
 .text-primary { color: var(--text); }
 .text-muted { color: var(--text-muted); }
@@ -288,9 +367,9 @@ body {
 .text-km { color: var(--km-color); }
 .text-forecast { color: var(--forecast-color); }
 
-/* ------------------------------------------------------------
+/* ============================================================
    8) GRAFICI
-   ------------------------------------------------------------ */
+   ============================================================ */
 
 canvas {
     border-radius: 12px;
@@ -302,6 +381,12 @@ canvas {
     border-radius: 1rem;
     padding: 1rem;
     backdrop-filter: blur(6px);
+    transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+    border-color: var(--accent-2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .chart-title {
@@ -311,9 +396,39 @@ canvas {
     margin-bottom: 0.75rem;
 }
 
-/* ------------------------------------------------------------
+.chart-container {
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Statistiche cards nei grafici */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.5rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background: var(--card-soft);
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+/* ============================================================
    9) ANIMAZIONI E MICRO-INTERAZIONI
-   ------------------------------------------------------------ */
+   ============================================================ */
 
 .animate-fade-in {
     animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -391,9 +506,9 @@ canvas {
     width: 100%;
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    10) OTTIMIZZAZIONE RESPONSIVE
-   ------------------------------------------------------------ */
+   ============================================================ */
 
 /* Tablet e sotto */
 @media (max-width: 768px) {
@@ -466,9 +581,9 @@ canvas {
     }
 }
 
-/* ------------------------------------------------------------
-   11) VARIABILI SEMANTICHE COMUNI A TUTTI I TEMI
-   ------------------------------------------------------------ */
+/* ============================================================
+   11) VARIABILI SEMANTICHE COMUNI
+   ============================================================ */
 
 :root {
     --text-muted: rgba(148,163,184,0.7);
@@ -481,11 +596,11 @@ canvas {
     --forecast-color: #c084fc;
 }
 
-/* ------------------------------------------------------------
+/* ============================================================
    12) TEMI (10 TEMI COMPLETI)
-   ------------------------------------------------------------ */
+   ============================================================ */
 
-/* 1) DEFAULT (Migliorato contrasti) */
+/* 1) DEFAULT - Blu scuro con gradiente emerald/cyan */
 .theme-default {
     --bg: #0a0f1e;
     --text: #f1f5f9;
@@ -507,7 +622,7 @@ canvas {
     --toggle-border: rgba(71, 85, 105, 0.7);
 }
 
-/* 2) DARK (Contrasti migliorati) */
+/* 2) DARK - Nero puro con lime accent */
 .theme-dark {
     --bg: #000000;
     --text: #f5f5f5;
@@ -529,7 +644,7 @@ canvas {
     --toggle-border: #2a2a2a;
 }
 
-/* 3) LIGHT (Contrasti ottimizzati) */
+/* 3) LIGHT - Bianco/grigio chiaro */
 .theme-light {
     --bg: #f8fafc;
     --text: #0f172a;
@@ -554,7 +669,7 @@ canvas {
     --text-subtle: rgba(51, 65, 85, 0.5);
 }
 
-/* 4) EMERALD */
+/* 4) EMERALD - Verde foresta */
 .theme-emerald {
     --bg: #064e3b;
     --text: #ecfdf5;
@@ -576,7 +691,7 @@ canvas {
     --toggle-border: rgba(52, 211, 153, 0.4);
 }
 
-/* 5) NEON */
+/* 5) NEON - Viola psichedelico */
 .theme-neon {
     --bg: #1a002b;
     --text: #f5f3ff;
@@ -598,7 +713,7 @@ canvas {
     --toggle-border: rgba(216, 180, 254, 0.4);
 }
 
-/* 6) NORD */
+/* 6) NORD - Nord frost */
 .theme-nord {
     --bg: #2e3440;
     --text: #eceff4;
@@ -620,7 +735,7 @@ canvas {
     --toggle-border: #4c566a;
 }
 
-/* 7) SOLARIZED */
+/* 7) SOLARIZED - Solarized light */
 .theme-solarized {
     --bg: #fdf6e3;
     --text: #073642;
@@ -642,7 +757,7 @@ canvas {
     --toggle-border: #d6cbb8;
 }
 
-/* 8) MATERIAL */
+/* 8) MATERIAL - Indigo material design */
 .theme-material {
     --bg: #1e1b4b;
     --text: #e0e7ff;
@@ -664,7 +779,7 @@ canvas {
     --toggle-border: #4338ca;
 }
 
-/* 9) CYBER */
+/* 9) CYBER - Matrix style verde neon */
 .theme-cyber {
     --bg: #000000;
     --text: #00ff41;
@@ -686,7 +801,7 @@ canvas {
     --toggle-border: #00ff41;
 }
 
-/* 10) SUNSET */
+/* 10) SUNSET - Rosa/viola tramonto */
 .theme-sunset {
     --bg: #2e0f3a;
     --text: #ffe4e6;
