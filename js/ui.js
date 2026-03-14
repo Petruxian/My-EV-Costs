@@ -810,7 +810,7 @@ function ChargeList({ charges, onEdit, onDelete }) {
  * @param {number} [props.activeVehicleId] - ID veicolo attivo per filtro fornitori
  * @returns {JSX.Element} Vista impostazioni
  */
-function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier, activeVehicleId }) {
+function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier, activeVehicleId, defaultSupplierId, onSetDefaultSupplier }) {
     // Filtra fornitori: comuni + esclusivi per il veicolo attivo
     const filteredSuppliers = suppliers.filter(s => 
         !s.vehicle_id || s.vehicle_id === activeVehicleId
@@ -894,13 +894,25 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                     <p className="text-xs text-muted mb-3">
                         {activeVehicleId ? "Mostrati: comuni + esclusivi per l'auto selezionata" : "Tutti i fornitori"}
                     </p>
+                    <p className="text-xs text-yellow-400/80 mb-3">
+                        🏅 Clicca sulla medaglia per impostare il fornitore di default per l'auto attiva
+                    </p>
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                         {filteredSuppliers.map(s => {
                             const exclusiveVehicle = s.vehicle_id ? vehicles.find(v => v.id === s.vehicle_id) : null;
+                            const isDefault = String(defaultSupplierId) === String(s.id);
                             return (
-                                <div key={s.id} className={`card-soft p-3 hover:bg-card transition-colors flex justify-between items-center ${s.is_favorite ? 'border border-yellow-500/30 bg-yellow-500/5' : ''}`}>
+                                <div key={s.id} className={`card-soft p-3 hover:bg-card transition-colors flex justify-between items-center ${s.is_favorite ? 'border border-yellow-500/30 bg-yellow-500/5' : ''} ${isDefault ? 'border-2 border-amber-500/50 bg-amber-500/10' : ''}`}>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
+                                            {/* Medaglia fornitore di default - cliccabile */}
+                                            <button
+                                                onClick={() => onSetDefaultSupplier && onSetDefaultSupplier(s.id)}
+                                                className={`text-lg transition-all ${isDefault ? 'opacity-100 scale-110' : 'opacity-30 grayscale hover:opacity-70 hover:grayscale-0'} cursor-pointer`}
+                                                title={isDefault ? "Rimuovi come fornitore di default" : "Imposta come fornitore di default"}
+                                            >
+                                                🏅
+                                            </button>
                                             {s.is_favorite && <span className="text-lg" title="Preferito">⭐</span>}
                                             <span className="font-semibold">{s.name}</span>
                                             <span className={`text-xs px-2 py-0.5 rounded ${s.type === 'DC' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>{s.type}</span>
@@ -913,6 +925,7 @@ function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehi
                                         <div className="text-xs text-muted flex gap-2">
                                             <span>€{parseFloat(s.standard_cost).toFixed(3)}/kWh</span>
                                             {s.sort_order !== 9 && <span className="text-text opacity-50">• Ordine: {s.sort_order}</span>}
+                                            {isDefault && <span className="text-amber-400 font-bold">• Default per auto attiva</span>}
                                         </div>
                                     </div>
                                     <div className="flex gap-1">

@@ -348,10 +348,15 @@ async function deleteSupplierFromDB(sb, supplierId) {
  */
 async function startChargeDB(sb, data, vehicleId, suppliers) {
     // Trova il fornitore selezionato nell'array
-    const supplier = suppliers.find(s => s.id == data.supplierId);
+    // Fix: Confronto con String() per gestire tipi misti (number vs string)
+    const supplier = suppliers.find(s => String(s.id) === String(data.supplierId));
 
     if (!supplier) {
-        console.error("Supplier non trovato in startChargeDB");
+        console.error("Supplier non trovato in startChargeDB", {
+            supplierId: data.supplierId,
+            supplierIdType: typeof data.supplierId,
+            availableSuppliers: suppliers.map(s => ({ id: s.id, type: typeof s.id }))
+        });
         return false;
     }
 
