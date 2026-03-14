@@ -108,9 +108,6 @@ function EVCostTracker() {
     });
     
     const [recentSuppliers, setRecentSuppliers] = React.useState([]);
-    
-    // Fornitore di default per veicolo (aggiornato dinamicamente)
-    const [defaultSupplierForVehicle, setDefaultSupplierForVehicle] = React.useState(null);
 
     // ========================================================
     // STATO MODALI
@@ -447,27 +444,39 @@ function EVCostTracker() {
     // ========================================================
     // HANDLER: FORNITORI
     // ========================================================
-    // Aggiorna il fornitore di default quando cambia il veicolo
-    React.useEffect(() => {
-        if (activeVehicle) {
-            const stored = localStorage.getItem(`ev_default_supplier_${activeVehicle.id}`);
-            setDefaultSupplierForVehicle(stored || null);
-        } else {
-            setDefaultSupplierForVehicle(null);
-        }
-    }, [activeVehicle]);
+    // Fornitore di default: preso dal veicolo attivo (default_supplier_id dal DB)
+    const defaultSupplierId = activeVehicle?.default_supplier_id || null;
     
-    function handleSetDefaultSupplier(supplierId) {
+    // Imposta il fornitore di default per il veicolo attivo (salva nel DB)
+    async function handleSetDefaultSupplier(supplierId) {
         if (!activeVehicle) return;
-        if (defaultSupplierForVehicle === String(supplierId)) {
-            // Rimuovi default
-            localStorage.removeItem(`ev_default_supplier_${activeVehicle.id}`);
-            setDefaultSupplierForVehicle(null);
-        } else {
-            // Imposta default
-            localStorage.setItem(`ev_default_supplier_${activeVehicle.id}`, String(supplierId));
-            setDefaultSupplierForVehicle(String(supplierId));
+        
+        const newDefaultId = defaultSupplierId === String(supplierId) ? null : String(supplierId);
+        
+        setIsSyncing(true);
+        try {
+            const ok = await updateVehicleInDB(supabaseClient, {
+                id: activeVehicle.id,
+                name: activeVehicle.name,
+                brand: activeVehicle.brand,
+                capacity: activeVehicle.capacity_kwh,
+                theme: activeVehicle.theme,
+                showFunStats: activeVehicle.show_fun_stats,
+                monthlyBudget: activeVehicle.monthly_budget,
+                budgetAlertThreshold: activeVehicle.budget_alert_threshold,
+                defaultSupplierId: newDefaultId
+            });
+            
+            if (ok) {
+                await loadData();
+            } else {
+                alert("❌ Errore durante il salvataggio del fornitore di default.");
+            }
+        } catch (err) {
+            console.error("Errore handleSetDefaultSupplier:", err);
+            alert("❌ Errore: " + err.message);
         }
+        setIsSyncing(false);
     }
     
     async function handleEditSupplier(supplier) {
@@ -536,9 +545,6 @@ function EVCostTracker() {
             const ok = await startChargeDB(supabaseClient, data, selectedVehicleId, suppliers);
             if (ok) {
                 setShowStartModal(false);
-                
-                // Salva fornitore di default per questo veicolo
-                localStorage.setItem(`ev_default_supplier_${selectedVehicleId}`, data.supplierId);
                 
                 // Aggiorna fornitori recenti per Quick Actions
                 const updated = [data.supplierId, ...recentSuppliers.filter(id => id != data.supplierId)].slice(0, 3);
@@ -844,7 +850,7 @@ function EVCostTracker() {
                         onEditSupplier={handleEditSupplier}
                         onDeleteSupplier={handleDeleteSupplier}
                         activeVehicleId={selectedVehicleId}
-                        defaultSupplierId={defaultSupplierForVehicle}
+                        defaultSupplierId={defaultSupplierId}
                         onSetDefaultSupplier={handleSetDefaultSupplier}
                     />
                 )}
@@ -869,7 +875,7 @@ function EVCostTracker() {
                     activeVehicle={activeVehicle} 
                     suppliers={filteredSuppliersForVehicle} 
                     lastKm={currentVehicleCharges[0]?.total_km || null}
-                    defaultSupplierId={defaultSupplierForVehicle}
+                    defaultSupplierId={defaultSupplierId}
                     onClose={() => setShowStartModal(false)} 
                     onStart={handleStartCharge} 
                 />

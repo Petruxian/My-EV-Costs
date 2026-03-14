@@ -111,7 +111,8 @@ async function saveVehicleToDB(sb, vehicle) {
         theme: vehicle.theme || 'theme-default',
         show_fun_stats: vehicle.showFunStats !== false,
         monthly_budget: parseFloat(vehicle.monthlyBudget) || 0,
-        budget_alert_threshold: parseInt(vehicle.budgetAlertThreshold) || 80
+        budget_alert_threshold: parseInt(vehicle.budgetAlertThreshold) || 80,
+        default_supplier_id: vehicle.defaultSupplierId ? parseInt(vehicle.defaultSupplierId) : null
     });
 
     if (error) console.error(error);
@@ -154,7 +155,8 @@ async function updateVehicleInDB(sb, vehicle) {
             theme: vehicle.theme || 'theme-default',
             show_fun_stats: vehicle.showFunStats !== false,
             monthly_budget: parseFloat(vehicle.monthlyBudget) || 0,
-            budget_alert_threshold: parseInt(vehicle.budgetAlertThreshold) || 80
+            budget_alert_threshold: parseInt(vehicle.budgetAlertThreshold) || 80,
+            default_supplier_id: vehicle.defaultSupplierId ? parseInt(vehicle.defaultSupplierId) : null
         })
         .eq("id", vehicle.id)
         .select();

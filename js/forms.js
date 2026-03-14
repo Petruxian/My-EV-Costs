@@ -58,7 +58,7 @@
  */
 function getLocalDateTimeString(dateInput = new Date()) {
     let date;
-
+    
     // Gestisci diversi tipi di input
     if (dateInput instanceof Date) {
         date = dateInput;
@@ -68,19 +68,19 @@ function getLocalDateTimeString(dateInput = new Date()) {
     } else {
         date = new Date();
     }
-
+    
     // Verifica data valida
     if (isNaN(date.getTime())) {
         date = new Date();
     }
-
+    
     // Estrai componenti della data LOCALE (non UTC)
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');  // 0-11 → 01-12
     const day = String(date.getDate()).padStart(2, '0');         // 1-31 → 01-31
     const hours = String(date.getHours()).padStart(2, '0');      // 0-23 → 00-23
     const minutes = String(date.getMinutes()).padStart(2, '0');  // 0-59 → 00-59
-
+    
     // Formato richiesto da datetime-local: YYYY-MM-DDTHH:MM
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
@@ -121,48 +121,48 @@ function AddVehicleModal({ newVehicle, setNewVehicle, onClose, onSave, isSyncing
             <div className="modal-panel max-w-sm w-full">
                 {/* Header Modale */}
                 <h2 className="text-xl font-bold mb-4 text-accent">🚘 Nuova Auto</h2>
-
+                
                 {/* Form Campi */}
                 <div className="space-y-3">
                     {/* Nome Veicolo */}
                     <div>
                         <label className="label">Nome (es. La mia Tesla)</label>
-                        <input
-                            className="input"
-                            type="text"
-                            value={newVehicle.name}
-                            onChange={e => setNewVehicle({ ...newVehicle, name: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="text" 
+                            value={newVehicle.name} 
+                            onChange={e => setNewVehicle({ ...newVehicle, name: e.target.value })} 
                         />
                     </div>
-
+                    
                     {/* Brand */}
                     <div>
                         <label className="label">Brand (es. Tesla, Fiat)</label>
-                        <input
-                            className="input"
-                            type="text"
-                            value={newVehicle.brand}
-                            onChange={e => setNewVehicle({ ...newVehicle, brand: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="text" 
+                            value={newVehicle.brand} 
+                            onChange={e => setNewVehicle({ ...newVehicle, brand: e.target.value })} 
                         />
                     </div>
-
+                    
                     {/* Capacità Batteria */}
                     <div>
                         <label className="label">Capacità Batteria (kWh) *</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.1"
-                            placeholder="es. 55"
-                            value={newVehicle.capacity}
-                            onChange={e => setNewVehicle({ ...newVehicle, capacity: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.1" 
+                            placeholder="es. 55" 
+                            value={newVehicle.capacity} 
+                            onChange={e => setNewVehicle({ ...newVehicle, capacity: e.target.value })} 
                         />
                         <p className="text-xs text-muted mt-1">
                             Fondamentale per i calcoli di efficienza.
                         </p>
                     </div>
                 </div>
-
+                
                 {/* Pulsanti Azione */}
                 <div className="flex gap-2 mt-6">
                     <button onClick={onClose} className="btn btn-secondary flex-1">Annulla</button>
@@ -213,7 +213,7 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
         supplierId: "",  // Viene impostato dall'useEffect sotto
         notes: ""
     });
-
+    
     // Aggiorna il fornitore quando cambia defaultSupplierId (es. cambio veicolo o impostazioni)
     React.useEffect(() => {
         if (defaultSupplierId) {
@@ -234,7 +234,7 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
 
         // Converti la data locale in ISO completo per il database
         const dateObj = new Date(data.date);
-
+        
         onStart({
             ...data,
             totalKm: data.totalKm || null,  // Km opzionale
@@ -259,23 +259,23 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
                     {/* Data/Ora Inizio */}
                     <div>
                         <label className="label">📅 Data/Ora Inizio</label>
-                        <input
-                            className="input"
-                            type="datetime-local"
-                            value={data.date}
-                            onChange={e => setData({ ...data, date: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="datetime-local" 
+                            value={data.date} 
+                            onChange={e => setData({ ...data, date: e.target.value })} 
                         />
                     </div>
 
                     {/* Km Odometro */}
                     <div>
                         <label className="label">🚗 Km Attuali <span className="text-muted font-normal">(opzionale)</span></label>
-                        <input
-                            className="input text-lg font-mono"
-                            type="number"
-                            placeholder={lastKm ? `es. ${lastKm.toLocaleString('it-IT')} (ultimo)` : "es. 12500"}
-                            value={data.totalKm}
-                            onChange={e => setData({ ...data, totalKm: e.target.value })}
+                        <input 
+                            className="input text-lg font-mono" 
+                            type="number" 
+                            placeholder={lastKm ? `es. ${lastKm.toLocaleString('it-IT')} (ultimo)` : "es. 12500"} 
+                            value={data.totalKm} 
+                            onChange={e => setData({ ...data, totalKm: e.target.value })} 
                         />
                         {lastKm && (
                             <p className="text-[10px] text-muted mt-1">
@@ -288,14 +288,14 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
                     <div>
                         <label className="label">🔋 % Batteria Iniziale</label>
                         <div className="flex items-center gap-2">
-                            <input
-                                className="input text-lg font-bold text-center"
-                                type="number"
-                                min="0"
-                                max="100"
-                                placeholder="%"
-                                value={data.startPct}
-                                onChange={e => setData({ ...data, startPct: e.target.value })}
+                            <input 
+                                className="input text-lg font-bold text-center" 
+                                type="number" 
+                                min="0" 
+                                max="100" 
+                                placeholder="%" 
+                                value={data.startPct} 
+                                onChange={e => setData({ ...data, startPct: e.target.value })} 
                             />
                             <span className="text-xl">%</span>
                         </div>
@@ -304,9 +304,9 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
                     {/* Selezione Fornitore */}
                     <div>
                         <label className="label">🏪 Fornitore</label>
-                        <select
-                            className="input"
-                            value={data.supplierId}
+                        <select 
+                            className="input" 
+                            value={data.supplierId} 
                             onChange={e => setData({ ...data, supplierId: e.target.value })}
                         >
                             <option value="">Seleziona...</option>
@@ -321,11 +321,11 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
                     {/* Note Opzionali */}
                     <div>
                         <label className="label">📝 Note (Opzionale)</label>
-                        <textarea
-                            className="input min-h-[60px] text-sm"
-                            placeholder="Es. Colonnina lenta, pioveva..."
-                            value={data.notes}
-                            onChange={e => setData({ ...data, notes: e.target.value })}
+                        <textarea 
+                            className="input min-h-[60px] text-sm" 
+                            placeholder="Es. Colonnina lenta, pioveva..." 
+                            value={data.notes} 
+                            onChange={e => setData({ ...data, notes: e.target.value })} 
                         />
                     </div>
                 </div>
@@ -416,38 +416,38 @@ function StopChargeModal({ activeSession, activeVehicle, lastKm, onClose, onStop
                     {/* % Batteria Finale */}
                     <div>
                         <label className="label">🔋 % Batteria Finale</label>
-                        <input
-                            className="input text-lg font-bold text-center"
-                            type="number"
-                            min="0"
-                            max="100"
-                            placeholder="%"
-                            value={data.endPct}
-                            onChange={e => setData({ ...data, endPct: e.target.value })}
+                        <input 
+                            className="input text-lg font-bold text-center" 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            placeholder="%" 
+                            value={data.endPct} 
+                            onChange={e => setData({ ...data, endPct: e.target.value })} 
                         />
                     </div>
 
                     {/* kWh Erogati */}
                     <div>
                         <label className="label">⚡ kWh Erogati (da colonnina)</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.01"
-                            value={data.kwhAdded}
-                            onChange={e => setData({ ...data, kwhAdded: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.01" 
+                            value={data.kwhAdded} 
+                            onChange={e => setData({ ...data, kwhAdded: e.target.value })} 
                         />
                     </div>
 
                     {/* Km Odometro */}
                     <div>
                         <label className="label">🚗 Km Totali <span className="text-muted font-normal">(opzionale)</span></label>
-                        <input
-                            className="input text-lg font-mono"
-                            type="number"
-                            placeholder={lastKm ? `es. ${lastKm.toLocaleString('it-IT')}` : "es. 12500"}
-                            value={data.totalKm}
-                            onChange={e => setData({ ...data, totalKm: e.target.value })}
+                        <input 
+                            className="input text-lg font-mono" 
+                            type="number" 
+                            placeholder={lastKm ? `es. ${lastKm.toLocaleString('it-IT')}` : "es. 12500"} 
+                            value={data.totalKm} 
+                            onChange={e => setData({ ...data, totalKm: e.target.value })} 
                         />
                         {lastKm && !data.totalKm && (
                             <p className="text-[10px] text-muted mt-1">
@@ -464,35 +464,35 @@ function StopChargeModal({ activeSession, activeVehicle, lastKm, onClose, onStop
                     {/* Costo Totale */}
                     <div>
                         <label className="label">💵 Costo Totale (€)</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.01"
-                            placeholder="Opzionale per Casa"
-                            value={data.cost}
-                            onChange={e => setData({ ...data, cost: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="Opzionale per Casa" 
+                            value={data.cost} 
+                            onChange={e => setData({ ...data, cost: e.target.value })} 
                         />
                     </div>
 
                     {/* Data/Ora Fine */}
                     <div>
                         <label className="label">📅 Data/Ora Fine</label>
-                        <input
-                            className="input"
-                            type="datetime-local"
-                            value={data.endDate}
-                            onChange={e => setData({ ...data, endDate: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="datetime-local" 
+                            value={data.endDate} 
+                            onChange={e => setData({ ...data, endDate: e.target.value })} 
                         />
                     </div>
 
                     {/* Note */}
                     <div>
                         <label className="label">📝 Aggiorna Note</label>
-                        <textarea
-                            className="input min-h-[60px] text-sm"
-                            placeholder="Aggiungi dettagli..."
-                            value={data.notes}
-                            onChange={e => setData({ ...data, notes: e.target.value })}
+                        <textarea 
+                            className="input min-h-[60px] text-sm" 
+                            placeholder="Aggiungi dettagli..." 
+                            value={data.notes} 
+                            onChange={e => setData({ ...data, notes: e.target.value })} 
                         />
                     </div>
                 </div>
@@ -590,20 +590,20 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
                     {/* Data/Ora */}
                     <div className="col-span-2">
                         <label className="label">📅 Data</label>
-                        <input
-                            className="input"
-                            type="datetime-local"
-                            value={data.date}
-                            onChange={e => setData({ ...data, date: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="datetime-local" 
+                            value={data.date} 
+                            onChange={e => setData({ ...data, date: e.target.value })} 
                         />
                     </div>
 
                     {/* Fornitore */}
                     <div className="col-span-2">
                         <label className="label">🏪 Fornitore</label>
-                        <select
-                            className="input"
-                            value={data.supplierId}
+                        <select 
+                            className="input" 
+                            value={data.supplierId} 
                             onChange={e => setData({ ...data, supplierId: e.target.value })}
                         >
                             <option value="">Seleziona...</option>
@@ -616,12 +616,12 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
                     {/* Km Totali */}
                     <div>
                         <label className="label">🚗 Km Totali <span className="text-muted font-normal">(opzionale)</span></label>
-                        <input
-                            className="input"
-                            type="number"
+                        <input 
+                            className="input" 
+                            type="number" 
                             placeholder="Es. 12500"
-                            value={data.totalKm}
-                            onChange={e => setData({ ...data, totalKm: e.target.value })}
+                            value={data.totalKm} 
+                            onChange={e => setData({ ...data, totalKm: e.target.value })} 
                         />
                         <p className="text-[10px] text-muted mt-1">
                             Necessari per statistiche consumo
@@ -631,82 +631,82 @@ function ManualChargeModal({ activeVehicle, suppliers, onClose, onSave }) {
                     {/* kWh Totali */}
                     <div>
                         <label className="label">⚡ kWh Totali</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.1"
-                            value={data.kwhAdded}
-                            onChange={e => setData({ ...data, kwhAdded: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.1" 
+                            value={data.kwhAdded} 
+                            onChange={e => setData({ ...data, kwhAdded: e.target.value })} 
                         />
                     </div>
 
                     {/* % Start */}
                     <div>
                         <label className="label">🔋 % Start</label>
-                        <input
-                            className="input"
-                            type="number"
-                            placeholder="0-100"
-                            value={data.startPct}
-                            onChange={e => setData({ ...data, startPct: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            placeholder="0-100" 
+                            value={data.startPct} 
+                            onChange={e => setData({ ...data, startPct: e.target.value })} 
                         />
                     </div>
 
                     {/* % End */}
                     <div>
                         <label className="label">🔋 % End</label>
-                        <input
-                            className="input"
-                            type="number"
-                            placeholder="0-100"
-                            value={data.endPct}
-                            onChange={e => setData({ ...data, endPct: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            placeholder="0-100" 
+                            value={data.endPct} 
+                            onChange={e => setData({ ...data, endPct: e.target.value })} 
                         />
                     </div>
 
                     {/* Costo */}
                     <div className="col-span-2">
                         <label className="label">💵 Costo (€)</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.01"
-                            value={data.cost}
-                            onChange={e => setData({ ...data, cost: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.01" 
+                            value={data.cost} 
+                            onChange={e => setData({ ...data, cost: e.target.value })} 
                         />
                     </div>
 
                     {/* Note */}
                     <div className="col-span-2">
                         <label className="label">📝 Note</label>
-                        <textarea
-                            className="input min-h-[60px] text-sm"
-                            placeholder="Dettagli ricarica..."
-                            value={data.notes}
-                            onChange={e => setData({ ...data, notes: e.target.value })}
+                        <textarea 
+                            className="input min-h-[60px] text-sm" 
+                            placeholder="Dettagli ricarica..." 
+                            value={data.notes} 
+                            onChange={e => setData({ ...data, notes: e.target.value })} 
                         />
                     </div>
 
                     {/* Tags */}
                     <div className="col-span-2">
                         <label className="label">🏷️ Tag (separati da virgola)</label>
-                        <input
-                            className="input"
+                        <input 
+                            className="input" 
                             type="text"
-                            placeholder="#lavoro, #viaggio, #notturna..."
-                            value={data.tags || ""}
-                            onChange={e => setData({ ...data, tags: e.target.value })}
+                            placeholder="#lavoro, #viaggio, #notturna..." 
+                            value={data.tags || ""} 
+                            onChange={e => setData({ ...data, tags: e.target.value })} 
                         />
                         <div className="flex flex-wrap gap-1 mt-2">
                             {['#lavoro', '#viaggio', '#notturna', '#urgente', '#economica', '#lunga'].map(tag => (
-                                <button
-                                    key={tag}
+                                <button 
+                                    key={tag} 
                                     type="button"
                                     onClick={() => {
                                         const currentTags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
                                         if (!currentTags.includes(tag)) {
-                                            const newTags = currentTags.length > 0
-                                                ? [...currentTags, tag].join(', ')
+                                            const newTags = currentTags.length > 0 
+                                                ? [...currentTags, tag].join(', ') 
                                                 : tag;
                                             setData({ ...data, tags: newTags });
                                         }
@@ -775,52 +775,52 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
      */
     const calculateDuration = () => {
         if (!charge.date || !charge.endDate) return "-";
-
+        
         const start = new Date(charge.date);
         const end = new Date(charge.endDate);
-
+        
         if (isNaN(start.getTime()) || isNaN(end.getTime())) return "-";
         if (end <= start) return "⚠️ Fine prima di inizio";
-
+        
         const diffMs = end - start;
         const diffMins = Math.floor(diffMs / 60000);
         const hours = Math.floor(diffMins / 60);
         const mins = diffMins % 60;
-
+        
         if (hours > 0) {
             return `${hours}h ${mins}min`;
         }
         return `${mins} min`;
     };
-
+    
     /**
      * Calcola la potenza media di ricarica in kW.
      * @returns {string|null} Potenza formattata o null se non calcolabile
      */
     const calculatePower = () => {
         if (!charge.date || !charge.endDate || !charge.kwhAdded) return null;
-
+        
         const start = new Date(charge.date);
         const end = new Date(charge.endDate);
-
+        
         if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
         if (end <= start) return null;
-
+        
         const diffMs = end - start;
         const diffHours = diffMs / 3600000; // ms to hours
-
+        
         if (diffHours <= 0) return null;
-
+        
         const kwh = parseFloat(charge.kwhAdded);
         if (isNaN(kwh) || kwh <= 0) return null;
-
+        
         const power = kwh / diffHours;
         return power.toFixed(1);
     };
-
+    
     const duration = calculateDuration();
     const power = calculatePower();
-
+    
     return (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
             <div className="modal-panel max-w-md w-full border-2 border-blue-500/30 max-h-[90vh] overflow-y-auto">
@@ -833,25 +833,25 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                     {/* Data/Ora INIZIO */}
                     <div className="col-span-2 sm:col-span-1">
                         <label className="label">📅 Inizio Ricarica</label>
-                        <input
-                            className="input"
-                            type="datetime-local"
-                            value={charge.date || ""}
-                            onChange={e => setCharge({ ...charge, date: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="datetime-local" 
+                            value={charge.date || ""} 
+                            onChange={e => setCharge({ ...charge, date: e.target.value })} 
                         />
                     </div>
-
+                    
                     {/* Data/Ora FINE */}
                     <div className="col-span-2 sm:col-span-1">
                         <label className="label">🏁 Fine Ricarica</label>
-                        <input
-                            className="input"
-                            type="datetime-local"
-                            value={charge.endDate || ""}
-                            onChange={e => setCharge({ ...charge, endDate: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="datetime-local" 
+                            value={charge.endDate || ""} 
+                            onChange={e => setCharge({ ...charge, endDate: e.target.value })} 
                         />
                     </div>
-
+                    
                     {/* Info Durata e Velocità */}
                     <div className="col-span-2">
                         <div className="flex items-center gap-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
@@ -871,9 +871,9 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                     {/* Fornitore */}
                     <div className="col-span-2">
                         <label className="label">🏪 Fornitore</label>
-                        <select
-                            className="input"
-                            value={charge.supplierId || ""}
+                        <select 
+                            className="input" 
+                            value={charge.supplierId || ""} 
                             onChange={e => setCharge({ ...charge, supplierId: e.target.value })}
                         >
                             <option value="">Seleziona...</option>
@@ -886,11 +886,11 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                     {/* Km Totali */}
                     <div>
                         <label className="label">🚗 Km Totali <span className="text-muted font-normal">(opzionale)</span></label>
-                        <input
-                            className="input"
-                            type="number"
-                            value={charge.totalKm || ""}
-                            onChange={e => setCharge({ ...charge, totalKm: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            value={charge.totalKm || ""} 
+                            onChange={e => setCharge({ ...charge, totalKm: e.target.value })} 
                         />
                         <p className="text-[10px] text-muted mt-1">
                             Necessari per statistiche consumo
@@ -900,12 +900,12 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                     {/* kWh */}
                     <div>
                         <label className="label">⚡ kWh</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.1"
-                            value={charge.kwhAdded || ""}
-                            onChange={e => setCharge({ ...charge, kwhAdded: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.1" 
+                            value={charge.kwhAdded || ""} 
+                            onChange={e => setCharge({ ...charge, kwhAdded: e.target.value })} 
                         />
                         <p className="text-[10px] text-muted mt-1">
                             Influenza consumo
@@ -915,40 +915,40 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                     {/* % Start */}
                     <div>
                         <label className="label">🔋 % Start</label>
-                        <input
-                            className="input"
-                            type="number"
-                            min="0"
-                            max="100"
-                            placeholder="0-100"
-                            value={charge.batteryStart || ""}
-                            onChange={e => setCharge({ ...charge, batteryStart: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            placeholder="0-100" 
+                            value={charge.batteryStart || ""} 
+                            onChange={e => setCharge({ ...charge, batteryStart: e.target.value })} 
                         />
                     </div>
 
                     {/* % End */}
                     <div>
                         <label className="label">🔋 % End</label>
-                        <input
-                            className="input"
-                            type="number"
-                            min="0"
-                            max="100"
-                            placeholder="0-100"
-                            value={charge.batteryEnd || ""}
-                            onChange={e => setCharge({ ...charge, batteryEnd: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            placeholder="0-100" 
+                            value={charge.batteryEnd || ""} 
+                            onChange={e => setCharge({ ...charge, batteryEnd: e.target.value })} 
                         />
                     </div>
 
                     {/* Costo */}
                     <div className="col-span-2">
                         <label className="label">💵 Costo (€)</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.01"
-                            value={charge.cost || ""}
-                            onChange={e => setCharge({ ...charge, cost: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.01" 
+                            value={charge.cost || ""} 
+                            onChange={e => setCharge({ ...charge, cost: e.target.value })} 
                         />
                         <p className="text-[10px] text-muted mt-1">
                             Lascia vuoto per calcolo automatico (Casa/Fotovoltaico)
@@ -958,47 +958,48 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                     {/* Note */}
                     <div className="col-span-2">
                         <label className="label">📝 Note</label>
-                        <textarea
-                            className="input min-h-[60px] text-sm"
-                            placeholder="Dettagli ricarica..."
-                            value={charge.notes || ""}
-                            onChange={e => setCharge({ ...charge, notes: e.target.value })}
+                        <textarea 
+                            className="input min-h-[60px] text-sm" 
+                            placeholder="Dettagli ricarica..." 
+                            value={charge.notes || ""} 
+                            onChange={e => setCharge({ ...charge, notes: e.target.value })} 
                         />
                     </div>
 
                     {/* Tags */}
                     <div className="col-span-2">
                         <label className="label">🏷️ Tag (separati da virgola)</label>
-                        <input
-                            className="input"
+                        <input 
+                            className="input" 
                             type="text"
-                            placeholder="#lavoro, #viaggio, #notturna..."
-                            value={charge.tags || ""}
-                            onChange={e => setCharge({ ...charge, tags: e.target.value })}
+                            placeholder="#lavoro, #viaggio, #notturna..." 
+                            value={charge.tags || ""} 
+                            onChange={e => setCharge({ ...charge, tags: e.target.value })} 
                         />
                         <div className="flex flex-wrap gap-1 mt-2">
                             {['#lavoro', '#viaggio', '#notturna', '#urgente', '#economica', '#lunga'].map(tag => {
                                 const currentTags = (charge.tags || '').split(',').map(t => t.trim()).filter(Boolean);
                                 const isActive = currentTags.includes(tag);
                                 return (
-                                    <button
-                                        key={tag}
+                                    <button 
+                                        key={tag} 
                                         type="button"
                                         onClick={() => {
                                             let newTags;
                                             if (isActive) {
                                                 newTags = currentTags.filter(t => t !== tag).join(', ');
                                             } else {
-                                                newTags = currentTags.length > 0
-                                                    ? [...currentTags, tag].join(', ')
+                                                newTags = currentTags.length > 0 
+                                                    ? [...currentTags, tag].join(', ') 
                                                     : tag;
                                             }
                                             setCharge({ ...charge, tags: newTags });
                                         }}
-                                        className={`text-[10px] px-2 py-1 rounded-full transition-all ${isActive
-                                                ? 'bg-blue-500 text-white'
+                                        className={`text-[10px] px-2 py-1 rounded-full transition-all ${
+                                            isActive 
+                                                ? 'bg-blue-500 text-white' 
                                                 : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
-                                            }`}
+                                        }`}
                                     >
                                         {isActive ? '✓ ' : '+'}{tag}
                                     </button>
@@ -1025,9 +1026,9 @@ function EditChargeModal({ charge, setCharge, suppliers, onClose, onSave, isSync
                 {/* Pulsanti Azione */}
                 <div className="flex gap-2 mt-6">
                     <button onClick={onClose} className="btn btn-secondary flex-1">Annulla</button>
-                    <button
-                        onClick={onSave}
-                        disabled={isSyncing}
+                    <button 
+                        onClick={onSave} 
+                        disabled={isSyncing} 
                         className="btn bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white flex-1"
                     >
                         {isSyncing ? "..." : "💾 Salva Modifiche"}
@@ -1065,9 +1066,9 @@ function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave, vehicl
      * sortOrder 9 = ultima posizione, isFavorite false = normale.
      */
     React.useEffect(() => {
-        setNewSupplier(prev => ({
-            ...prev,
-            isFavorite: prev.isFavorite ?? false,
+        setNewSupplier(prev => ({ 
+            ...prev, 
+            isFavorite: prev.isFavorite ?? false, 
             sortOrder: prev.sortOrder ?? 9,
             vehicleId: prev.vehicleId ?? null
         }));
@@ -1078,74 +1079,75 @@ function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave, vehicl
             <div className="modal-panel max-w-sm w-full">
                 {/* Header */}
                 <h2 className="text-xl font-bold mb-4">Aggiungi Fornitore</h2>
-
+                
                 <div className="space-y-3">
                     {/* Nome Fornitore */}
-                    <input
-                        className="input"
-                        placeholder="Nome (es. Enel X)"
-                        value={newSupplier.name || ""}
-                        onChange={e => setNewSupplier({ ...newSupplier, name: e.target.value })}
+                    <input 
+                        className="input" 
+                        placeholder="Nome (es. Enel X)" 
+                        value={newSupplier.name || ""} 
+                        onChange={e => setNewSupplier({ ...newSupplier, name: e.target.value })} 
                     />
-
+                    
                     {/* Tipo e Costo */}
                     <div className="grid grid-cols-2 gap-3">
-                        <select
-                            className="input"
-                            value={newSupplier.type || "AC"}
+                        <select 
+                            className="input" 
+                            value={newSupplier.type || "AC"} 
                             onChange={e => setNewSupplier({ ...newSupplier, type: e.target.value })}
                         >
                             <option value="AC">AC (Lento)</option>
                             <option value="DC">DC (Fast)</option>
                         </select>
-                        <input
-                            className="input"
-                            type="number"
-                            placeholder="€/kWh"
-                            value={newSupplier.standardCost || ""}
-                            onChange={e => setNewSupplier({ ...newSupplier, standardCost: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            placeholder="€/kWh" 
+                            value={newSupplier.standardCost || ""} 
+                            onChange={e => setNewSupplier({ ...newSupplier, standardCost: e.target.value })} 
                         />
                     </div>
 
                     {/* Sezione Preferiti & Ordine */}
                     <div className="flex items-center gap-3 bg-card-soft p-2 rounded-lg border border-card-border">
                         {/* Toggle Preferito */}
-                        <button
-                            className={`text-2xl transition-transform active:scale-125 ${newSupplier.isFavorite ? 'grayscale-0 scale-110' : 'grayscale opacity-50'
-                                }`}
+                        <button 
+                            className={`text-2xl transition-transform active:scale-125 ${
+                                newSupplier.isFavorite ? 'grayscale-0 scale-110' : 'grayscale opacity-50'
+                            }`}
                             onClick={() => setNewSupplier({ ...newSupplier, isFavorite: !newSupplier.isFavorite })}
                             title="Segna come preferito"
                         >
                             ⭐
                         </button>
-
+                        
                         {/* Label Stato */}
                         <div className="flex-1 text-xs text-muted">
                             {newSupplier.isFavorite ? "Preferito (In cima alla lista)" : "Normale"}
                         </div>
-
+                        
                         {/* Ordine Priorità */}
                         <div className="flex items-center gap-2">
                             <label className="text-xs font-bold text-muted">Priorità:</label>
-                            <select
-                                className="input py-1 px-2 w-16 text-center"
-                                value={newSupplier.sortOrder || 9}
+                            <select 
+                                className="input py-1 px-2 w-16 text-center" 
+                                value={newSupplier.sortOrder || 9} 
                                 onChange={e => setNewSupplier({ ...newSupplier, sortOrder: parseInt(e.target.value) })}
                             >
-                                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                                {[0,1,2,3,4,5,6,7,8,9].map(n => (
                                     <option key={n} value={n}>{n}</option>
                                 ))}
                             </select>
                         </div>
                     </div>
-
+                    
                     {/* Veicolo Esclusivo */}
                     {vehicles && vehicles.length > 1 && (
                         <div className="bg-blue-500/10 p-2 rounded-lg border border-blue-500/30">
                             <label className="text-xs text-muted block mb-1">🚗 Esclusivo per veicolo (opzionale)</label>
-                            <select
-                                className="input"
-                                value={newSupplier.vehicleId || ""}
+                            <select 
+                                className="input" 
+                                value={newSupplier.vehicleId || ""} 
                                 onChange={e => setNewSupplier({ ...newSupplier, vehicleId: e.target.value || null })}
                             >
                                 <option value="">Comune a tutti i veicoli</option>
@@ -1157,7 +1159,7 @@ function AddSupplierModal({ newSupplier, setNewSupplier, onClose, onSave, vehicl
                         </div>
                     )}
                 </div>
-
+                
                 {/* Pulsanti Azione */}
                 <div className="flex gap-2 mt-4">
                     <button onClick={onClose} className="btn btn-secondary flex-1">Esci</button>
@@ -1197,11 +1199,11 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing, 
                     {/* Nome */}
                     <div>
                         <label className="label">Nome</label>
-                        <input
-                            className="input"
-                            type="text"
-                            value={supplier.name}
-                            onChange={e => setSupplier({ ...supplier, name: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="text" 
+                            value={supplier.name} 
+                            onChange={e => setSupplier({ ...supplier, name: e.target.value })} 
                         />
                     </div>
 
@@ -1209,9 +1211,9 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing, 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="label">Tipo</label>
-                            <select
-                                className="input"
-                                value={supplier.type}
+                            <select 
+                                className="input" 
+                                value={supplier.type} 
                                 onChange={e => setSupplier({ ...supplier, type: e.target.value })}
                             >
                                 <option value="AC">AC</option>
@@ -1220,12 +1222,12 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing, 
                         </div>
                         <div>
                             <label className="label">Costo (€/kWh)</label>
-                            <input
-                                className="input"
-                                type="number"
-                                step="0.001"
-                                value={supplier.standardCost}
-                                onChange={e => setSupplier({ ...supplier, standardCost: e.target.value })}
+                            <input 
+                                className="input" 
+                                type="number" 
+                                step="0.001" 
+                                value={supplier.standardCost} 
+                                onChange={e => setSupplier({ ...supplier, standardCost: e.target.value })} 
                             />
                         </div>
                     </div>
@@ -1233,14 +1235,15 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing, 
                     {/* Sezione Preferiti & Ordine */}
                     <div className="flex items-center gap-3 bg-card-soft p-3 rounded-lg border border-card-border mt-2">
                         {/* Toggle Preferito */}
-                        <button
-                            className={`text-3xl transition-transform active:scale-125 ${supplier.isFavorite ? 'grayscale-0 scale-110' : 'grayscale opacity-40'
-                                }`}
+                        <button 
+                            className={`text-3xl transition-transform active:scale-125 ${
+                                supplier.isFavorite ? 'grayscale-0 scale-110' : 'grayscale opacity-40'
+                            }`}
                             onClick={() => setSupplier({ ...supplier, isFavorite: !supplier.isFavorite })}
                         >
                             ⭐
                         </button>
-
+                        
                         {/* Label Stato */}
                         <div className="flex-1">
                             <div className="text-sm font-bold">
@@ -1248,18 +1251,18 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing, 
                             </div>
                             <div className="text-xs text-muted">Apparirà per primo</div>
                         </div>
-
+                        
                         {/* Ordine Priorità */}
                         <div className="text-right">
                             <label className="text-[10px] font-bold text-muted uppercase block mb-1">
                                 Ordine (0-9)
                             </label>
-                            <select
-                                className="input py-1 px-2 w-16 text-center font-bold"
-                                value={supplier.sortOrder !== undefined ? supplier.sortOrder : 9}
+                            <select 
+                                className="input py-1 px-2 w-16 text-center font-bold" 
+                                value={supplier.sortOrder !== undefined ? supplier.sortOrder : 9} 
                                 onChange={e => setSupplier({ ...supplier, sortOrder: parseInt(e.target.value) })}
                             >
-                                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                                {[0,1,2,3,4,5,6,7,8,9].map(n => (
                                     <option key={n} value={n}>{n}</option>
                                 ))}
                             </select>
@@ -1270,9 +1273,9 @@ function EditSupplierModal({ supplier, setSupplier, onClose, onSave, isSyncing, 
                     {vehicles && vehicles.length > 1 && (
                         <div className="bg-blue-500/10 p-2 rounded-lg border border-blue-500/30 mt-2">
                             <label className="text-xs text-muted block mb-1">🚗 Esclusivo per veicolo (opzionale)</label>
-                            <select
-                                className="input"
-                                value={supplier.vehicleId || ""}
+                            <select 
+                                className="input" 
+                                value={supplier.vehicleId || ""} 
                                 onChange={e => setSupplier({ ...supplier, vehicleId: e.target.value || null })}
                             >
                                 <option value="">Comune a tutti i veicoli</option>
@@ -1325,57 +1328,57 @@ function EditVehicleModal({ vehicle, setVehicle, onClose, onSave, isSyncing }) {
             <div className="modal-panel max-w-md w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <h2 className="text-xl font-bold mb-4 text-accent">✏️ Modifica Auto</h2>
-
+                
                 <div className="space-y-3">
                     {/* Nome */}
                     <div>
                         <label className="label">Nome (es. La mia Tesla)</label>
-                        <input
-                            className="input"
-                            type="text"
-                            value={vehicle.name}
-                            onChange={e => setVehicle({ ...vehicle, name: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="text" 
+                            value={vehicle.name} 
+                            onChange={e => setVehicle({ ...vehicle, name: e.target.value })} 
                         />
                     </div>
-
+                    
                     {/* Brand */}
                     <div>
                         <label className="label">Brand (es. Tesla, Fiat)</label>
-                        <input
-                            className="input"
-                            type="text"
-                            value={vehicle.brand}
-                            onChange={e => setVehicle({ ...vehicle, brand: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="text" 
+                            value={vehicle.brand} 
+                            onChange={e => setVehicle({ ...vehicle, brand: e.target.value })} 
                         />
                     </div>
-
+                    
                     {/* Capacità Batteria */}
                     <div>
                         <label className="label">Capacità Batteria (kWh)</label>
-                        <input
-                            className="input"
-                            type="number"
-                            step="0.1"
-                            value={vehicle.capacity}
-                            onChange={e => setVehicle({ ...vehicle, capacity: e.target.value })}
+                        <input 
+                            className="input" 
+                            type="number" 
+                            step="0.1" 
+                            value={vehicle.capacity} 
+                            onChange={e => setVehicle({ ...vehicle, capacity: e.target.value })} 
                         />
                         <p className="text-xs text-muted mt-1">
                             Modificare la capacità non ricalcolerà lo storico.
                         </p>
                     </div>
-
+                    
                     {/* Separatore */}
                     <hr className="border-card-border my-4" />
-
+                    
                     {/* Impostazioni Veicolo */}
                     <h3 className="text-sm font-bold text-muted uppercase tracking-wider">Impostazioni Veicolo</h3>
-
+                    
                     {/* Tema */}
                     <div>
                         <label className="label">🎨 Tema Grafico</label>
-                        <select
-                            className="input"
-                            value={vehicle.theme || 'theme-default'}
+                        <select 
+                            className="input" 
+                            value={vehicle.theme || 'theme-default'} 
                             onChange={e => setVehicle({ ...vehicle, theme: e.target.value })}
                         >
                             <option value="theme-auto">🌓 Auto (Segui Sistema)</option>
@@ -1389,7 +1392,7 @@ function EditVehicleModal({ vehicle, setVehicle, onClose, onSave, isSyncing }) {
                             <option value="theme-sunset">🌅 Sunset</option>
                         </select>
                     </div>
-
+                    
                     {/* Badge Fun Stats */}
                     <div className="flex items-center justify-between bg-card-soft p-3 rounded-lg border border-card-border">
                         <div>
@@ -1401,7 +1404,7 @@ function EditVehicleModal({ vehicle, setVehicle, onClose, onSave, isSyncing }) {
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                         </label>
                     </div>
-
+                    
                     {/* Budget Mensile */}
                     <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
                         <h4 className="text-sm font-bold text-emerald-400 mb-2 flex items-center gap-2">
@@ -1410,31 +1413,31 @@ function EditVehicleModal({ vehicle, setVehicle, onClose, onSave, isSyncing }) {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-xs text-muted block mb-1">Budget (€/mese)</label>
-                                <input
-                                    type="number"
-                                    step="1"
-                                    className="input"
-                                    value={vehicle.monthlyBudget || 0}
-                                    onChange={e => setVehicle({ ...vehicle, monthlyBudget: parseFloat(e.target.value) || 0 })}
+                                <input 
+                                    type="number" 
+                                    step="1" 
+                                    className="input" 
+                                    value={vehicle.monthlyBudget || 0} 
+                                    onChange={e => setVehicle({ ...vehicle, monthlyBudget: parseFloat(e.target.value) || 0 })} 
                                 />
                                 <p className="text-[10px] text-muted mt-1">0 = disabilitato</p>
                             </div>
                             <div>
                                 <label className="text-xs text-muted block mb-1">Allerta (%)</label>
-                                <input
-                                    type="number"
-                                    step="5"
-                                    min="50"
+                                <input 
+                                    type="number" 
+                                    step="5" 
+                                    min="50" 
                                     max="95"
-                                    className="input"
-                                    value={vehicle.budgetAlertThreshold || 80}
-                                    onChange={e => setVehicle({ ...vehicle, budgetAlertThreshold: parseInt(e.target.value) || 80 })}
+                                    className="input" 
+                                    value={vehicle.budgetAlertThreshold || 80} 
+                                    onChange={e => setVehicle({ ...vehicle, budgetAlertThreshold: parseInt(e.target.value) || 80 })} 
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
-
+                
                 {/* Pulsanti Azione */}
                 <div className="flex gap-2 mt-6">
                     <button onClick={onClose} className="btn btn-secondary flex-1">Annulla</button>
