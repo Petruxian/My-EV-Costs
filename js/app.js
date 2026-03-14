@@ -859,7 +859,7 @@ function EVCostTracker() {
                 {view === "charts" && (
                     <div className="animate-fade-in">
                         <h2 className="text-xl font-bold mb-4 text-center">Analisi {activeVehicle?.name}</h2>
-                        <ChartSection charges={filteredCharges} theme={activeVehicle?.theme || 'theme-default'} />
+                        <ChartSection charges={filteredCharges} theme={activeVehicle?.theme || 'theme-default'} settings={settings} />
                     </div>
                 )}
 
