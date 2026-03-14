@@ -506,16 +506,26 @@ function EVCostTracker() {
     async function handleStartCharge(data) {
         if (!selectedVehicleId) return alert("Seleziona prima un'auto!");
         setIsSyncing(true);
-        const ok = await startChargeDB(supabaseClient, data, selectedVehicleId, suppliers);
-        if (ok) {
-            setShowStartModal(false);
-            
-            // Aggiorna fornitori recenti per Quick Actions
-            const updated = [data.supplierId, ...recentSuppliers.filter(id => id != data.supplierId)].slice(0, 3);
-            setRecentSuppliers(updated);
-            localStorage.setItem("ev_recent_suppliers", JSON.stringify(updated));
-            
-            await loadData();
+        try {
+            const ok = await startChargeDB(supabaseClient, data, selectedVehicleId, suppliers);
+            if (ok) {
+                setShowStartModal(false);
+                
+                // Salva fornitore di default per questo veicolo
+                localStorage.setItem(`ev_default_supplier_${selectedVehicleId}`, data.supplierId);
+                
+                // Aggiorna fornitori recenti per Quick Actions
+                const updated = [data.supplierId, ...recentSuppliers.filter(id => id != data.supplierId)].slice(0, 3);
+                setRecentSuppliers(updated);
+                localStorage.setItem("ev_recent_suppliers", JSON.stringify(updated));
+                
+                await loadData();
+            } else {
+                alert("❌ Errore durante l'avvio della ricarica. Riprova.");
+            }
+        } catch (err) {
+            console.error("Errore handleStartCharge:", err);
+            alert("❌ Errore imprevisto: " + err.message);
         }
         setIsSyncing(false);
     }
@@ -831,6 +841,7 @@ function EVCostTracker() {
                     activeVehicle={activeVehicle} 
                     suppliers={filteredSuppliersForVehicle} 
                     lastKm={currentVehicleCharges[0]?.total_km || null}
+                    defaultSupplierId={localStorage.getItem(`ev_default_supplier_${activeVehicle?.id}`) || null}
                     onClose={() => setShowStartModal(false)} 
                     onStart={handleStartCharge} 
                 />

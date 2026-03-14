@@ -200,7 +200,7 @@ function AddVehicleModal({ newVehicle, setNewVehicle, onClose, onSave, isSyncing
  * @param {Function} props.onClose - Callback chiusura
  * @param {Function} props.onStart - Callback avvio ricarica
  */
-function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }) {
+function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId, onClose, onStart }) {
     /**
      * STATO LOCALE DEL FORM
      * Nota: getLocalDateTimeString() restituisce l'ora locale corretta,
@@ -210,9 +210,16 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, onClose, onStart }
         date: getLocalDateTimeString(),  // FIX: Ora locale invece di UTC
         totalKm: "",  // Campo vuoto, il valore precedente è mostrato come placeholder
         startPct: "",
-        supplierId: "",
+        supplierId: defaultSupplierId || "",  // Preseleziona fornitore di default
         notes: ""
     });
+    
+    // Aggiorna il fornitore quando cambia defaultSupplierId (es. cambio veicolo)
+    React.useEffect(() => {
+        if (defaultSupplierId && !data.supplierId) {
+            setData(prev => ({ ...prev, supplierId: defaultSupplierId }));
+        }
+    }, [defaultSupplierId]);
 
     /**
      * Gestisce il submit del form.
