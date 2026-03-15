@@ -210,32 +210,27 @@ function StartChargeModal({ activeVehicle, suppliers, lastKm, defaultSupplierId,
         date: getLocalDateTimeString(),  // FIX: Ora locale invece di UTC
         totalKm: "",  // Campo vuoto, il valore precedente è mostrato come placeholder
         startPct: "",
-        supplierId: "",  // Viene impostato dall'useEffect sotto
+        supplierId: defaultSupplierId || "",  // Preseleziona fornitore di default
         notes: ""
     });
     
     // Aggiorna il fornitore quando cambia defaultSupplierId (es. cambio veicolo o impostazioni)
     React.useEffect(() => {
-        if (defaultSupplierId) {
+        if (defaultSupplierId && !data.supplierId) {
             setData(prev => ({ ...prev, supplierId: defaultSupplierId }));
         }
     }, [defaultSupplierId]);
 
     /**
-     * I km sono OPZIONALI. Possono essere inseriti:
-     * - All'avvio della ricarica
-     * - Alla fine (StopChargeModal)
-     * - A posteriori (EditChargeModal)
+     * Gestisce il submit del form.
+     * Valida i campi obbligatori e invia i dati al parent.
+     * Converte la data in ISO per il database.
      */
     const handleSubmit = () => {
-        // Validazione: solo % batteria e fornitore sono OBBLIGATORI
-        if (!data.startPct) {
-            return alert("⚠️ Inserisci la % batteria iniziale!");
+        // Validazione campi obbligatori (km ora opzionale)
+        if (!data.startPct || !data.supplierId) {
+            return alert("Compila % batteria e fornitore!");
         }
-        if (!data.supplierId) {
-            return alert("⚠️ Seleziona un fornitore!");
-        }
-
 
         // Converti la data locale in ISO completo per il database
         const dateObj = new Date(data.date);
