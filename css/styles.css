@@ -381,12 +381,6 @@ canvas {
     border-radius: 1rem;
     padding: 1rem;
     backdrop-filter: blur(6px);
-    transition: all 0.3s ease;
-}
-
-.chart-card:hover {
-    border-color: var(--accent-2);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .chart-title {
@@ -394,36 +388,6 @@ canvas {
     font-weight: 600;
     color: var(--accent);
     margin-bottom: 0.75rem;
-}
-
-.chart-container {
-    animation: fadeIn 0.4s ease-out;
-}
-
-/* Statistiche cards nei grafici */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 0.5rem;
-}
-
-.stat-item {
-    text-align: center;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    background: var(--card-soft);
-}
-
-.stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-.stat-label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
 }
 
 /* ============================================================
@@ -455,6 +419,78 @@ canvas {
 @keyframes scaleIn {
     from { opacity: 0; transform: scale(0.95); }
     to   { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   INSIGHTS CARDS
+   ============================================================ */
+
+.insight-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+    border-color: var(--accent-2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.insight-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--card-border);
+}
+
+/* Progress bar per insights */
+.progress-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--card-soft);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Badge per insights */
+.insight-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.insight-badge.success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #4ade80;
+}
+
+.insight-badge.warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.insight-badge.danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+.insight-badge.info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
 }
 
 .animate-pulse-glow {
