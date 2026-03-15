@@ -846,6 +846,8 @@ function EVCostTracker() {
                         activeVehicleId={selectedVehicleId}
                         defaultSupplierId={defaultSupplierId}
                         onSetDefaultSupplier={handleSetDefaultSupplier}
+                        allCharges={charges}
+                        activeVehicle={activeVehicle}
                     />
                 )}
 
@@ -861,18 +863,6 @@ function EVCostTracker() {
                                     charges={filteredCharges}
                                     vehicle={activeVehicle}
                                     settings={settings}
-                                />
-                            </div>
-                        )}
-                        
-                        {/* Export Buttons */}
-                        {filteredCharges.length > 0 && (
-                            <div className="flex justify-end mb-4 gap-2">
-                                <ExportButtons 
-                                    charges={filteredCharges}
-                                    vehicle={activeVehicle}
-                                    settings={settings}
-                                    stats={stats}
                                 />
                             </div>
                         )}

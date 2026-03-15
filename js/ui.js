@@ -47,6 +47,196 @@
  */
 
 // ============================================================
+// FUNZIONI EXPORT EXCEL
+// ============================================================
+
+/**
+ * Esporta le ricariche in formato Excel (singolo foglio)
+ * 
+ * @param {Array} charges - Array ricariche da esportare
+ * @param {Object} vehicle - Veicolo selezionato
+ * @param {string} filename - Nome file (opzionale)
+ */
+function exportChargesToExcel(charges, vehicle, filename) {
+    if (!charges || charges.length === 0) {
+        alert('Nessuna ricarica da esportare');
+        return;
+    }
+    
+    // Prepara i dati per il foglio Excel
+    const data = charges.map(c => {
+        const kwh = parseFloat(c.kwh_added) || 0;
+        const cost = parseFloat(c.cost) || 0;
+        const costPerKwh = kwh > 0 ? (cost / kwh) : 0;
+        
+        return {
+            'Data': new Date(c.date).toLocaleDateString('it-IT'),
+            'Ora': new Date(c.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+            'Fornitore': c.supplier_name || '',
+            'Tipo': c.supplier_type || '',
+            'kWh': kwh.toFixed(2),
+            'Costo (€)': cost.toFixed(2),
+            '€/kWh': costPerKwh.toFixed(3),
+            'Km Totali': c.total_km || '',
+            'Km Percorsi': c.km_since_last || '',
+            'Consumo (kWh/100km)': c.consumption ? c.consumption.toFixed(2) : '',
+            'Batteria Inizio %': c.battery_start || '',
+            'Batteria Fine %': c.battery_end || '',
+            'Note': c.notes || '',
+            'Tags': c.tags || ''
+        };
+    });
+    
+    // Crea workbook e worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    
+    // Imposta larghezza colonne
+    ws['!cols'] = [
+        { wch: 12 }, // Data
+        { wch: 8 },  // Ora
+        { wch: 20 }, // Fornitore
+        { wch: 6 },  // Tipo
+        { wch: 10 }, // kWh
+        { wch: 10 }, // Costo
+        { wch: 10 }, // €/kWh
+        { wch: 12 }, // Km Totali
+        { wch: 12 }, // Km Percorsi
+        { wch: 18 }, // Consumo
+        { wch: 15 }, // Batteria Inizio
+        { wch: 15 }, // Batteria Fine
+        { wch: 30 }, // Note
+        { wch: 20 }  // Tags
+    ];
+    
+    // Aggiungi foglio al workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Ricariche');
+    
+    // Genera nome file
+    const name = filename || `EV_Tracker_${vehicle?.name || 'Export'}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    
+    // Download
+    XLSX.writeFile(wb, name);
+}
+
+/**
+ * Esporta TUTTO il database in formato Excel (multi-sheet)
+ * Include: Veicoli, Fornitori, Ricariche, Impostazioni
+ * 
+ * @param {Array} vehicles - Tutti i veicoli
+ * @param {Array} suppliers - Tutti i fornitori
+ * @param {Array} charges - Tutte le ricariche
+ * @param {Object} settings - Impostazioni globali
+ */
+function exportAllToExcel(vehicles, suppliers, charges, settings) {
+    const wb = XLSX.utils.book_new();
+    
+    // ===== FOGLIO 1: VEICOLI =====
+    if (vehicles && vehicles.length > 0) {
+        const vehiclesData = vehicles.map(v => ({
+            'ID': v.id,
+            'Nome': v.name,
+            'Brand': v.brand || '',
+            'Capacità (kWh)': v.capacity_kwh,
+            'Tema': v.theme || 'theme-default',
+            'Fun Stats': v.show_fun_stats ? 'Sì' : 'No',
+            'Budget Mensile (€)': v.monthly_budget || 0,
+            'Soglia Alert (%)': v.budget_alert_threshold || 80,
+            'Fornitore Default ID': v.default_supplier_id || '',
+            'Creato': v.created_at ? new Date(v.created_at).toLocaleDateString('it-IT') : ''
+        }));
+        const wsVehicles = XLSX.utils.json_to_sheet(vehiclesData);
+        wsVehicles['!cols'] = [
+            { wch: 5 }, { wch: 20 }, { wch: 15 }, { wch: 12 },
+            { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 12 },
+            { wch: 18 }, { wch: 12 }
+        ];
+        XLSX.utils.book_append_sheet(wb, wsVehicles, 'Veicoli');
+    }
+    
+    // ===== FOGLIO 2: FORNITORI =====
+    if (suppliers && suppliers.length > 0) {
+        const suppliersData = suppliers.map(s => ({
+            'ID': s.id,
+            'Nome': s.name,
+            'Tipo': s.type,
+            'Costo Standard (€/kWh)': parseFloat(s.standard_cost).toFixed(3),
+            'Preferito': s.is_favorite ? 'Sì' : 'No',
+            'Ordine': s.sort_order || 9,
+            'Veicolo Esclusivo ID': s.vehicle_id || '',
+            'Creato': s.created_at ? new Date(s.created_at).toLocaleDateString('it-IT') : ''
+        }));
+        const wsSuppliers = XLSX.utils.json_to_sheet(suppliersData);
+        wsSuppliers['!cols'] = [
+            { wch: 5 }, { wch: 25 }, { wch: 6 }, { wch: 20 },
+            { wch: 10 }, { wch: 8 }, { wch: 18 }, { wch: 12 }
+        ];
+        XLSX.utils.book_append_sheet(wb, wsSuppliers, 'Fornitori');
+    }
+    
+    // ===== FOGLIO 3: RICARICHE =====
+    if (charges && charges.length > 0) {
+        const chargesData = charges.map(c => {
+            const kwh = parseFloat(c.kwh_added) || 0;
+            const cost = parseFloat(c.cost) || 0;
+            return {
+                'ID': c.id,
+                'Veicolo ID': c.vehicle_id,
+                'Fornitore ID': c.supplier_id,
+                'Fornitore': c.supplier_name || '',
+                'Tipo': c.supplier_type || '',
+                'Data': new Date(c.date).toLocaleDateString('it-IT'),
+                'Ora Inizio': new Date(c.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+                'Ora Fine': c.end_date ? new Date(c.end_date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '',
+                'kWh': kwh.toFixed(2),
+                'Costo (€)': cost.toFixed(2),
+                '€/kWh': kwh > 0 ? (cost / kwh).toFixed(3) : '',
+                'Costo Standard Snapshot': c.standard_cost_snapshot || '',
+                'Km Totali': c.total_km || '',
+                'Km Percorsi': c.km_since_last || '',
+                'Consumo (kWh/100km)': c.consumption ? c.consumption.toFixed(2) : '',
+                'Batteria Inizio %': c.battery_start || '',
+                'Batteria Fine %': c.battery_end || '',
+                'Status': c.status || 'completed',
+                'Note': c.notes || '',
+                'Tags': c.tags || '',
+                'Prezzo Benzina Salvato': c.saved_gasoline_price || '',
+                'Prezzo Diesel Salvato': c.saved_diesel_price || ''
+            };
+        });
+        const wsCharges = XLSX.utils.json_to_sheet(chargesData);
+        wsCharges['!cols'] = [
+            { wch: 5 }, { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 6 },
+            { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 },
+            { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 12 }, { wch: 18 },
+            { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 30 }, { wch: 20 },
+            { wch: 18 }, { wch: 18 }
+        ];
+        XLSX.utils.book_append_sheet(wb, wsCharges, 'Ricariche');
+    }
+    
+    // ===== FOGLIO 4: IMPOSTAZIONI =====
+    const settingsData = [
+        { 'Parametro': 'Prezzo Benzina (€/L)', 'Valore': settings.gasolinePrice || 1.9 },
+        { 'Parametro': 'Consumo Benzina (km/L)', 'Valore': settings.gasolineConsumption || 15 },
+        { 'Parametro': 'Prezzo Diesel (€/L)', 'Valore': settings.dieselPrice || 1.8 },
+        { 'Parametro': 'Consumo Diesel (km/L)', 'Valore': settings.dieselConsumption || 18 },
+        { 'Parametro': 'Costo Energia Casa (€/kWh)', 'Valore': settings.homeElectricityPrice || 0.25 },
+        { 'Parametro': 'Costo Fotovoltaico (€/kWh)', 'Valore': settings.solarElectricityPrice || 0 },
+        { 'Parametro': 'Data Export', 'Valore': new Date().toLocaleDateString('it-IT') }
+    ];
+    const wsSettings = XLSX.utils.json_to_sheet(settingsData);
+    wsSettings['!cols'] = [{ wch: 30 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, wsSettings, 'Impostazioni');
+    
+    // Genera nome file
+    const filename = `EV_Tracker_Completo_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    
+    // Download
+    XLSX.writeFile(wb, filename);
+}
+
+// ============================================================
 // SKELETON LOADER
 // ============================================================
 /**
@@ -808,57 +998,122 @@ function ChargeList({ charges, onEdit, onDelete }) {
  * @param {Object} props - Props del componente
  * @param {Function} props.onDeleteSupplier - Callback elimina fornitore
  * @param {number} [props.activeVehicleId] - ID veicolo attivo per filtro fornitori
+ * @param {Array} [props.allCharges] - Tutte le ricariche per export completo
+ * @param {Object} [props.activeVehicle] - Veicolo attivo per export singolo
  * @returns {JSX.Element} Vista impostazioni
  */
-function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier, activeVehicleId, defaultSupplierId, onSetDefaultSupplier }) {
+function SettingsView({ settings, setSettings, saveSettings, vehicles, onAddVehicle, onEditVehicle, onDeleteVehicle, suppliers, onAddSupplier, onEditSupplier, onDeleteSupplier, activeVehicleId, defaultSupplierId, onSetDefaultSupplier, allCharges, activeVehicle }) {
     // Filtra fornitori: comuni + esclusivi per il veicolo attivo
     const filteredSuppliers = suppliers.filter(s => 
         !s.vehicle_id || s.vehicle_id === activeVehicleId
     );
     
+    // Ricariche del veicolo attivo per export singolo
+    const vehicleCharges = allCharges ? allCharges.filter(c => c.vehicle_id === activeVehicleId && c.status === 'completed') : [];
+    
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
-            <div className="card">
-                <h2 className="text-xl font-bold text-saving mb-4">⚙️ Impostazioni Globali</h2>
-                
-                <p className="text-xs text-muted mb-4">
-                    I prezzi carburanti e i consumi sono usati per calcolare il risparmio rispetto alle auto a combustione.
-                    Le impostazioni personali (tema, budget) si trovano in ogni singola auto.
-                </p>
+            <div className="space-y-6">
+                <div className="card">
+                    <h2 className="text-xl font-bold text-saving mb-4">⚙️ Impostazioni Globali</h2>
+                    
+                    <p className="text-xs text-muted mb-4">
+                        I prezzi carburanti e i consumi sono usati per calcolare il risparmio rispetto alle auto a combustione.
+                        Le impostazioni personali (tema, budget) si trovano in ogni singola auto.
+                    </p>
 
-                <div className="space-y-4 text-sm">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="label">⛽ Benzina (€/L)</label>
-                            <input type="number" step="0.01" className="input" value={settings.gasolinePrice} onChange={e => setSettings({ ...settings, gasolinePrice: e.target.value })} />
+                    <div className="space-y-4 text-sm">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="label">⛽ Benzina (€/L)</label>
+                                <input type="number" step="0.01" className="input" value={settings.gasolinePrice} onChange={e => setSettings({ ...settings, gasolinePrice: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="label">🚗 Consumo (km/L)</label>
+                                <input type="number" step="0.1" className="input" value={settings.gasolineConsumption} onChange={e => setSettings({ ...settings, gasolineConsumption: e.target.value })} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="label">⛽ Diesel (€/L)</label>
+                                <input type="number" step="0.01" className="input" value={settings.dieselPrice} onChange={e => setSettings({ ...settings, dieselPrice: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="label">🚗 Consumo (km/L)</label>
+                                <input type="number" step="0.1" className="input" value={settings.dieselConsumption} onChange={e => setSettings({ ...settings, dieselConsumption: e.target.value })} />
+                            </div>
                         </div>
                         <div>
-                            <label className="label">🚗 Consumo (km/L)</label>
-                            <input type="number" step="0.1" className="input" value={settings.gasolineConsumption} onChange={e => setSettings({ ...settings, gasolineConsumption: e.target.value })} />
+                            <label className="label">⚡ Costo Energia Casa (€/kWh)</label>
+                            <input type="number" step="0.001" className="input" value={settings.homeElectricityPrice} onChange={e => setSettings({ ...settings, homeElectricityPrice: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className="label">☀️ Fotovoltaico (€/kWh)</label>
+                            <input type="number" step="0.001" className="input" value={settings.solarElectricityPrice || 0} onChange={e => setSettings({ ...settings, solarElectricityPrice: parseFloat(e.target.value) || 0 })} />
+                            <p className="text-xs text-muted mt-1">Costo simbolico pannelli solari (€0.00 se totalmente gratuito)</p>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="label">⛽ Diesel (€/L)</label>
-                            <input type="number" step="0.01" className="input" value={settings.dieselPrice} onChange={e => setSettings({ ...settings, dieselPrice: e.target.value })} />
-                        </div>
-                        <div>
-                            <label className="label">🚗 Consumo (km/L)</label>
-                            <input type="number" step="0.1" className="input" value={settings.dieselConsumption} onChange={e => setSettings({ ...settings, dieselConsumption: e.target.value })} />
-                        </div>
+
+                    <button onClick={saveSettings} className="btn btn-primary mt-6 w-full">💾 Salva Impostazioni</button>
+                </div>
+                
+                {/* SEZIONE EXPORT */}
+                <div className="card border-2 border-blue-500/30 bg-gradient-to-br from-blue-900/20 to-purple-900/20">
+                    <h2 className="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2">
+                        <span>📊</span>
+                        <span>Export Dati</span>
+                    </h2>
+                    
+                    <p className="text-xs text-muted mb-4">
+                        Esporta i tuoi dati in formato Excel. Scegli se esportare solo le ricariche dell'auto selezionata o l'intero database.
+                    </p>
+                    
+                    <div className="space-y-3">
+                        {/* Export Solo Ricariche */}
+                        <button 
+                            onClick={() => exportChargesToExcel(vehicleCharges, activeVehicle)}
+                            disabled={!activeVehicle || vehicleCharges.length === 0}
+                            className="btn w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white"
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">📄</span>
+                                <div className="text-left">
+                                    <div className="font-bold">Solo Ricariche</div>
+                                    <div className="text-xs opacity-80">
+                                        {activeVehicle ? `${vehicleCharges.length} ricariche di ${activeVehicle.name}` : 'Nessuna auto selezionata'}
+                                    </div>
+                                </div>
+                            </div>
+                            <span className="text-xl">⬇️</span>
+                        </button>
+                        
+                        {/* Export Totale DB */}
+                        <button 
+                            onClick={() => exportAllToExcel(vehicles, suppliers, allCharges, settings)}
+                            disabled={!allCharges || allCharges.length === 0}
+                            className="btn w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white"
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">📁</span>
+                                <div className="text-left">
+                                    <div className="font-bold">Database Completo</div>
+                                    <div className="text-xs opacity-80">
+                                        {allCharges ? `${allCharges.length} ricariche, ${vehicles.length} veicoli, ${suppliers.length} fornitori` : 'Nessun dato'}
+                                    </div>
+                                </div>
+                            </div>
+                            <span className="text-xl">⬇️</span>
+                        </button>
                     </div>
-                    <div>
-                        <label className="label">⚡ Costo Energia Casa (€/kWh)</label>
-                        <input type="number" step="0.001" className="input" value={settings.homeElectricityPrice} onChange={e => setSettings({ ...settings, homeElectricityPrice: e.target.value })} />
-                    </div>
-                    <div>
-                        <label className="label">☀️ Fotovoltaico (€/kWh)</label>
-                        <input type="number" step="0.001" className="input" value={settings.solarElectricityPrice || 0} onChange={e => setSettings({ ...settings, solarElectricityPrice: parseFloat(e.target.value) || 0 })} />
-                        <p className="text-xs text-muted mt-1">Costo simbolico pannelli solari (€0.00 se totalmente gratuito)</p>
+                    
+                    <div className="mt-4 p-3 bg-black/20 rounded-lg text-xs text-muted">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span>💡</span>
+                            <span className="font-medium text-blue-300">Info</span>
+                        </div>
+                        <p>L'export completo include 4 fogli: Veicoli, Fornitori, Ricariche e Impostazioni. Utile per backup o migrazione dati.</p>
                     </div>
                 </div>
-
-                <button onClick={saveSettings} className="btn btn-primary mt-6 w-full">💾 Salva Impostazioni</button>
             </div>
 
             <div className="space-y-6">
